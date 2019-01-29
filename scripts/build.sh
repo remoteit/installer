@@ -94,6 +94,84 @@ sudo chown -R "$user":"$user" "$pkgFolder"
 # save current folder to write output file to
 cwd="$(pwd)"
 
+build() {
+    if [ $buildDeb -eq 1 ]; then
+        echo "Building Debian package..."
+    else
+        echo "Building tar package..."
+    fi
+
+    echo "PLATFORM=$PLATFORM"
+    echo "arch=$arch"
+    echo
+
+    setEnvironment "$arch" "$PLATFORM"
+    # put build date into connected_options
+    setOption options "BUILDDATE" "\"$(date)\""
+
+    # clean up and recreate md5sums file
+    cd "$pkgFolder"
+    sudo chmod 777 DEBIAN
+    # ls -l
+    sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
+    sudo chmod 775 DEBIAN
+    sudo mv md5sums DEBIAN
+    sudo chmod 644 DEBIAN/md5sums
+    # cd "$cwd"
+    cd ..
+
+    if [ "$buildDeb" = 1 ]; then
+
+        echo "Building Debian package for architecture: $arch"
+
+        #--------------------------------------------------------
+        # for Deb pkg build, remove builddate.txt file
+        # builddate.txt is used by generic tar.gz installers
+        file="$pkgFolder"/etc/connectd/builddate.txt
+
+        if [ -e "$file" ]; then
+            rm "$pkgFolder"/etc/connectd/builddate.txt
+        fi
+        #--------------------------------------------------------
+        buildDebianFile "$pkgFolder"
+
+        if [ $? == 0 ];then
+            version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+            filename="${pkg}_${version}_$arch$RELEASE".deb
+            # for now, mark all releases as $RELEASE
+            mv "$pkgFolder".deb "$filename"
+        else
+            echo "Errors encountered during build."
+            echo "Press Enter to review errors."
+            read anykey
+            less lintian-E.txt
+        fi
+
+    else
+        # we are making a tar file, but first  we make a Debian file
+        # use lintian to check for errors
+        # then extract the /usr, /etc and /lib folders.
+        buildDebianFile "$pkgFolder"
+
+        if [ $? == 0 ];then
+            version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+
+            # for now, mark all releases per RELEASE variable
+            echo "Extracting contents to tar file"
+            ./extract-scripts.sh "$pkgFolder".deb
+            filename="${pkg}_${version}_$PLATFORM$RELEASE"
+            mv "$pkgFolder".deb.tar "$cwd/$filename".tar
+        else
+            echo "Errors encountered during build."
+            echo "Press Enter to review errors."
+            read anykey
+            less lintian-E.txt
+        fi
+
+    fi
+
+}
+
 buildDeb=1
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -148,83 +226,5 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build
-
-build() {
-    if [ $buildDeb -eq 1 ]; then
-        echo "Building Debian package..."
-    else
-        echo "Building tar package..."
-    fi
-
-    echo "PLATFORM=$PLATFORM"
-    echo "arch=$arch"
-    echo
-
-    setEnvironment "$arch" "$PLATFORM"
-    # put build date into connected_options
-    setOption options "BUILDDATE" "\"$(date)\""
-
-    # clean up and recreate md5sums file
-    cd "$pkgFolder"
-    sudo chmod 777 DEBIAN
-    # ls -l
-    sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
-    sudo chmod 775 DEBIAN
-    sudo mv md5sums DEBIAN
-    sudo chmod 644 DEBIAN/md5sums
-    # cd "$cwd"
-    cd ..
-
-    if [ "$buildDeb" = 1 ]; then
-
-    echo "Building Debian package for architecture: $arch"
-
-    #--------------------------------------------------------
-    # for Deb pkg build, remove builddate.txt file
-    # builddate.txt is used by generic tar.gz installers
-    file="$pkgFolder"/etc/connectd/builddate.txt
-
-    if [ -e "$file" ]; then
-        rm "$pkgFolder"/etc/connectd/builddate.txt
-    fi
-    #--------------------------------------------------------
-    buildDebianFile "$pkgFolder"
-
-    if [ $? == 0 ];then
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-        filename="${pkg}_${version}_$arch$RELEASE".deb
-        # for now, mark all releases as $RELEASE
-        mv "$pkgFolder".deb "$filename"
-    else
-        echo "Errors encountered during build."
-        echo "Press Enter to review errors."
-        read anykey
-        less lintian-E.txt
-    fi
-
-    else
-    # we are making a tar file, but first  we make a Debian file
-    # use lintian to check for errors
-    # then extract the /usr, /etc and /lib folders.
-    buildDebianFile "$pkgFolder"
-
-    if [ $? == 0 ];then
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-
-        # for now, mark all releases per RELEASE variable
-        echo "Extracting contents to tar file"
-        ./extract-scripts.sh "$pkgFolder".deb
-        filename="${pkg}_${version}_$PLATFORM$RELEASE"
-        mv "$pkgFolder".deb.tar "$cwd/$filename".tar
-    else
-        echo "Errors encountered during build."
-        echo "Press Enter to review errors."
-        read anykey
-        less lintian-E.txt
-    fi
-
-    fi
-
-}
 
 ls -l "${pkg}"*.*
