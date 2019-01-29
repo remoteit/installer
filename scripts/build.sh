@@ -93,7 +93,7 @@ sudo chown -R "$user":"$user" "$pkgFolder"
 
 # save current folder to write output file to
 cwd="$(pwd)/build"
-mkdir -p cwd
+mkdir -p $cwd
 
 build() {
     if [ $buildDeb -eq 1 ]; then
