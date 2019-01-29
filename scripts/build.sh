@@ -158,7 +158,7 @@ build() {
 
             # for now, mark all releases per RELEASE variable
             echo "Extracting contents to tar file"
-            ./extract-scripts.sh "$pkgFolder".deb
+            ./scripts/extract-scripts.sh "$pkgFolder".deb
             filename="${pkg}_${version}_$PLATFORM$RELEASE"
             mv "$pkgFolder".deb.tar "$cwd/$filename".tar
         else
