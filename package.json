@@ -4,7 +4,7 @@
   "description": "System tools for setting up remote.it on your internet connected devices.",
   "scripts": {
     "build": "./scripts/build.sh",
-    "download-connectd-releases": "ts-node scripts/download-connectd-releases.ts"
+    "download-assets": "ts-node scripts/download-assets.ts"
   },
   "dependencies": {
     "axios": "0.18.0",

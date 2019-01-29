@@ -40,7 +40,7 @@ setEnvironment()
         exit 1
     fi
     sudo chmod +x "$pkgFolder"/usr/bin/connectd."$2"
-    sudo cp ~/Github/Server-Channel/pre-built/schannel."$2" "$pkgFolder"/usr/bin/connectd_schannel."$2"
+    sudo cp ./assets/schannel."$2" "$pkgFolder"/usr/bin/connectd_schannel."$2"
     if [ $? = 1 ]; then
         echo "Error, missing file: schannel.$2"
         exit 1

@@ -3,8 +3,6 @@ import fs from "fs";
 import { resolve } from "path";
 
 const ASSET_BASE_PATH = resolve(__dirname, "..", "assets");
-const RELEASE_BASE_URL =
-  "https://api.github.com/repos/remoteit/connectd/releases";
 
 type Release = {
   url: string;
@@ -66,11 +64,10 @@ async function downloadAsset(asset: ReleaseAsset) {
   });
 }
 
-async function downloadReleases() {
+async function downloadRelease(baseURL: string) {
   // TODO: support downloading other versions
-  const { data }: { data: Release } = await axios.get(
-    RELEASE_BASE_URL + "/latest"
-  );
+  const url = baseURL + "/latest";
+  const { data }: { data: Release } = await axios.get(url);
 
   // Create "./assets" folder in case it doesn't exist.
   if (!fs.existsSync(ASSET_BASE_PATH)) {
@@ -80,8 +77,20 @@ async function downloadReleases() {
   // Download each release in parallel
   await Promise.all(data.assets.map(asset => downloadAsset(asset)));
 
+  console.log(`👍  Downloaded all releases from "${url}"`);
+}
+
+// Download connectd releases
+async function downloadAll() {
+  await Promise.all([
+    downloadRelease("https://api.github.com/repos/remoteit/connectd/releases"),
+    downloadRelease(
+      "https://api.github.com/repos/remoteit/Server-Channel/releases"
+    )
+  ]);
+
   console.log(`🎉  Downloaded all files to "./assets"`);
 }
 
-// Start it off!
-downloadReleases();
+// Download everything!
+downloadAll();

@@ -62,15 +62,15 @@ For example, the name of the install folder, hardware ID, registration key, info
 
 ## Development
 
-### Get latest connectd daemon
+### Get latest connectd and schannel daemon
 
 Make sure you have node installed and then run:
 
 ```shell
-npm run download-connectd-releases
+npm run download-assets
 ```
 
-This will download the latest connectd release assets from Github and place them in `./assets`.
+This will download the latest connectd and Server Channel release assets from Github and place them in `./assets`.
 
 ### Make a build
 
