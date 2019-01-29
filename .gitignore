@@ -4,3 +4,5 @@ add-creds
 debug.txt
 builds
 .DS_Store
+node_modules
+assets
