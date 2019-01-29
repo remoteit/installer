@@ -1,0 +1,106 @@
+#!/bin/sh
+
+#  connectd_schannel.sh
+#  startup script for the server channel listener
+#  one instance of this can serve all installed Connectd daemons
+#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#
+
+VERSION="v1.7"
+AUTHOR="Gary Worsham"
+MODIFIED="January 02, 2019"
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+
+DAEMON=connectd_schannel."$PLATFORM"
+CONF_FILE="$BASEDIR"/etc/connectd/schannel.conf
+
+# BIN_DIR=/usr/bin
+# PID_DIR=/var/run
+BIN_PATH=$BIN_DIR/$DAEMON
+PIDPATH=$PID_DIR/$DAEMON.pid
+# LOG_FILE=/dev/null
+# LOG_DIR=/var/log
+# PSFLAGS="ax"
+
+
+##### Version #####
+displayVersion()
+{
+    printf "remote.it server channel daemon start/stop script Version: %s \n" "$VERSION"
+    # check for sudo user at this point
+    if ! [ "$(id -u)" = 0 ]; then
+        echo "Running $0 requires root access." 1>&2
+        echo "Please run sudo $0" 1>&2
+	exit 1
+    fi
+}
+##### End Version #####
+
+
+checkPID()
+{
+	if [ -f $PIDPATH ]; then
+		runningPID="$(cat $PIDPATH)"
+	fi
+}
+
+isRunning()
+{
+	isRunning=$(ps "$PSFLAGS" | grep -w "$DAEMON" | grep -v grep | wc -l)
+}
+
+stopConnectd()
+{
+	isRunning
+	checkPID
+	if [ $isRunning != 0 ]; then
+		if [ "$2" != "-q" ]; then
+			echo "Stopping $DAEMON..."
+		fi
+		kill $runningPID 2> /dev/null
+		rm $PIDPATH 2> /dev/null
+	else
+		if [ "$2" != "-q" ]; then
+			echo "$DAEMON not currently active. Nothing to stop."
+		fi
+	fi
+}
+
+startConnectd()
+{
+	isRunning
+	if [ $isRunning = 0 ]; then
+		if [ "$2" != "-q" ]; then
+			echo "Starting $DAEMON..."
+		fi
+		 $BIN_DIR/$DAEMON -f $CONF_FILE -d $PID_DIR/$DAEMON.pid
+	else
+		if [ "$2" != "-q" ]; then
+			echo "$DAEMON is already started"
+		fi
+	fi
+}
+
+restartConnectd()
+{
+	stopConnectd
+	sleep 2
+	startConnectd
+}
+
+displayVersion
+
+if [ -z $1 ]; then
+	echo "You need one of the following arguments: start|stop|restart"
+	exit
+elif [ "$(echo "$1" | tr '[A-Z]' '[a-z]' | tr -d ' ')" = "stop" ]; then 
+	stopConnectd
+elif [ "$(echo "$1" | tr '[A-Z]' '[a-z]' | tr -d ' ')" = "start" ]; then
+	startConnectd
+elif [ "$(echo "$1" | tr '[A-Z]' '[a-z]' | tr -d ' ')" = "restart" ]; then
+	restartConnectd
+else
+	echo "This option is not supported"
+fi
+

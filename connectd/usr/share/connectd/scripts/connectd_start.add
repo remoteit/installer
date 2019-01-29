@@ -1,0 +1,3 @@
+if [ -f "/usr/bin/REPLACE_TEXT" ]; then
+   /usr/bin/REPLACE_TEXT start
+fi

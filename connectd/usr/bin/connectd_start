@@ -1,0 +1,99 @@
+#!/bin/sh
+#
+#  remote.it startup script for connectd package
+#
+#  remot3.it, Inc : https://remote.it
+#
+#
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+# include shell script lib, must be in path or specify path here
+. "$BIN_DIR"/connectd_wlib
+
+#### Settings #####
+VERSION=1.0.12
+MODIFIED="January 12, 2019"
+#
+# Config 
+#mac
+LOG_NAME="connectd_start"
+VERBOSE=0
+
+do_provision()
+{
+    logger "[$LOG_NAME] $hardware_id"
+    logger "[$LOG_NAME] Call dprovision"
+    # do bulk provisioning
+    info=$("$BIN_DIR"/connectd_control -v dprovision)
+    ret="$?"
+    logger [$LOG_NAME] $info
+
+    logger "[$LOG_NAME] Call bprovision"
+    # do bulk provisioning
+    info=$("$BIN_DIR"/connectd_control bprovision all)
+    ret="$?"
+    logger [$LOG_NAME] $info
+    return $ret
+}
+
+
+internet_available()
+{
+    ret=0
+    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "$apiServer" 80  >/dev/null 2>&1
+    online=$?
+    if [ $online -eq 0 ]; then
+        if [ $VERBOSE -gt 0 ]; then
+            echo "Internet Available"
+        fi
+        ret=1
+    else
+        if [ $VERBOSE -gt 0 ]; then
+            echo "Internet Not Available"
+        fi
+    fi
+    return $ret
+}
+
+
+###################################################
+# Main Loop, wait for internet access             #  
+###################################################
+
+logger "[$LOG_NAME] Startup"
+
+while [ 1 ]
+do
+    internet_available
+    if [ "$?" -eq 1 ]; then
+        # internet is available, if startup script from
+        # interactive install exists, try launching it.
+        # commented out by default as we are using cron
+        # for the Pi installer.
+        if [ -e "$BIN_DIR"/connectd_start_all ]; then
+            sleep 2
+            # "$BIN_DIR"/connectd_start_all
+        fi
+        # internet is available, try provision
+        sleep 5
+        do_provision
+        #
+        info=$("$BIN_DIR"/connectd_control start all)
+        logger "$0 started: $info" 
+        break
+    fi 
+    sleep 15
+    logger "[$LOG_NAME] Loop"
+done
+
+    #start device 2 device monitor if present and executable
+    if [ -x "$BIN_DIR/connectd_d2d" ]; then
+        logger "[$LOG_NAME] connectd_d2d start"
+        "$BIN_DIR/connectd_d2d" start
+    fi
+
+logger "[$LOG_NAME] exit"
+
+exit 0
+
+

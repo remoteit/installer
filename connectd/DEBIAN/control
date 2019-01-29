@@ -1,0 +1,18 @@
+Package: connectd
+Version: 2.2.3.24
+Section: non-free/net
+Priority: optional
+Homepage: http://remote.it
+Architecture: armhf
+Depends: libc6 (>= 2.1), mawk (>= 1.0), grep (>= 2.1.6), curl (>= 7.25.0), psmisc (>= 22.19-1)
+Maintainer: Gary Worsham <gary@remote.it>
+Description: remote.it is a cloud service that provides secure connections to 
+ your networked devices across the public internet, even those located behind 
+ cellular connections. remote.it is like a private VPN service for networked 
+ devices, making support, maintenance and management easy - even eliminating 
+ costly 'truck rolls'.  
+ remote.it is compatible with most devices with a TCP/IP stack; simply add a  
+ small daemon and configuration files, and it will be instantly available for 
+ a secure connection.  The APIs and portal allow for easy 'bulk' management 
+ of devices in the field.  
+ For more information, visit https://remote.it to create your free account.

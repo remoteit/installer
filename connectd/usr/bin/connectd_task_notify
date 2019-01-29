@@ -1,0 +1,349 @@
+#!/bin/sh
+#
+# Copyright (C) 2019 remot3.it, Inc.
+#
+# This is a notification plugin for for bulk managment.  
+#
+# The calling formats are as follows:
+#
+# connectd_task_notify [cmd] [taskid] [api] [status]
+#
+# connectd_task_notify 0 [taskid] [api] [status]
+#       returns 200 OK for   
+#
+# connectd_task_notify 1
+#       returns 200 OK for 
+#
+# Usage:  connectd_task_notify <cmd> <taskid> <api> <status>
+# 
+# connectd_task_notify [0/1/2/3] <$taskid> <api> <$status>
+#
+
+#### Settings #####
+VERSION=1.0
+MODIFIED="January 02, 2019"
+#
+# Log to system log if set to 1
+LOGGING=1
+VERBOSE=0
+#
+#
+#==========================================================================
+# get global options such as BASEDIR and PLATFORM
+# path to connectd_options has to be hardwired here and edited if needed
+# e.g. INSTALLPATH=/media/usb
+# ----------------------------------------
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+
+
+# Config curl path
+CURL="curl"
+
+#Default values
+TMP="/tmp"
+DEBUG=1
+OUTPUT="$TMP/connectd_task_notify_result"
+
+#
+# Build API URLS GET API's                                                                                                          
+API_TASK_UPDATE="/bulk/job/task/update/"    
+API_TASK_DONE="/bulk/job/task/done/"
+API_TASK_FAILED="/bulk/job/task/failed/"
+API_DEVICE_STATUS="/bulk/service/status/"
+API_DEVICE_STATUS_A="/bulk/service/status/a/"
+API_DEVICE_STATUS_B="/bulk/service/status/b/"
+
+#
+# Helper Functions
+#
+#produces a unix timestamp to the output
+utime()
+{ 
+    echo $(date +%s)
+}
+
+# produces a random number ($1 digits) to the output (supports upto 50 digits for now)
+dev_random()
+{
+    local count=$1
+    
+    #defualt is 10 digits if none specified
+    count=${1:-10};
+
+    #1 to 50 digits supported    
+    if [ "$count" -lt 1 ] || [ "$count" -ge 50 ]; then
+        count=10;
+    fi
+
+    # uses /dev/urandom
+    ret=$(cat /dev/urandom | tr -cd '0-9' | dd bs=1 count=$count 2>/dev/null)
+    echo $ret
+}
+
+#
+# JSON parse (very simplistic):  get value frome key $2 in buffer $1,  values or keys must not have the characters {}", and the key must not have : in them
+#
+jsonval()
+{
+    temp=`echo $1 | sed -e 's/[{}"]//g' -e 's/,/\n/g' | grep -w $2 | cut -d":" -f2-`
+    echo ${temp##*|}
+}
+
+
+#
+# urlencode $1
+#
+urlencode()
+{
+STR=$1
+[ "${STR}x" == "x" ] && { STR="$(cat -)"; }
+
+echo ${STR} | sed -e 's| |%20|g' \
+-e 's|!|%21|g' \
+-e 's|#|%23|g' \
+-e 's|\$|%24|g' \
+-e 's|%|%25|g' \
+-e 's|&|%26|g' \
+-e "s|'|%27|g" \
+-e 's|(|%28|g' \
+-e 's|)|%29|g' \
+-e 's|*|%2A|g' \
+-e 's|+|%2B|g' \
+-e 's|,|%2C|g' \
+-e 's|/|%2F|g' \
+-e 's|:|%3A|g' \
+-e 's|;|%3B|g' \
+-e 's|=|%3D|g' \
+-e 's|?|%3F|g' \
+-e 's|@|%40|g' \
+-e 's|\[|%5B|g' \
+-e 's|]|%5D|g'
+}
+
+#
+#
+#
+return_code()
+{
+    case $resp in
+        "200")
+            #Good Reponse
+            echo "$resp OK"
+            ;;
+        "500")
+            ret=$(jsonval "$(cat $OUTPUT)" "error") 
+            echo "$resp $ret"
+            ;;
+        *)
+            echo "$resp FAIL"
+            ;;
+    esac
+}
+
+
+#
+# Print Usage
+#
+usage()
+{
+        if [ $LOGGING -gt 0 ]; then 
+            logger "[connectd_task_notify Called with bad format or -h]" 
+        fi
+
+        echo "Usage: $0 [-v (verbose)] [-v (maximum verbosity)] [-h (this message)] <CMD> <TASKID> <API> <STATUS>" >&2
+        echo "     [optional] Must specify <CMD> <TASKID> <API> and <STATUS>" >&2
+        echo "     CMD=0   --> update status " >&2
+        echo "     CMD=1   --> completed status " >&2
+        echo "     CMD=2   --> failed status " >&2
+        echo "     CMD=3   --> status A " >&2
+        echo "     CMD=4   --> status B " >&2
+        echo "Version $VERSION Build $MODIFIED" >&2
+        exit 1
+}
+
+
+
+###############################
+# Main program starts here    #
+###############################
+#
+
+################################################
+# parse the flag options (and their arguments) #
+################################################
+while getopts vh OPT; do
+    case "$OPT" in
+      v)
+        VERBOSE=$((VERBOSE+1)) ;;
+      h | [?])
+        # got invalid option
+        usage
+        ;;
+    esac
+done
+
+# get rid of the just-finished flag arguments
+shift $(($OPTIND-1))
+
+# make sure we have at least 4 cmd, taskid , api and status
+if [ $# -lt 4 ]; then
+    usage
+fi
+
+# Parse off command
+cmd=$1
+shift
+
+#Parse off taskid
+task_id=$1
+shift
+
+#Parse off api
+api_base=$1
+shift
+
+status="$@"
+
+if [ $LOGGING -gt 0 ]; then 
+    logger "[connectd_task_notify Called with cmd $cmd taskid $task_id value $status]" 
+fi
+if [ $VERBOSE -gt 0 ]; then
+    echo "[connectd_task_notify Called with cmd $cmd taskid $task_id value $status]"
+fi
+
+#
+case $cmd in
+    "0")
+        #
+        # Send Update 
+        #
+        URL="$apiMethod$api_base$API_TASK_UPDATE"
+        data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+        resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+	if [ "$resp" -eq 200 ]; then
+           # echo URL "return USERID"
+           ret=$(jsonval "$(cat $OUTPUT)" "status")
+           echo "$resp $ret"
+       else
+           ret=$(jsonval "$(cat $OUTPUT)" "reason")
+           logger "[connectd_task_notify failed with $resp, $ret]"
+           return_code $resp
+       fi
+    ;;
+
+    "1")
+        #
+        # Task Done 
+        #
+        URL="$apiMethod$api_base$API_TASK_DONE"
+        data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+        resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+        if [ "$resp" -eq "200" ]; then
+            # echo URL "return USERID"
+            ret=$(jsonval "$(cat $OUTPUT)" "status")
+            echo "$resp $ret"
+        else
+            return_code $resp
+        fi
+    ;;
+    "2")
+        #
+        # Task Failed 
+        #
+        URL="$apiMethod$api_base$API_TASK_DONE"
+        data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+        resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+        if [ "$resp" -eq 200 ]; then
+            # echo URL "return USERID"
+            ret=$(jsonval "$(cat $OUTPUT)" "status")
+            echo "$resp $ret"
+        else
+            return_code $resp
+        fi        
+    ;;
+    "3" | "A" | "a")
+        # device status A
+        URL="$apiMethod$api_base$API_DEVICE_STATUS_A"
+        data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+        resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+        if [ "$resp" -eq 200 ]; then
+            # echo URL "return USERID"
+            ret=$(jsonval "$(cat $OUTPUT)" "status")
+            echo "$resp $ret"
+        else
+            return_code $resp
+        fi        
+    ;;
+    "4" | "B" | "b")
+        # device status 2
+        URL="$apiMethod$api_base$API_DEVICE_STATUS_B"
+        data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+        resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+        if [ "$resp" -eq 200 ]; then
+            # echo URL "return USERID"
+            ret=$(jsonval "$(cat $OUTPUT)" "status")
+            echo "$resp $ret"
+        else
+            return_code $resp
+        fi
+    ;;
+    '5' | 'C' | 'c')
+        generic='c'
+    ;;
+    '6' | 'D' | 'd')
+        generic='d'
+    ;;
+    '7' | 'E' | 'e')
+        generic='e'
+    ;;
+    '8' | 'F' | 'f')
+        generic='f'
+    ;;
+    '9' | 'G' | 'g')
+        generic='g'
+    ;;
+    '10' | 'H' | 'h')
+        generic='h'
+    ;;
+    '11' | 'I' | 'i')
+        generic='i'
+    ;;
+    '12' | 'J' | 'j')
+        generic='j'
+    ;;
+esac
+
+# Do Generic Call
+if [ -n "$generic" ]; then
+
+    # device status Generic
+    URL="$apiMethod$api_base$API_DEVICE_STATUS$generic/"
+    data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
+
+    resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
+
+    if [ "$resp" -eq 200 ]; then
+        # echo URL "return USERID"
+        ret=$(jsonval "$(cat $OUTPUT)" "status")
+        echo "$resp $ret"
+    else
+        return_code $resp
+    fi
+fi
+
+
+# flush multiple returns
+echo
+
+

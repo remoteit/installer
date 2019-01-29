@@ -1,0 +1,1338 @@
+#!/bin/sh 
+#
+#  remote.it Control Script manages remote.it devices on a platform
+#
+#  connectd_control <flags> command 
+#
+#  <optional>  -v = verbose -v -v =maximum verbosity
+#
+#  will store info in CONNECTD_DIR
+#
+#  remot3.it, Inc. : https://remote.it
+#
+# BASEDIR is the path relative to / where these files are installed
+# e.g. BASEDIR=/media/usb
+BULK_REG=1
+BASEDIR=
+
+# pick up global options, e.g. PLATFORM and API
+. "$BASEDIR"/usr/bin/connectd_options
+
+# include shell script lib
+. "$BIN_DIR"/connectd_wlib
+
+# use set -x for debugging as needed
+#set -x
+
+#### Settings #####
+VERSION=1.1.13
+MODIFIED="January 12, 2019"
+
+#
+# Config Dir CONNECTD_DIR is read from connectd_options
+
+#Raw Provisioning Files Downloaded
+PROVISION_DOWNLOAD="$CONNECTD_DIR/dfiles"
+#Installed Provisioning files go here (unprovisioned only)
+PROVISION_DEFAULT="$CONNECTD_DIR/pfiles"
+#created devices are in available
+DEVICES_AVAILABLE="$CONNECTD_DIR/available"
+#active devices are sym linked in active
+DEVICES_ACTIVE="$CONNECTD_DIR/active"
+#running devices have pidfiles of the same name in running
+DEVICES_RUNNING="$PID_DIR/connectd"
+#
+CONNECTD_BULK_ID="$CONNECTD_DIR/bulk_identification_code.txt"
+CONNECTD_VERSION="$CONNECTD_DIR/connectd_version.txt"
+
+LOG_FILE=/dev/null
+LOG_DIR=/var/log
+#
+#
+#
+#
+# Save Auth in homedir (not normally enabled)
+#
+# SAVE_AUTH=1
+#
+# use/store authhash instead of password (recommended)
+#
+USE_AUTHHASH=1
+authtype=0 
+
+if [ -f "$CONNECTD_BULK_ID" ]; then
+    bulk_id_code=$(cat "$CONNECTD_BULK_ID")
+else
+    bulk_id_code="Bulk ID code file is missing."
+fi
+
+BULK_REG_DEVICE_FILE="$DEVICES_ACTIVE/rmt3.i686"
+#
+# Other Globals
+#
+DEVICE_ADDRESS=""
+DEVICE_STATE=""
+LIST_ONLY=0
+VERBOSE=0
+DEBUG=0
+PID=0;
+TIMEIT=0
+FAILTIME=10
+# 3 hrs of bulk provisioning retry time
+# after that you have to power cycle or reboot
+BULK_RETRY_TIME=30
+BULK_RETRY_COUNT=3600
+#
+GEN_RETRY_TIME=5
+GEN_RETRY_COUNT=3
+#
+# API URL's
+#
+BulkRegisterURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/register"
+ComponentVersionURL="${apiMethod}${apiServer}${apiVersion}/device/component/version"
+
+#/bulk/registration/device/friendly/configuration/{provisiong_file_id}
+ProjectListURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/device/friendly/configuration"
+
+#bulk/registration/configuration/{id}/{sec}
+ProvisionConfig="${apiMethod}${apiServer}${apiVersion}/bulk/registration/configuration"
+
+# device/enablement/{provisioning_file_id}
+ProjectEnablementGet="${apiMethod}${apiServer}${apiVersion}/device/enablement"
+
+# Get Provisioning File Link project/provisioning/{provisioning_file_id}
+ProvisionGet="${apiMethod}${apiServer}${apiVersion}/project/provisioning"
+
+# Get provisioning file directly
+ProvisionDownloadDirect="${apiMethod}${apiServer}${apiVersion}/project/provisioning/download"
+
+##### End Settings #####
+
+#
+# Built in manpage
+#
+manpage()
+{
+#
+# Put manpage text here
+#
+read -d '' man_text << EOF
+
+MANPAGE
+
+EOF
+#
+printf "\n%s\n\n\n" "$man_text"
+}
+
+
+
+#
+# Print Usage
+#
+usage()
+{
+    echo "Usage: $0 command " >&2
+    echo "  commands : show types typesl status enable disable start stop restart dprovision bprovision update reset" >&2
+    echo "Version $VERSION Build $MODIFIED" >&2
+    exit 1 
+}
+
+#
+# isDirEmpty dir
+# returns 1 for empty
+#
+isDirEmpty()
+{
+    ret=0
+    err="$(ls -A $1 2>&1)"
+    if [ "$?" -ne 0 ]; then
+        ret=1
+    fi
+    return $ret
+}
+
+
+#
+# factory reset
+#
+reset()
+{
+    # delete files
+    null=$(rm -f $CONNECTD_DIR/*.ver 2>&1)
+    null=$(rm -f $DEVICES_AVAILABLE/* 2>&1)
+    null=$(rm -f $DEVICES_ACTIVE/* 2>&1)
+    null=$(rm -f $PROVISION_DOWNLOAD/* 2>&1)
+    null=$(rm -f $PROVISION_DEFAULT/* 2>&1)
+
+    # check for success
+    isDirEmpty "$CONNECTD_DIR/*ver"
+    if [ "$?" -eq 1 ]; then
+        isDirEmpty "$DEVICES_AVAILABLE/*"
+        if [ "$?" -eq 1 ]; then
+            isDirEmpty "$DEVICES_ACTIVE/*"
+            if [ "$?" -eq 1 ]; then
+                isDirEmpty "$PROVISION_DOWNLOAD/*"
+                if [ "$?" -eq 1 ]; then
+                    isDirEmpty "$PROVISION_DEFAULT/*"
+                    if [ "$?" -eq 1 ]; then
+#  Hook for OEM to add a function to save configuration changes
+                        OEM_save_config
+                        echo "OK: factory reset"
+                        return 0
+                    fi
+                fi
+            fi
+        fi
+    fi
+    echo "FAIL: failed to reset files"
+    return 1
+}
+
+#
+#  Hook for OEM to add a function to save configuration changes
+#  OEM must add the file in $BIN_DIR, called connectd_save_config
+#  it must be set to be executable (chmod +x)
+#
+
+OEM_save_config()
+{
+# hook for OEM to add platform specific call to save configuration changes
+    if [ -e "$BIN_DIR"/connectd_save_config ]; then
+        "$BIN_DIR"/connectd_save_config
+    fi
+}
+
+#
+#  End of hook for OEM to add a function to save configuration changes
+#
+
+
+#
+# Show the HWID and REG_KEY for this device
+#
+show()
+{
+    printf "Hardware ID is %s\n" "$hardware_id"
+    printf "Registration key is %s\n" "$registration_key"
+    printf "Bulk ID Code is %s\n" "$bulk_id_code"
+}
+
+#
+get_registration_data()
+{
+    if [ $REG_DEBUG -gt 0 ]; then
+# override values set in connectd_options
+        hardware_id="00:00:00:00:00:00"
+        registration_key="MYSECRET"
+    fi
+
+    if [ $VERBOSE -gt 0 ]; then
+        printf "Hardware ID is %s registration key is %s\n" $hardware_id $registration_key
+    fi
+}
+
+#
+# update package vesrion to service, this is based on dpkg, may not work for everything
+# update $name $version
+#
+update_version()
+{
+    if [ -n "$2" ]; then
+        version="$2"
+        # Check against Saved Version
+        if [ -f "$CONNECTD_DIR/$1.ver" ]; then
+            #get saved version
+            sversion=$(cat "$CONNECTD_DIR/$1.ver")
+        fi
+        # Check if versions are the same
+        if [ "$version" = "$sversion" ]; then
+            echo "OK: package $1 version has not changed ($version)"
+            return 0
+        fi
+        #versions are different, try to update 
+        # must have rmt as active
+        if [ -f "$BULK_REG_DEVICE_FILE" ]; then
+            # we have bulk file, lets extract the UID and secret
+            uid="$(grep '^UID' "$BULK_REG_DEVICE_FILE" | awk '{print $2}')"
+            secret="$(grep 'password' "$BULK_REG_DEVICE_FILE" | awk '{print $2}')"
+            #
+            # get hardware ID
+            get_registration_data
+            #push to service
+            post='{"hardware_id":"'$hardware_id'","device_address":"'$uid'","device_secret":"'$secret'","component":"'$1'","version":"'$version'"}'
+            # make curl call
+            resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$post" $ComponentVersionURL )
+       
+            echo "curl ret $?"
+
+            status=$(jsonval "$(echo -n "$resp")" "status")
+            #
+            # check return code, if OK cache this new version
+            if [ "$status" = "true" ]; then
+                echo "$version" > "$CONNECTD_DIR/$1.ver" 
+                echo "OK: new version $version updated to service for package $1"
+            else
+                reason=$(jsonval "$(echo -n "$resp")" "reason")
+                echo "FAIL: Update $version to service for package $1 failed ($reason)"
+                return 1
+            fi
+        else
+            echo "FAIL: Bulk service not enabled, no update to service possible"
+            return 2
+        fi
+    else
+        if [ -n "$1" ]; then
+            echo "FAIL: no version number specified for $1"
+        else
+            echo "FAIL: no name or version number specified"
+        fi
+        return 1
+    fi
+}
+
+update()
+{
+    # make sure we have 2 strings
+    if [ -n "$2" ]; then
+        # update version takes 2 strings
+        update_version "$1" "$2"
+        return "$?"
+    else
+        if [ -n "$1" ]; then
+            echo "FAIL: no version number specified for $1"
+        else
+            echo "FAIL: no name or version number specified"
+        fi
+        return 2
+    fi
+}
+
+
+
+#
+# killit pid
+#
+killit()
+{
+    pid=$1
+    ret=1
+    kill $pid 
+    #wait for pid to die 5 seconds
+    count=0                   # Initialise a counter
+    while [ $count -lt 5 ]  
+    do
+	if [ ! -d /proc/$pid ]; then
+        #if [ "$pid" != `pidrunning $pid`  ] 
+        #then
+           ret=0
+           break;
+        fi
+        # not dead yet
+        count=`expr $count + 1`  # Increment the counter
+        if [ $VERBOSE -gt 0 ]; then
+            echo "still running"
+        fi
+        sleep 1
+    done
+    return $ret    
+}
+#
+# Stopit name
+#
+stopit()
+{
+    ret=1
+    if [ -e "$DEVICES_AVAILABLE/$1" ]; then
+        if [ -e "$DEVICES_ACTIVE/$1" ]; then
+           if [ -e "$DEVICES_RUNNING/$1.pid" ]; then 
+                # grab pid
+                pid=`cat $DEVICES_RUNNING/$1.pid`;
+                # assumes /proc/$pid, if not use pidrunning
+                if [ -d /proc/$pid ]; then
+                    # shutdown
+                    killit $pid
+                    retval=$?
+                    if [ $retval -ne 0 ]; then
+                        echo "FAIL: Could not kill $1 on pid $pid"
+                    else
+                        ret=0
+                        echo "OK: $1 is stopped"
+                        rm "$DEVICES_RUNNING/$1.pid"
+                    fi
+                else
+                    ret=0
+                    echo "OK: $1 is not running, cleaning up pid file"
+                    rm "$DEVICES_RUNNING/$1.pid"
+                fi
+            else
+                ret=0
+                echo "OK: $1 is not running"
+            fi
+        else
+            echo "FAIL: $1 Not Active"
+        fi
+    else
+        echo "FAIL: $1 does not exist"
+    fi
+    return $ret
+}
+
+#
+# startit name
+#
+startit()
+{
+    ret=1
+    if [ -e "$DEVICES_ACTIVE/$1" ]; then
+        if [ -e "$DEVICES_RUNNING/$1.pid" ]; then
+            # Check if already running
+            pid=`cat $DEVICES_RUNNING/$1.pid`;
+            # assumes /proc/$pid, if not use pidrunning
+            if [ -d /proc/$pid ]; then
+                ret=0
+                echo "OK: Device $1 is already started"    
+            else
+                #cleanup
+                rm "$DEVICES_RUNNING/$1.pid"
+            fi
+        fi    
+        if [ ! -e "$DEVICES_RUNNING/$1.pid" ]; then
+            # start it up
+            $BIN_DIR/$DAEMON.$PLATFORM -f "$DEVICES_ACTIVE/$1" -d "$DEVICES_RUNNING/$1.pid" > $LOG_DIR/$1.log
+            ret=0
+            echo "OK: $1 has started"
+        fi
+    else
+        echo "FAIL: $1 does not exist"
+    fi
+    return $ret
+}
+
+#
+# cleanup files that could affect normal operation if things went wrong  cleans up auth
+#
+cleanup_files()
+{
+    if [ $VERBOSE -gt 0 ]; then
+        printf "Cleaning up remote.it runtime files.  Removing auth file and active files.\n"
+    fi   
+    # reset auth
+    rm -f $AUTH
+    rm -f $TOKEN
+}
+
+#
+# Create Directories if they do not exist
+#
+create_config()
+{
+    umask 0077
+    # create connectd directory
+    if [ ! -d "$CONNECTD_DIR" ]; then
+        mkdir "$CONNECTD_DIR" 
+    fi
+    # create active dir
+    if [ ! -d "$DEVICES_ACTIVE" ] ; then
+        mkdir "$DEVICES_ACTIVE"
+    fi
+    # create available dir
+    if [ ! -d "$DEVICES_AVAILABLE" ] ; then
+        mkdir "$DEVICES_AVAILABLE"
+    fi
+    # create active dir
+    if [ ! -d "$DEVICES_RUNNING" ] ; then
+        mkdir "$DEVICES_RUNNING"
+    fi
+    # create dfiles dir
+    if [ ! -d "$PROVISION_DOWNLOAD" ] ; then
+        mkdir "$PROVISION_DOWNLOAD"
+    fi
+    # create pfiles dir
+    if [ ! -d "$PROVISION_DEFAULT" ] ; then
+        mkdir "$PROVISION_DEFAULT"
+    fi
+}
+#
+# Cleanup, this cleans up the files for the connection, and kills the P2P session if necessary
+#
+cleanup()
+{
+    echo ""
+}
+
+#
+# Control C trap
+#
+ctrap()
+{
+    if [ $VERBOSE -gt 0 ]; then
+        echo "ctrl-c trap"
+    fi
+
+    cleanup
+    exit 0;
+}
+
+#
+# check_auth_cache, one line auth file, type is set to 0 for password and 1 for authash
+# 
+# Returns $username $password $type on success
+#
+check_auth_cache()
+{
+    # check for auth file
+    if [ -e "$AUTH" ] ; then
+        # Auth file exists, lets get it
+        read -r line < "$AUTH"
+        # Parse
+        username=${line%%"|"*}
+        password=${line##*"|"}
+        t=${line#*"|"}
+        authtype=${t%%"|"*}
+        if [ $authtype -eq 1 ]; then
+            ahash=$password
+        fi
+        return 1
+    fi
+    return 0
+}
+
+
+#
+#
+#### Local Data Functions
+
+# iterate through directory
+get_provisioning_types()
+{
+
+    if [ -v $1 ]; then
+        extend=0
+    else
+        extend=$1
+    fi
+
+    for f in $PROVISION_DEFAULT/*
+    do
+        # list the files
+        if [ $extend -eq 1 ]; then
+            # get the description for each file
+            desc=$(grep desc $f)
+            echo "$(basename $f) -${desc#*"desc "}"
+        else
+            # trim
+            echo "$(basename $f) "
+        fi
+    done    
+
+}
+
+status()
+{
+
+if [ -z "${@}" ]; then
+    echo "ERROR: status requires one parameter, either specific device or all for all devices"
+
+else
+
+#system status
+
+if [ "$1" = "all" ]; then
+    # return the status of all
+    # walk through available
+    echo "status on all devices"
+    tcount=0;
+    echo "OK: All "
+    for f in $DEVICES_AVAILABLE/*
+    do
+        if [ "$(basename $f)" != "*" ]; then
+            tcount=$((tcount + 1))
+            printf "$(basename $f) "
+            #
+            # Check if enabled
+            if [ -e "$DEVICES_ACTIVE/$(basename $f)" ]; then
+                printf "enabled "
+                #
+                # get pid and check for pid
+                #
+                if [ -e "$DEVICES_RUNNING/$(basename $f).pid" ]; then
+                    # get pid and check
+                    pid=`cat "$DEVICES_RUNNING/$(basename $f).pid"`;
+                    #echo "pid $pid"
+                    if [ -d /proc/$pid ]; then 
+                        echo "and running"
+                    else
+                        echo "but not running (cleaning up pid)"
+                        rm "$DEVICES_RUNNING/$(basename $f).pid"
+                    fi
+                else
+                    echo "but not running"
+                fi
+
+            else
+                echo "disabled "
+            fi
+        fi   
+    done
+    if [ $tcount -eq 0 ]; then
+        echo "no devices found"
+    fi
+else
+    echo "OK: $1"
+    # look for a specific device
+    if [ -e "$DEVICES_AVAILABLE/$1" ]; then
+        printf "$1 "
+        # Check if enabled
+        if [ -e "$DEVICES_ACTIVE/$1" ]; then
+            printf "enabled "
+            if [ -e "$DEVICES_RUNNING/$1.pid" ]; then
+                pid=`cat "$DEVICES_RUNNING/$1.pid"`;    
+                #echo "pid $pid"
+                if [ -d /proc/$pid ]; then
+                    echo "and running" 
+                else
+                    echo "but not running (cleaning up pid)"
+                    rm "$DEVICES_RUNNING/$1.pid"
+                fi
+            else
+                echo "but not running"
+            fi
+        else
+            echo "not running"
+        fi
+    else
+        echo "no device named $1 found" 
+    fi
+fi
+
+fi
+
+}
+
+#list all available
+list()
+{
+    status all
+}
+
+
+#
+# write_config [name] [data]
+#
+write_config()
+{
+    if [ $VERBOSE -gt 0 ]; then printf "write config for %s \n" "$1" ; fi
+    timestamp=$(jsonval "$2" "timestamp")
+    enabled=$(jsonval "$2" "enabled")
+    content_ip=$(jsonval "$2" "content_ip")
+    content_port=$(jsonval "$2" "content_port")
+    content_type=$(jsonval "$2" "content_type")
+    content_test=$(jsonval "$2" "content_test")
+    echo "timestamp $timestamp" > "$PROVISION_DOWNLOAD/$1.conf"
+    if [ -n "$enabled" ]; then
+        echo "enabled $enabled" >> "$PROVISION_DOWNLOAD/$1.conf"
+    else
+        echo "enabled 1" >> "$PROVISION_DOWNLOAD/$1.conf"
+    fi
+    #
+    if [ -n "$content_type" ]; then
+        echo "application_type $content_type" >> "$PROVISION_DOWNLOAD/$1.conf"
+    fi
+    if [ -n "$content_port" ]; then
+        echo "proxy_dest_port $content_port" >> "$PROVISION_DOWNLOAD/$1.conf"
+    fi
+    if [ -n "$content_ip" ]; then
+        echo "proxy_dest_ip $content_ip" >> "$PROVISION_DOWNLOAD/$1.conf"
+    fi
+    if [ -n "$content_test" ]; then
+        echo "content_test $content_test" >> "$PROVISION_DOWNLOAD/$1.conf"
+    fi
+}
+
+#
+#
+#
+generate_pfile()
+{
+    if [ $VERBOSE -gt 0 ]; then printf "generate pfile for %s \n" "$1" ; fi
+	# delete pfile if it exists 
+    if [ -f "$PROVISION_DEFAULT/$1" ]; then
+    	rm "$PROVISION_DEFAULT/$1"
+    fi
+    # Generate pfile
+    cat "$PROVISION_DOWNLOAD/$1" >> "$PROVISION_DEFAULT/$1"
+    cat "$PROVISION_DOWNLOAD/$1.conf" >> "$PROVISION_DEFAULT/$1"
+    echo "#####-#####" >> "$PROVISION_DEFAULT/$1"
+}
+
+#
+# update_afile() update an active file
+#
+update_afile()
+{
+    if [ $VERBOSE -gt 0 ]; then printf "update available file for %s\n" "$1" ; fi
+    # disabled, check if we need to disable it from startup
+    if [ -f "$DEVICES_AVAILABLE/$1" ]; then
+		if [ -f "$PROVISION_DEFAULT/$i" ]; then
+			# get user config
+			dynamic=$(cat "$DEVICES_AVAILABLE/$1" | sed -e "1,/"#####-#####"/d")
+			cp "$PROVISION_DEFAULT/$1" "$DEVICES_AVAILABLE/$1"
+			echo $dynamic >> "$DEVICES_AVAILABLE/$1"
+		fi	
+	fi
+}
+
+#
+# download the config for a provisioning file
+# dconfig [id] [secret]
+#
+dconfig()
+{
+
+    #download the config for the passed provisioning file
+    resp2=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProvisionConfig/$1/$2/")
+    status=$(jsonval "$resp2" "status")
+    if [ "$status" = "true" ]; then
+    	#
+    	# get timestamp and enable
+    	timestamp=$(jsonval "$resp2" "timestamp")
+    	enabled=$(jsonval "$resp2" "enabled")
+    	#
+    	# check if config file is there, if not, check if we are enabled
+    	if [ ! -f "$PROVISION_DOWNLOAD/$i.conf" ]; then
+    		# conf file does not exit
+        	if [ $VERBOSE -gt 0 ]; then printf "Config file does not exist.\n" ; fi
+        	if [ $enabled = "1" ]; then
+        	if [ $VERBOSE -gt 0 ]; then printf "Creating config file...\n" ; fi
+        	    # enabled, generate config file and pfiles 
+                write_config "$i" "$resp2"
+                # Generate
+                generate_pfile "$1"
+				#
+            else
+                # not enabled, do nothing, 
+                if [ $VERBOSE -gt 0 ]; then printf "Configuration is disabled... do nothing...\n" ; fi
+        	fi
+    	else
+    		# check timestamp with grep
+    		if [ $enabled = "1" ]; then
+    		    # check timestamp with grep
+        	    result=$(grep "$timestamp" "$PROVISION_DOWNLOAD/$i.conf")
+        	    if [ "$?" = "1" ]; then
+        	        if [ $VERBOSE -gt 0 ]; then 
+                            printf "timestamp not same, update\n"  
+                        fi
+        	        #
+                        # need to generate conf file and pfile, update available
+                        write_config "$i" "$resp2"
+                        #
+                        # Generate new pfile
+                        generate_pfile "$1"
+					#
+		        # update the active file
+	       	        update_afile "$1"
+
+           	    else
+            	        if [ $VERBOSE -gt 0 ]; then printf "timestamp same, no update\n" ; fi
+	            fi
+			else
+			    # disabled, check if we need to disable it from startup
+                if [ -e "$DEVICES_ACTIVE/$1" ]; then
+                    stopit "$1"
+                    rm "$DEVICES_ACTIVE/$1"
+                fi
+			fi
+		fi
+    else
+    	if [ $VERBOSE -gt 0 ]; then printf "Provisioning Config Failed (%s)\n" $status ; fi
+    fi
+}
+
+#
+# download provisioning and configurating files
+# update configuration if exists and are changed
+#
+dprovision()
+{
+# keep track of whether anything requires a call to OEM_save_config
+    update=0
+    ret=1
+    rc=1
+    p1=$bulk_id_code
+    p2=
+    #if [ "$#" -ne 2 ]; then
+    #if [ -z "${@}" ]; then
+    #    ret=3
+    #    echo "ERROR: dprovision requires two parameters, a project ID and a HardwareID."
+    #else
+	#
+	# get the list of project ID's for the product
+	resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
+        # parse response "status"
+        status=$(jsonval "$resp" "status")
+        if [ "$status" = "true" ]; then
+            #
+            # parse out
+            projects=$(jsonvalxf "$resp" "projects")
+            #
+            # replace , with spaces
+            lines=$(echo "$projects" | sed  's/,/ /g' )
+            for i in $lines; do
+                echo "."
+                if [ $VERBOSE -gt 0 ]; then printf 'Checking %s\n' "$i" ; fi
+                # check if it exists, download if not
+                if [ ! -f "$PROVISION_DOWNLOAD/$i" ]; then    
+                    if [ $VERBOSE -gt 0 ]; then echo "need to download" ; fi
+                    #
+                    # download and store in directory
+                    # ProjectEnablementGet
+                    # in this case we write out the file and check the return code
+                    resp2=$(curl ${CURL_OPTS} 'GET' -w "%{http_code}\\n" -H "content-type:application/json" \
+                                    -o "$PROVISION_DOWNLOAD/$i.tmp" "$ProvisionDownloadDirect/$i")
+                    if [ "$resp2" = "200" ]; then
+                        # if return code is 200 we keep the file
+			mv "$PROVISION_DOWNLOAD/$i.tmp" "$PROVISION_DOWNLOAD/$i"
+			update=1
+			if [ $VERBOSE -gt 0 ]; then printf "downloaded provisioning ok (%s)\n" $resp2 ; fi		
+                    else
+                        # do not keep, bad
+                        rm "$PROVISION_DOWNLOAD/$i.tmp"
+                        if [ $VERBOSE -gt 0 ]; then printf "Failed to download provisioning file (%s)\n" $resp2 ; fi
+                    fi
+                else
+                    # do nothing already downloaded
+                    if [ $VERBOSE -gt 0 ]; then printf "Provisioning File %s already downloaded\n" $i ; fi
+                fi
+
+                #if provision exists lets try to get the config
+                if [ -f "$PROVISION_DOWNLOAD/$i" ]; then
+                    dconfig "$i" "$hardware_id" 
+                fi    
+            done
+        else
+            reason=$(jsonval "$resp" "reason")
+            echo "dprovision for $bulk_id_code failed: $reason"
+        fi
+    if [ $update -eq 1 ]; then
+        OEM_save_config
+    fi
+}
+
+
+#bulk provision a specific pfile do not call directly call bprovision()
+bprovisionit()
+{
+    echo "."
+    if [ $VERBOSE -gt 0 ]; then
+        printf "Bulk provisioning %s\n" $1
+    fi
+    #extract the project ID 
+    project_id=$(grep -A1 \#begin "$PROVISION_DEFAULT/$1" | grep -v \#begin)
+    #idlen=expr length "$project_id"
+    idlen=${#project_id} 
+    if [ $idlen -eq 36 ]; then
+        # we have provisioning file lets make call
+        get_registration_data
+        if [ $VERBOSE -gt 0 ]; then
+            printf "Calling API...\n"
+        fi
+
+        retry_count=0
+		while : 
+		do
+        	# make curl call
+                # Removed test queue, see Github and Jira comments (CTD-113)
+        	data='{"project_id":"'$project_id'","hardware_id" : "'$hardware_id'", "registration_key" : "'$registration_key'"}'
+
+        	resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $BulkRegisterURL )
+
+        	#status=$(jsonval "$(echo -n "$resp")" "status")
+        	status=$(jsonval "$resp" "status")
+
+        	case "$status" in
+        	"true")
+            	# got a 200 lets do it
+            	uid=$(jsonval "$resp" "uid")
+            	secret=$(jsonval "$resp" "secret")
+            	# we have reg stuff lets create it
+            	cp "$PROVISION_DEFAULT/$1" "$DEVICES_AVAILABLE/$1"
+            	echo "UID $uid" >> "$DEVICES_AVAILABLE/$1"
+            	echo "password $secret" >> "$DEVICES_AVAILABLE/$1"
+            	#
+            	echo "OK: $1 is provisioned"
+            	#
+            	# Activate it
+            	enable $1
+            	# start it
+            	start $1
+        	;;
+        	"pending")
+            	reason=$(jsonval "$(echo -n "$resp")" "reason")
+            	if [ $VERBOSE -gt 0 ]; then
+                	printf "server returned pending ($reason)\n" 
+            	fi
+            	echo "RETRY: $1: $status : $reason"
+                #
+                # increment and check retry count
+                retry_count=`expr $retry_count + 1`  # Increment the counter (old school Bourne shell compatible)
+                if [ $retry_count -gt $BULK_RETRY_COUNT ]; then
+                    printf "FAIL: on retry count (still pending : $reason)\n" 
+                    return 1
+                fi
+        	    sleep $BULK_RETRY_TIME 
+		        continue
+		    ;;
+        	"false")
+            	reason=$(jsonval "$(echo -n "$resp")" "reason")
+            	if [ $VERBOSE -gt 0 ]; then
+                	printf "Server Said = %s\n" "$reason"
+            	fi
+            	printf "FAIL: %s: %s\n" "$1" "$reason"
+            	return 1
+        	;;
+        	*)
+            	if [ $VERBOSE -gt 0 ]; then
+                	printf "Curl Call failed with error. output= %s\n" $status
+            	fi
+            	echo "RETRY: $1: $status"
+                # increment and check retry count
+                retry_count=`expr $retry_count + 1`
+                if [ $retry_count -gt $GEN_RETRY_COUNT ]; then
+            	    echo "FAIL: error talking to server (${status})"
+            	    return 1
+            	fi
+            	sleep $GEN_RETRY_TIME
+            	continue
+        	;;
+        	esac 
+			break
+		done
+
+
+    else
+        if [ $VERBOSE -gt 0 ]; then
+            printf "Provisioning file corrupt for %s\n" $1
+        fi
+        return 2
+    fi
+    return 0
+}
+
+# bulk provision
+bprovision()
+{
+    update=0
+    ret=1
+    rc=1
+    if [ -z "${@}" ]; then
+        ret=3
+        echo "ERROR: enable requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ] || [ -z "${@}" ]; then
+            # to bulk provision must be in pfiles but not available
+            for f in $PROVISION_DEFAULT/*
+            do
+                base=$(basename $f)
+                if [ "$base" != "*" ]; then
+                    #see if this is also in available, if not try to provision
+                    if [ ! -f "$DEVICES_AVAILABLE/$base" ]; then
+                        ret=0
+                        # Try to bulk provision
+                        bprovisionit $base
+                        if [ "$?" -eq 0 ]; then
+                            # set that we have done something
+			    update=1
+                            rc=0
+                        fi
+			sleep 1
+                    fi
+                fi
+            done
+            if [ $ret -ne 0 ]; then
+                echo "FAIL: nothing to provision"
+                ret=1
+            fi
+        else
+            if [ -e "$PROVISION_DEFAULT/$1" ]; then   
+                if [ ! -f "$DEVICES_AVAILABLE/$1)" ]; then 
+                    # Try to bulk provision
+                    bprovisionit $1
+                fi
+            else
+                echo "FAIL: $1 not found"
+                ret=1
+            fi 
+        fi
+    fi
+    if [ $update -eq 1 ]; then
+        OEM_save_config
+    fi
+
+    return $rc
+}
+
+
+# symlink the available to enabled
+enable()
+{
+    ret=1
+    if [ -z "${@}" ]; then
+        echo "ERROR: enable requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ] || [ -z "${@}" ]; then
+            echo "OK: enable all"
+            #itterate through available files and symlink to active
+            for f in $DEVICES_AVAILABLE/*
+            do
+                base=$(basename $f)
+                if [ "$base" != "*" ]; then
+		    ret=0
+                    # active is a symlink so need to use -e here
+                    if [ -e "$DEVICES_ACTIVE/$base" ]; then
+                        echo "OK: $(basename $f) already enabled"
+                    else
+                        ln -s $f "$DEVICES_ACTIVE"
+                        echo "OK: $base enabled"
+                    fi
+                fi
+            done 
+            if [ $ret -ne 0 ]; then
+                echo "FAIL: notihing to enable"
+            fi
+        else
+            if [ -e "$DEVICES_AVAILABLE/$1" ]; then
+                if [ -e "$DEVICES_ACTIVE/$1" ]; then
+                    echo "OK: $1 already enabled"
+                else 
+                    echo "OK: $1 enabled"
+                    ln -s "$DEVICES_AVAILABLE/$1" "$DEVICES_ACTIVE"
+                fi
+            else
+                echo "ERROR: $1 not found"
+            fi
+
+        fi
+    fi
+    return 0
+}
+
+#stop if running remove symlink
+disable()
+{
+    ret=1
+    if [ -z "${@}" ]; then
+        echo "ERROR: disable requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ]; then
+            echo "OK: disable all"
+            for f in $DEVICES_AVAILABLE/*
+            do
+                base=$(basename $f)
+                if [ "$base" != "*" ]; then
+                    if [ -e "$DEVICES_ACTIVE/$base" ]; then
+                        ret=0
+                        stopit $base
+                        echo "OK: $base disabled"
+                        rm "$DEVICES_ACTIVE/$base"
+                    fi 
+               fi
+            done
+            if [ $ret -ne 0 ]; then
+                echo "FAIL: noting to disable"
+            fi
+        else
+            if [ -e "$DEVICES_ACTIVE/$1" ]; then
+                stopit $1
+                echo "OK: disable $1"
+                rm "$DEVICES_ACTIVE/$1"
+            else
+                echo "FAIL: $1 not active"
+            fi
+            return 1
+        fi
+    fi        
+    return 0
+}
+
+#startup the device
+start()
+{
+    ret=1
+    if [ -z "${@}" ]; then
+        echo "ERROR: start requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ]; then
+            #loop through all enabled but not active devices and start them
+            for f in $DEVICES_ACTIVE/*
+            do
+                base=$(basename $f)
+                if [ "$base" != "*" ]; then
+		    ret=0
+                    startit $base
+                fi
+            done
+            if [ $ret -ne 0 ]; then
+                echo "FAIL: No active devices to start"
+            fi
+        else
+            #start the device if not running and is available
+            if [ -e "$DEVICES_AVAILABLE/$1" ]; then
+                if [ -e "$DEVICES_ACTIVE/$1" ]; then
+                    # see if really running
+                    startit $1
+                    ret=$?
+                else 
+                    echo "FAIL: $1 is not active"
+                    ret=1
+                fi
+            else
+                echo "FAIL: $1 does not exist"
+                ret=1
+            fi
+        fi
+    fi
+    return $ret
+}
+
+#shutdown the device
+stop()
+{
+    ret=1
+    if [ -z "${@}" ]; then
+        echo "ERROR: stop requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ]; then          
+            #loop through all running devices and stop them
+            for f in $DEVICES_ACTIVE/*
+            do
+		base=$(basename $f)
+                if [ "$base" != "*" ]; then
+                   ret=0
+                   stopit $base
+		fi
+            done
+            if [ $ret -ne 0 ]; then
+                echo "FAIL: No active devices to stop"
+            fi
+        else
+            #stop one device
+            stopit $1
+            ret=$?
+        fi
+    fi
+    return $ret
+}
+
+#restart the device
+restart()
+{
+    stop $@
+    ret=$?
+    sleep 1
+    start $@
+    ret=$?
+    return $ret
+}
+
+#create a device
+create()
+{
+    type=$1
+    name=$2
+    ip=$3
+    port=$4
+
+    if [ -z "${type}" ] || [ -z "${name}" ] || [ -z "${ip}" ] || [ -z "${port}" ]; then
+        echo "ERROR: create requires 4 parameters, [type] [name] [ip] [port].  Assumes authentication is good"
+        echo "type is an avalable provisioning type, name is what you want to call the device, IP is the target IP, port is th target port."
+    else
+        # check that type exists
+        type=$1
+        if [ -e "$PROVISION_DEFAULT/$1" ]; then
+            #found get rest of values
+            echo "create $type - $name - $ip - $port"
+            return 0
+        else
+            echo "ERROR: no provisioning type $type found"
+        fi
+    fi
+    return 1
+}
+
+#delete a device, should preserve UID if deleted
+delete()
+{
+    if [ -z "${@}" ]; then
+        echo "ERROR: delete requires one parameter, either specific device name or all for all devices"
+    else
+        if [ "$1" = "all" ]; then
+            #loop through all running devices and delete them
+            echo "all"
+        else
+            #stop one device
+            if [ -e "$DEVICES_AVAILABLE/$1" ]; then
+                if [ -e "$DEVICES_ACTIVE/$1" ]; then
+                    # shutdown device before delete, let hide output
+                    tmp=$(stop $1)
+                fi
+                # now lets delete device from service
+                
+                # now delete provisioning file (we should save UID)
+                return 0
+            else
+                echo "ERROR: $1 does not exist"
+            fi    
+        fi
+    fi
+    return 1
+}
+
+login()
+{
+    username=$1
+    password=$2
+
+    if [ -z "${username}" ] || [ -z "${password}" ]; then
+        echo "ERROR: login requires 2 parameters, [username] [password]."
+    else
+        # reset current auth
+        cleanup_files    
+        # try to login 
+        userLogin
+        
+        # check return value and exit if error
+        retval=$?
+        if [ "$retval" = 0 ]; then
+            echo "ERROR: $loginerror"
+            return 1 
+        fi
+        echo "OK: logged in"     
+        return 0
+    fi
+    return 1
+}
+
+logout()
+{
+    #reset current auth
+    cleanup_files
+    echo "OK: logged out"
+    return 0
+}
+
+###############################
+# Main program starts here    #
+###############################
+logger "$0 $1 $2 $3 $4"
+#
+# Create the config directory if not there
+#
+#echo "remote.it Control Version $VERSION $MODIFIED"
+create_config
+
+################################################
+# parse the flag options (and their arguments) #
+################################################
+while getopts lvhmcr OPT; do
+    case "$OPT" in
+      p)
+        echo "Installed Provisioning Types"
+        get_provisioning_types 1
+        exit 0
+        ;;
+      m)
+        manpage
+        exit 0
+        ;;
+      v)
+        VERBOSE=$((VERBOSE+1)) 
+        if [ $VERBOSE -gt 2 ]; then
+            set -x
+        fi
+        ;;
+      h | [?])
+        # got invalid option
+        usage
+        ;;
+    esac
+done
+
+# get rid of the just-finished flag arguments
+shift $(($OPTIND-1))
+
+#now lets get command
+
+command=$1
+
+case "$command" in
+    "types")
+        get_provisioning_types 0 
+        ;;
+    "typesl")
+        get_provisioning_types 1
+        ;;
+    "status")
+        shift
+        status $@
+        ;;
+    "list")
+        shift
+        list $@
+        ;;
+    "bprovision")
+        shift
+        bprovision $@
+        ;;
+    "dprovision")
+        shift
+        dprovision $@
+        ;;
+    "show")
+        show
+        ;;
+    "enable")
+        shift
+        enable $@
+        ;;
+    "disable")
+        shift
+        disable $@
+        ;;
+    "start")
+        shift
+        start $@
+        ;;
+    "stop")
+        shift
+        stop $@
+        ;;
+    "restart")
+        shift
+        restart $@
+        ;;
+    "update")
+        shift
+        update $@
+        ;;
+    "updatedeb")
+        shift
+        updatedeb $@
+        ;;
+    "reset")
+        shift
+        reset $@
+        ;;
+    *)
+        usage
+        exit 1
+        ;;
+esac
+
+exit $?
+
+
+
+
+
+

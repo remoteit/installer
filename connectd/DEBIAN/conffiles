@@ -1,0 +1,4 @@
+/etc/connectd/schannel.conf
+/etc/connectd/bulk_identification_code.txt
+/etc/connectd/hardware_id.txt
+/etc/connectd/registration_key.txt

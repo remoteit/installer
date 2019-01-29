@@ -1,0 +1,40 @@
+#!/bin/sh
+# prerm script for connectd
+# updated 06/27/2018
+
+set -e
+logger "connectd installer prerm $1"
+
+case "$1" in
+
+    remove|purge|deconfigure)
+# remove serial number (HWID) file - probably redundant since we don't use it any more
+    if [ -e /etc/connectd/serial.txt ]; then
+      rm /etc/connectd/serial.txt
+    fi
+# shut down all running services that were configured with interactive installer
+    connectd_stop_all
+# shut down all running services that were configured with bulk registration
+    error=$(connectd_stop)
+    if [ "$error" = "FAIL: No active devices to stop" ]; then
+          echo "No remote.it services are running." 
+    else
+          echo "$error"
+    fi 
+  ;;
+
+    upgrade|failed-upgrade)
+  ;;
+
+    upgrade)
+  ;;
+
+  *)
+    echo "prerm called with unknown argument \`$1'" >&2
+    exit 1
+  ;;
+
+esac
+
+exit 0
+

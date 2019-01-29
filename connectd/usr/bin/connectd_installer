@@ -1,0 +1,41 @@
+#!/bin/sh
+
+#  connectd_installer
+#
+#  Run 'sudo connectd_installer' to interactively install, configure or remove remote.it
+#  connectd attachment services for tcp listeners.
+#
+#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#
+
+##### Settings #####
+VERSION=v2.0.4
+AUTHOR="Gary Worsham"
+MODIFIED="January 02, 2019"
+
+USERNAME=""
+PASSWORD=""
+AUTHHASH="REPLACE_AUTHHASH"
+DEVELOPERKEY=""
+MAXSEL=6
+
+#==========================================================================
+# get global options such as BASEDIR and PLATFORM
+# path to connectd_options has to be hardwired here and edited if needed
+# e.g. INSTALLPATH=/media/usb
+# ----------------------------------------
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_library
+# ----------------------------------------
+
+######### Main Program #########
+main()
+{
+    # interactive installer asks user for RMT3 service name.
+    # OEM installer allows OEM to use a different function to set the auto-assigned
+    # service names. By default it is the MAC.
+    SERVICEBASENAME="$MAC"
+    interactiveInstall "$1" "$2" "$3"
+}
+######### End Main Program #########
+main "$1" "$2" "$3"

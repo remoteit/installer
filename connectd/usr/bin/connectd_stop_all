@@ -1,0 +1,25 @@
+#!/bin/sh
+# Updated September 12, 2018
+
+#==========================================================================
+# connectd_stop_all, stops all running connectd services
+# which were configured using the interactive installer
+#==========================================================================
+# get global options such as BASEDIR and PLATFORM
+# path to connectd_options has to be hardwired here and edited if needed
+# e.g. INSTALLPATH=/media/usb
+# ----------------------------------------
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_library
+# ----------------------------------------
+checkForRoot
+
+if [ -d "$BASEDIR/usr/bin" ]; then
+    for f in "$BASEDIR"/usr/bin/Connectd*; do
+        if [ -f $f ]; then
+	    $f stop
+	fi
+    done
+fi
+
+"$BASEDIR"/usr/bin/connectd_schannel stop

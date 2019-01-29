@@ -1,0 +1,41 @@
+#!/bin/sh
+#
+#  remote.it stop script for connectd package
+#  Stops all running connectd and connectd_schannel daemons 
+#
+#  remot3.it, Inc. : https://remote.it
+#
+#
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+# include shell script lib, must be in path or specify path here
+. "$BIN_DIR"/connectd_wlib
+
+#### Settings #####
+VERSION=1.0.9
+MODIFIED="January 12, 2019"
+#
+# Config 
+#mac
+LOG_NAME="connectd_stop"
+VERBOSE=0
+
+###################################################
+# Stop all bulk provisioned connectd daemons      #
+###################################################
+
+logger "[$LOG_NAME] Stop"
+connectd_control stop all
+
+#stop device 2 device monitor if present and executable
+if [ -x "$BIN_DIR/connectd_d2d" ]; then
+    logger "[$LOG_NAME] connectd_d2d stop"
+	"$BIN_DIR/connectd_d2d" stop
+fi
+
+
+logger "[$LOG_NAME] Exit... completed."
+
+exit 0
+
+

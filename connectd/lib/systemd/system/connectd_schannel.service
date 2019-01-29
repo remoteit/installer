@@ -1,0 +1,19 @@
+[Unit]
+Description=Remote tcp command service
+Requires=rc-local.service
+After=network.target rc-local.service
+
+[Service]
+RemainAfterExit=yes
+ExecStart=/usr/bin/connectd_schannel start
+ExecStop=/usr/bin/connectd_schannel stop
+Restart=always
+RestartSec=10s
+TimeoutStartSec=0
+StartLimitInterval=60s
+StartLimitBurst=86400
+
+[Install]
+WantedBy=multi-user.target
+
+

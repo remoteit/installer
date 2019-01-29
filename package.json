@@ -1,0 +1,18 @@
+{
+  "name": "remote.it-installer",
+  "version": "1.0.0",
+  "description": "System tools for setting up remote.it on your internet connected devices.",
+  "scripts": {
+    "build": "./scripts/build.sh",
+    "download-connectd-releases": "ts-node scripts/download-connectd-releases.ts"
+  },
+  "dependencies": {
+    "axios": "0.18.0",
+    "ts-node": "8.0.2",
+    "typescript": "3.2.4"
+  },
+  "devDependencies": {
+    "@types/node": "10.12.19",
+    "prettier": "1.16.1"
+  }
+}

@@ -1,0 +1,100 @@
+#!/bin/sh
+# postrm script for connectd
+# updated 01/09/2019
+
+TMP_DIR=/tmp
+
+# clearCrontab removes the command to run connectd_start_all at reboot
+clearCrontab()
+{
+    crontab -l | grep -v connectd_start_all | cat > $TMP_DIR/.crontmp
+    crontab $TMP_DIR/.crontmp
+}
+
+set -e
+logger "connectd installer postrm state $1"
+case "$1" in
+  purge)
+# remove global startup file
+    if [ -f /usr/bin/connectd_start_all ]; then
+      rm -f /usr/bin/connectd_start_all
+    fi
+# remove startup scripts created by interactive installer	
+    for file in /usr/bin/Connectd* ; do
+      rm -f $file
+    done
+# remove configuration files and folders
+    for file in /etc/connectd/services/*.conf ; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd/services ]; then
+         rmdir /etc/connectd/services
+    fi
+    for file in /etc/connectd/dfiles/* ; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd/dfiles ]; then
+         rmdir /etc/connectd/dfiles
+    fi
+    for file in /etc/connectd/pfiles/* ; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd/pfiles ]; then
+         rmdir /etc/connectd/pfiles
+    fi
+    for file in /etc/connectd/active/* ; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd/active ]; then
+         rmdir /etc/connectd/active
+    fi
+    for file in /etc/connectd/available/* ; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd/available ]; then
+         rmdir /etc/connectd/available
+    fi
+    for file in /etc/connectd/*.*; do
+      rm -f $file
+    done
+    if [ -d /etc/connectd ]; then
+         rmdir /etc/connectd
+    fi
+# remove PID files
+    for file in /var/run/connectd*.pid ; do
+      rm -f $file
+    done
+# remove installation template files
+    if [ -d /usr/share/connectd ]; then
+      rm -r /usr/share/connectd
+    fi
+# remove crontab entry
+    clearCrontab
+    echo
+    echo "If you purged connectd without deleting all remote.it Services first,"
+    echo "there may be orphaned remote.it Services in your remote.it account Device "
+    echo "List.  On the 'View Devices' page in the web portal, select the Device's"
+    echo "checkbox, then use 'Actions'->'Delete' to delete the selected Device and"
+    echo "its remote.it Services."
+  ;;
+
+  remove|failed-upgrade|abort-install|abort-upgrade|disappear)
+# remove crontab entry
+    clearCrontab
+    if [ -d /usr/share/connectd ]; then
+      rm -r /usr/share/connectd
+    fi
+  ;;
+
+  upgrade)
+    echo "postrm called with upgrade" > /dev/null
+  ;;
+
+  *)
+    echo "postrm called with unknown argument \`$1'" >&2
+    exit 1
+  ;;
+
+esac
+
+exit 0

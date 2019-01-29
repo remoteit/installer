@@ -1,0 +1,14 @@
+#!/bin/sh
+# connectd_config_save - use to call a platform specific command to save registration
+# configuration data to persistent storage, if needed.
+# Author: Gary Worsham - gary@remote.it
+# Purpose of this file:
+# The 4 folders /etc/connectd/dfiles, /etc/connectd/pfiles, /etc/connectd/available, and /etc/connectd/active
+# along with all the files contained therein must all be saved in persistent storage.  
+# If they are not automatically saved to a persistent storage area, this file
+# must be modified to include platform specific commands to perform that backup.
+# This function does not retrieve files from persistent storage to the working folders above on a boot.
+# Providing a function to copy the 4 folder and files/links from persistent storage to the working folders at 
+# boot time is the responsibility of the OEM.
+# Users of devices with fully persistent operating systems such as Raspberry Pi (SD Card) or Ubuntu (hard drive)
+# should not have to change this file.

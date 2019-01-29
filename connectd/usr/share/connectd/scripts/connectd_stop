@@ -1,0 +1,11 @@
+#!/bin/sh
+
+# connectd_stop, stops all running connectd services
+
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+
+for f in "$BIN_DIR"/Connectd*; do
+	$f stop
+done
+"$BIN_DIR"/connectd_schannel stop

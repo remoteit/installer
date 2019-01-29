@@ -1,0 +1,14 @@
+#!/bin/sh
+# for future device to device managment.
+#
+# if this file is present and executable it will be run with the parameter 'start' ie:
+#   connectd_d2d start
+# when the connectd_start script is run, typically on product boot.
+#
+# Also it will be run with the parameter 'stop' if present and executable ie:
+#   connectd_d2d stop
+# when the connectd_stop script is run, typically on product shutdown.
+#
+# 
+#
+#

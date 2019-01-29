@@ -1,0 +1,76 @@
+#!/bin/sh
+
+#  connectd_startup_control
+#
+#  Run 'sudo connectd_startup_control' to control startup of 
+#  installed remote.it attachment services for tcp listeners.
+#  This controls services registered using bulk and auto registration.
+#
+#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#
+##### Settings #####
+VERSION=2.1.6
+AUTHOR="Gary Worsham"
+MODIFIED="January 15, 2019"
+DEBUG="1"
+
+#==========================================================================
+
+. /usr/bin/connectd_library
+
+########## Begin menuLoopA #################
+menuLoopA()
+{
+    while [ true ]; do
+   #     clear
+        printf "======================= Main Menu =======================\n"
+        printf "                                                         \n"
+        printf "    1) Set connectd_start to run at boot (systemd)       \n"
+        printf "    2) Disable connectd_start at boot                    \n"
+        printf "    3) Exit                                              \n"
+        printf "                                                         \n"
+        printf "=========================================================\n"
+
+        getNumRange 1 3 "Choose a menu selection"
+        get_num="$getNumRangeValue"
+        debug "get_num: $get_num"
+
+        if [ "$get_num" = 1 ]; then
+		enable_systemd
+		echo "connectd_start configured to boot (systemd)"
+        elif [ "$get_num" = 2 ]; then
+		disable_systemd
+		echo "connectd_start disabled at boot (systemd)"
+        elif [ "$get_num" = 3 ]; then
+            exit
+        fi
+    done
+}
+
+######## ##### End menuLoopA #######################
+
+enable_systemd()
+{
+    systemctl enable connectd
+    systemctl enable connectd_schannel
+}
+
+disable_systemd()
+{
+    systemctl disable connectd
+    systemctl disable connectd_schannel
+}
+
+######### Main Program #########
+main()
+{
+    displayVersion
+    checkForRoot
+# =============================================    
+    menuLoopA
+# =============================================   
+}
+
+######### End Main Program #########
+# 
+main 

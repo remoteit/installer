@@ -1,0 +1,182 @@
+#===================================
+# remote.it connectd package options
+#===================================
+MODIFIED="January 12, 2019"
+#===================================
+BUILDDATE="Mon Oct  8 06:57:20 PDT 2018"    
+#===================================
+# set DEBUG to 1 to enable debugging messages
+DEBUG="0"
+#===================================
+# set EXITONAPIERROR to 1 to quit if there are any API errors
+# set EXITONAPIERROR to 0 to keep going if there are any API errors,
+# set EXITONAPIERROR to 0 for debugging as needed.
+EXITONAPIERROR="1"
+#===================================
+# BASEDIR is root on many systems. If so, leave it blank.
+BASEDIR=    
+#===================================
+# BIN_DIR is default path for executables.  We install connectd scripts and binaries here.
+BIN_DIR="$BASEDIR"/usr/bin
+#===================================
+LOG_DIR=/var/log
+# ----------------------------------------
+# folders and files
+# these folders are not the same as used by Bulk Registration
+#===================================
+#
+# API's
+#
+apiMethod="https://"
+apiVersion="/api"
+apiServer="device.remot3.it"
+
+#===================================
+# Configuration Folder Variables
+#===================================
+# CONNECTD_DIR is where we store configured provisioning files per connection
+# 
+CONNECTD_DIR="$BASEDIR"/etc/connectd
+CONNECTD_CONF_DIR="$CONNECTD_DIR"/services
+#===================================
+# CONNECTD_LIB_DIR is the location of template files and script fragments used in installation.
+CONNECTD_LIB_DIR="$BASEDIR"/usr/share/connectd
+#===================================
+# /tmp is used for temporary files
+TMP_DIR=/tmp
+#===================================
+INIT_DIR="$BASEDIR"/etc/init.d
+#===================================
+# folder to keep pids per connectd process
+PID_DIR=/var/run
+#===================================
+# PLATFORM is the extension for the binaries, depends on CPU architecture
+# and shared libraries
+PLATFORM=x86_64-ubuntu16.04    
+#===================================
+# startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
+startupScripts=3
+#===================================
+# mac is the expression used to get the MAC for autonaming
+mac=$(ip addr | grep ether | tail -n 1 | awk '{ print $2 }') 
+#===================================
+# CURL_OPTS sets curl command line options.  Add -k for no-check-certificate if necessary.
+# However we strongly suggest installing CA certificates for improved security.
+# -X must be the final option as the command (POST or GET) comes immediately after
+CURL_OPTS="-s -S -X"
+#===================================
+# PSFLAGS is the option to be sent to the "ps" command to find the running daemons
+# For systems with root login and busybox implementation of ps, this should probably be: 
+# PSFLAGS=
+# For Ubuntu/Raspberry Pi/etc. running bash and standalone ps binary, it should be:
+# PSFLAGS="ax"
+PSFLAGS=ax    
+#===================================
+# If ENFORCEROOT is 1, then we check for root user (id = 0)
+# print warning and exit if not
+ENFORCEROOT="1"
+#==============================================================================
+# HWIDPREFIX is a string that can be set by OEMs to prefix the hardware ID
+# and thus the auto-registered device/service names
+HWIDPREFIX=""
+#==============================================================================
+# HWIDSEDSTRING is a string that can be set by OEMs to filter certain characters
+# from the hardware_id.  For example, you can use it to filter colons from
+# MAC addresses used in the default expressions for hardware_id.
+HWIDSEDSTRING="s/://g"
+#==============================================================================
+# The DAEMON variable sets the root of the daemon binary.
+DAEMON="connectd"
+#===================================
+
+
+#===================================
+# IMPORTANT CONFIG BELOW
+#
+# if BULK_REG is 1 (set in script which includes this file, e.g. /usr/bin/connectd_control) 
+# then you need to define expressions for variables hardware_id and registration_key.
+# By default, this script uses the wlan0 adapter MAC address as the hardware_id 
+# and the eth0 MAC address as the registration_key.
+# This is likely not what you want on your system.  
+# hardware_id must be unique on the remote.it system, and your device will be rejected 
+# when you upload the CSV for a Bulk Registration if hardware_id is not unique.
+#
+# Good hardware_ids are MAC+Random, UUID, IMEI etc.  You may want to pre or postpend
+# a static string onto IMEI or MAC addresses to know that you are unique on your 
+# product line, as we are not sure that you can trust MAC addresses to be unique.
+#
+# Registration keys should be unique per Hardware ID, though it is not required. 
+# Predictable registration keys are prone to cause problems if the hardware ID's
+# are also predictable.  Registration keys can be a different value than the 
+# hardware_id, preprogrammed random value, hash of hardware_id+secret, or any
+# other value you wish to use.   remote.it does not care as long as you provide
+# us the unique hardware_id and registration key in the CSV file for registration.
+#
+# registration key hash example:
+# company secret = "xyzzy"
+# registration_key=sha256(hardware_id,"xyzzy")
+#
+# For testing you can create a hardware_id.txt and a registration_key.txt in your
+# /etc/connectd directory and this script will use these values to override
+# the programmatic methods used below. Just make sure these files do not exist
+# in production unless you are using them to write unique values at production
+# time.
+#
+
+#
+if [ "$BULK_REG" = 1 ]; then
+# Bulk Registration Variables
+#===================================
+# set REG_DEBUG=1 to debug registration
+REG_DEBUG=0
+#===================================
+# The expressions below are supplied to provide the Bulk Registration API with the
+# Hardware ID (HWID) and Registration Key needed to identify the unique product
+# Hardware ID but be unique across the remote.it system
+# Registration can be another unique value readable from the command line, the
+# same as the HWID, or a constant for all devices.
+#=================================
+# if desired, customize these expressions for your platform, 
+# e.g to pick up the IMEI rather than the network adapter MAC address.
+# network adapter name to use for the HWID, if desired
+REG_ID_ADAPTER="wlan0"
+HW_ID_OVERRIDE_FILE="${CONNECTD_DIR}/hardware_id.txt"
+
+if [ -e "$HW_ID_OVERRIDE_FILE" ]; then
+    hardware_id="$(cat $HW_ID_OVERRIDE_FILE)"
+else
+    id_address=/sys/class/net/"$REG_ID_ADAPTER"/address
+
+    if [ -e "$id_address" ]; then
+        if [ "$HWIDSEDSTRING" != "" ]; then
+            hardware_id="$HWIDPREFIX$(cat $id_address | sed $HWIDSEDSTRING)"
+        else
+            hardware_id="$HWIDPREFIX$(cat $id_address)"
+        fi
+    else
+        echo "Error! Check expression for hardware_id in connectd_options."
+        echo "Exiting..."
+        exit 1
+    fi
+fi
+
+# network adapter name to use for the Registration Key, if desired
+REG_KEY_ADAPTER="eth0"
+REG_KEY_OVERRIDE_FILE="${CONNECTD_DIR}/registration_key.txt"
+
+if [ -e "$REG_KEY_OVERRIDE_FILE" ]; then
+    registration_key="$(cat $REG_KEY_OVERRIDE_FILE)"
+else
+	rk_address=/sys/class/net/"$REG_KEY_ADAPTER"/address
+
+	if [ -e "$rk_address" ]; then
+   		registration_key="$(cat $rk_address | sed s/://g)"
+	else
+   		echo "Error! Check expression for registration_key in connectd_options."
+   		echo "Exiting..."
+   		exit 1
+	fi
+fi
+
+### End if [ "$BULK_REG" = 1 ]
+fi
