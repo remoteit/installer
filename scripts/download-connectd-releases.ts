@@ -2,6 +2,7 @@ import axios from "axios";
 import fs from "fs";
 import { resolve } from "path";
 
+const ASSET_BASE_PATH = resolve(__dirname, "..", "assets");
 const RELEASE_BASE_URL =
   "https://api.github.com/repos/remoteit/connectd/releases";
 
@@ -45,7 +46,7 @@ type ReleaseAsset = {
 async function downloadAsset(asset: ReleaseAsset) {
   console.log(`⬇️  Downloading file "${asset.name}...`);
   const url = asset.browser_download_url;
-  const path = resolve(__dirname, "..", "assets", asset.name);
+  const path = resolve(ASSET_BASE_PATH, asset.name);
   const writer = fs.createWriteStream(path);
 
   const response = await axios({
@@ -58,7 +59,7 @@ async function downloadAsset(asset: ReleaseAsset) {
 
   return new Promise((success, failure) => {
     writer.on("finish", () => {
-      console.log(`✅  Downloaded file "${asset.name}!`);
+      console.log(`✅  Downloaded file "${asset.name}"!`);
       success();
     });
     writer.on("error", failure);
@@ -70,6 +71,11 @@ async function downloadReleases() {
   const { data }: { data: Release } = await axios.get(
     RELEASE_BASE_URL + "/latest"
   );
+
+  // Create "./assets" folder in case it doesn't exist.
+  if (!fs.existsSync(ASSET_BASE_PATH)) {
+    fs.mkdirSync(ASSET_BASE_PATH);
+  }
 
   // Download each release in parallel
   await Promise.all(data.assets.map(asset => downloadAsset(asset)));
