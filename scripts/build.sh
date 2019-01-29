@@ -81,12 +81,6 @@ runLintian()
     return $ret_val
 }
 
-# print out program banner
-echo
-echo "========================="
-echo "connectd installer build script"
-echo "========================="
-echo
 # copy build tree to /tmp to do actual build
 # commented out, temporarily disabling this method
 # cp -R "$pkg" "$pkgFolder"
@@ -100,147 +94,137 @@ sudo chown -R "$user":"$user" "$pkgFolder"
 # save current folder to write output file to
 cwd="$(pwd)"
 
-echo "========================="
-echo "Select target package and architecture below"
-echo "========= ARM ==========="
-echo "1) Debian, armhf, arm-linaro-pi (use for Pi)"
-echo "2) Debian, armel, arm-linaro-pi"
-echo "3) tar, arm-linaro-pi for Liverock modem"
-echo "4) tar, ARM gnueabi "
-echo "======= AMD/Intel ========="
-echo "10) tar, x86 Etch (32 bit)"
-echo "11) Debian, amd64, x86_64-ubuntu16.04 (64 bit) Ubuntu 16.04"
-echo "12) tar, amd64 Etch (64 bit) Generic"
-echo
+buildDeb=1
+setOption options "PSFLAGS" "ax"
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+arch="armhf"
+PLATFORM=arm-linaro-pi
+setOption options "BASEDIR" ""
+build
 
-read archMenu
-echo
+buildDeb=1
+setOption options "PSFLAGS" "ax"
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+arch="armel"
+PLATFORM=arm-linaro-pi
+setOption options "BASEDIR" ""
+build
 
-if [ "$archMenu" -eq 1 ]; then
-    buildDeb=1
-    setOption options "PSFLAGS" "ax"
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    arch="armhf"
-    PLATFORM=arm-linaro-pi
-    setOption options "BASEDIR" ""
-elif [ "$archMenu" -eq 2 ]; then
-    buildDeb=1
-    setOption options "PSFLAGS" "ax"
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    arch="armel"
-    PLATFORM=arm-linaro-pi
-    setOption options "BASEDIR" ""
-elif [ "$archMenu" -eq 10 ]; then
-    buildDeb=0
-    setOption options "PSFLAGS" "ax"
+buildDeb=0
+setOption options "PSFLAGS" "ax"
 #    setOption "mac" '$(ip addr | grep ether | tail -n 1 | awk "{ print $2 }")'
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    arch="i386"
-    PLATFORM=x86-etch
-    setOption options "BASEDIR" ""
-elif [ "$archMenu" -eq 11 ]; then
-    buildDeb=1
-    arch="amd64"
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    PLATFORM=x86_64-ubuntu16.04
-    setOption options "BASEDIR" ""
-    setOption options "PSFLAGS" "ax"
-elif [ "$archMenu" -eq 3 ]; then
-    buildDeb=0
-    arch="armhf"
-    PLATFORM=arm-linaro-pi
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    setOption options "PSFLAGS" "ax"
-elif [ "$archMenu" -eq 4 ]; then
-    buildDeb=0
-    arch="arm-gnueabi"
-    PLATFORM=arm-gnueabi
-    setOption options "PSFLAGS" "w"
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-elif [ "$archMenu" -eq 12 ]; then
-    buildDeb=0
-    arch="amd64"
-    PLATFORM=x86_64-etch
-    setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-    setOption options "BASEDIR" ""
-    setOption options "PSFLAGS" "ax"
-else
-    echo "Menu setting $archMenu not defined!"
-    exit 1
-fi
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+arch="i386"
+PLATFORM=x86-etch
+setOption options "BASEDIR" ""
+build
 
-if [ $buildDeb -eq 1 ]; then
-    echo "Building Debian package..."
-else
-    echo "Building tar package..."
-fi
-echo "PLATFORM=$PLATFORM"
-echo "arch=$arch"
-echo
+buildDeb=1
+arch="amd64"
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+PLATFORM=x86_64-ubuntu16.04
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build
 
-setEnvironment "$arch" "$PLATFORM"
-# put build date into connected_options
-setOption options "BUILDDATE" "\"$(date)\""
+buildDeb=0
+arch="armhf"
+PLATFORM=arm-linaro-pi
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "PSFLAGS" "ax"
+build
 
-# clean up and recreate md5sums file
-cd "$pkgFolder"
-sudo chmod 777 DEBIAN
-# ls -l
-sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
-sudo chmod 775 DEBIAN
-sudo mv md5sums DEBIAN
-sudo chmod 644 DEBIAN/md5sums
-# cd "$cwd"
-cd ..
+buildDeb=0
+arch="arm-gnueabi"
+PLATFORM=arm-gnueabi
+setOption options "PSFLAGS" "w"
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build
 
-if [ "$buildDeb" = 1 ]; then
+buildDeb=0
+arch="amd64"
+PLATFORM=x86_64-etch
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build
 
-echo "Building Debian package for architecture: $arch"
+build() {
+    if [ $buildDeb -eq 1 ]; then
+        echo "Building Debian package..."
+    else
+        echo "Building tar package..."
+    fi
 
-#--------------------------------------------------------
-# for Deb pkg build, remove builddate.txt file
-# builddate.txt is used by generic tar.gz installers
-file="$pkgFolder"/etc/connectd/builddate.txt
+    echo "PLATFORM=$PLATFORM"
+    echo "arch=$arch"
+    echo
 
-if [ -e "$file" ]; then
-    rm "$pkgFolder"/etc/connectd/builddate.txt
-fi
-#--------------------------------------------------------
-buildDebianFile "$pkgFolder"
+    setEnvironment "$arch" "$PLATFORM"
+    # put build date into connected_options
+    setOption options "BUILDDATE" "\"$(date)\""
 
-if [ $? == 0 ];then
-    version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-    filename="${pkg}_${version}_$arch$RELEASE".deb
-    # for now, mark all releases as $RELEASE
-    mv "$pkgFolder".deb "$filename"
-else
-    echo "Errors encountered during build."
-    echo "Press Enter to review errors."
-    read anykey
-    less lintian-E.txt
-fi
+    # clean up and recreate md5sums file
+    cd "$pkgFolder"
+    sudo chmod 777 DEBIAN
+    # ls -l
+    sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
+    sudo chmod 775 DEBIAN
+    sudo mv md5sums DEBIAN
+    sudo chmod 644 DEBIAN/md5sums
+    # cd "$cwd"
+    cd ..
 
-else
-# we are making a tar file, but first  we make a Debian file
-# use lintian to check for errors
-# then extract the /usr, /etc and /lib folders.
-buildDebianFile "$pkgFolder"
+    if [ "$buildDeb" = 1 ]; then
 
-if [ $? == 0 ];then
-    version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+    echo "Building Debian package for architecture: $arch"
 
-    # for now, mark all releases per RELEASE variable
-    echo "Extracting contents to tar file"
-    ./extract-scripts.sh "$pkgFolder".deb
-    filename="${pkg}_${version}_$PLATFORM$RELEASE"
-    mv "$pkgFolder".deb.tar "$cwd/$filename".tar
-else
-    echo "Errors encountered during build."
-    echo "Press Enter to review errors."
-    read anykey
-    less lintian-E.txt
-fi
+    #--------------------------------------------------------
+    # for Deb pkg build, remove builddate.txt file
+    # builddate.txt is used by generic tar.gz installers
+    file="$pkgFolder"/etc/connectd/builddate.txt
 
-fi
+    if [ -e "$file" ]; then
+        rm "$pkgFolder"/etc/connectd/builddate.txt
+    fi
+    #--------------------------------------------------------
+    buildDebianFile "$pkgFolder"
+
+    if [ $? == 0 ];then
+        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+        filename="${pkg}_${version}_$arch$RELEASE".deb
+        # for now, mark all releases as $RELEASE
+        mv "$pkgFolder".deb "$filename"
+    else
+        echo "Errors encountered during build."
+        echo "Press Enter to review errors."
+        read anykey
+        less lintian-E.txt
+    fi
+
+    else
+    # we are making a tar file, but first  we make a Debian file
+    # use lintian to check for errors
+    # then extract the /usr, /etc and /lib folders.
+    buildDebianFile "$pkgFolder"
+
+    if [ $? == 0 ];then
+        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+
+        # for now, mark all releases per RELEASE variable
+        echo "Extracting contents to tar file"
+        ./extract-scripts.sh "$pkgFolder".deb
+        filename="${pkg}_${version}_$PLATFORM$RELEASE"
+        mv "$pkgFolder".deb.tar "$cwd/$filename".tar
+    else
+        echo "Errors encountered during build."
+        echo "Press Enter to review errors."
+        read anykey
+        less lintian-E.txt
+    fi
+
+    fi
+
+}
 
 ls -l "${pkg}"*.*
