@@ -1,5 +1,7 @@
 # remote.it Installer
 
+[![CircleCI](https://circleci.com/gh/remoteit/installer.svg?style=svg)](https://circleci.com/gh/remoteit/installer)
+
 > System tools for setting up remote.it on your internet connected devices.
 
 ## Install
