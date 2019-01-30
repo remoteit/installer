@@ -120,7 +120,7 @@ build() {
     sudo chmod 644 DEBIAN/md5sums
     # cd "$cwd"
     cd ..
-    echo "Current directory: $pwd"
+    echo "Current directory: $cwd"
 
     if [ "$buildDeb" = 1 ]; then
 
