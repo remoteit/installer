@@ -118,8 +118,8 @@ build() {
     sudo chmod 775 DEBIAN
     sudo mv md5sums DEBIAN
     sudo chmod 644 DEBIAN/md5sums
-    # cd "$cwd"
-    cd ..
+    cd "$cwd"
+    # cd ..
 
     if [ "$buildDeb" = 1 ]; then
 
