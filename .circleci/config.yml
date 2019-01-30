@@ -11,6 +11,7 @@ workflows:
 jobs:
   build:
     executor: ubuntu
+    working_directory: /tmp
     steps:
       - checkout
       - attach_workspace:
@@ -36,4 +37,4 @@ jobs:
           name: Build binaries
           command: npm run build
       - store_artifacts:
-          path: ~/installer/build
+          path: /tmp/build
