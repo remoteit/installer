@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "System tools for setting up remote.it on your internet connected devices.",
   "scripts": {
-    "build": "./scripts/build.sh",
+    "build": "sudo ./scripts/build.sh",
     "download-assets": "ts-node scripts/download-assets.ts"
   },
   "dependencies": {
