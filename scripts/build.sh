@@ -141,7 +141,7 @@ build() {
             version=$(grep -i version "$controlFile" | awk '{ print $2 }')
             filename="${pkg}_${version}_$arch$RELEASE".deb
             # for now, mark all releases as $RELEASE
-            mv "$pkgFolder".deb "$filename"
+            mv "$pkgFolder".deb "$cwd/$filename"
         else
             echo "Errors encountered during build."
             echo "Press Enter to review errors."
