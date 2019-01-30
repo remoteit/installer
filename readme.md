@@ -76,6 +76,8 @@ This will download the latest connectd and Server Channel release assets from Gi
 
 ### Make a build
 
+To generate a build, you must first be on a Linux system, then run the following:
+
 ```shell
 npm run build
 ```
