@@ -1,5 +1,5 @@
 #!/bin/bash
-# lintpkg.sh
+# build.sh
 # script to build Debian package for remote.it connectd Installer
 # sorts out Lintian errors/warnings into individual
 # text files
@@ -204,6 +204,20 @@ arch="amd64"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 PLATFORM=x86_64-ubuntu16.04
 setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build
+
+buildDeb=0
+arch="armhf"
+PLATFORM=arm-android
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "PSFLAGS" "ax"
+build
+
+buildDeb=0
+arch="armhf"
+PLATFORM=arm-android_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
 build
 
