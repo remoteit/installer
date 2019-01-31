@@ -2,7 +2,7 @@ Package: connectd
 Version: 2.2.3.24
 Section: non-free/net
 Priority: optional
-Homepage: http://remote.it
+Homepage: https://remote.it
 Architecture: armhf
 Depends: libc6 (>= 2.1), mawk (>= 1.0), grep (>= 2.1.6), curl (>= 7.25.0), psmisc (>= 22.19-1)
 Maintainer: Gary Worsham <gary@remote.it>
