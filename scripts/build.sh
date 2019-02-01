@@ -9,7 +9,6 @@ pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
 controlFile="$controlFilePath"/control
-RELEASE="_RTM"
 # current user account
 user=$(whoami)
 
@@ -139,8 +138,7 @@ build() {
 
         if [ $? == 0 ];then
             version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-            filename="${pkg}_${version}_$arch$RELEASE".deb
-            # for now, mark all releases as $RELEASE
+            filename="${pkg}_${version}_$arch".deb
             mv "$pkgFolder".deb "$cwd/$filename"
         else
             echo "Errors encountered during build."
@@ -158,10 +156,9 @@ build() {
         if [ $? == 0 ];then
             version=$(grep -i version "$controlFile" | awk '{ print $2 }')
 
-            # for now, mark all releases per RELEASE variable
             echo "Extracting contents to tar file"
             ./scripts/extract-scripts.sh "$pkgFolder".deb
-            filename="${pkg}_${version}_$PLATFORM$RELEASE"
+            filename="${pkg}_${version}_$PLATFORM"
             mv "$pkgFolder".deb.tar "$cwd/$filename".tar
         else
             echo "Errors encountered during build."
