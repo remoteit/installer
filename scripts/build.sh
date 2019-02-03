@@ -27,20 +27,25 @@ setEnvironment()
     sed -i "/Architecture:/c\Architecture: $1" "$controlFile"
 
     setOption "options" "Architecture" "$1"
-    if [ -e "$pkgFolder"/usr/bin/connectd.* ]; then
-        rm "$pkgFolder"/usr/bin/connectd.*
-    fi
-    if [ -e "$pkgFolder"/usr/bin/connectd_schannel.* ]; then
-        rm "$pkgFolder"/usr/bin/connectd_schannel.*
-    fi
+
+    for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd.*")
+    do
+        rm "$i"
+    done
+
+    for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd_schannel.*")
+    do
+        rm "$i"
+    done
+
     sudo cp ./assets/connectd."$2" "$pkgFolder"/usr/bin
-    if [ $? = 1 ]; then
+    if [ $? -eq 1 ]; then
         echo "Error, missing file: connectd.$2"
         exit 1
     fi
     sudo chmod +x "$pkgFolder"/usr/bin/connectd."$2"
     sudo cp ./assets/schannel."$2" "$pkgFolder"/usr/bin/connectd_schannel."$2"
-    if [ $? = 1 ]; then
+    if [ $? -eq 1 ]; then
         echo "Error, missing file: schannel.$2"
         exit 1
     fi
@@ -57,9 +62,16 @@ setEnvironment()
 buildDebianFile()
 {
     # build reference DEB file
+    ret=0
     sudo chown -R root:root "$1"
-    dpkg-deb --build "$1"
-    ret=$(runLintian "$1".deb)
+    if [ "$buildDeb" -eq 1 ]; then
+        dpkg-deb --build "$1"
+        # only run lintian if we are really making a Debian package
+        ret=$(runLintian "$1".deb)
+    else
+        dpkg-deb --build "$1"
+        ret=$?
+    fi
     return $ret
 }
 
@@ -68,21 +80,17 @@ runLintian()
 {
     ret_val=0
     # scan debian file for errors and warnings
-    lintian -EviIL +pedantic "$1"  > lintian-result.txt
+    lintian -vi --show-overrides "$1"  > lintian-result.txt
     grep E: lintian-result.txt > lintian-E.txt
     grep W: lintian-result.txt > lintian-W.txt
     grep I: lintian-result.txt > lintian-I.txt
     grep X: lintian-result.txt > lintian-X.txt
-    rm lintian-result.txt
     if [ -s lintian-E.txt ]; then
 	ret_val=1
     fi
     return $ret_val
 }
 
-# copy build tree to /tmp to do actual build
-# commented out, temporarily disabling this method
-# cp -R "$pkg" "$pkgFolder"
 gzip -9 "$pkgFolder"/usr/share/doc/$pkg/*.man
 
 # change owner of all files to current user for manipulations
@@ -95,14 +103,9 @@ cwd="$(pwd)/build"
 mkdir -p $cwd
 
 build() {
-    if [ $buildDeb -eq 1 ]; then
-        echo "Building Debian package..."
-    else
-        echo "Building tar package..."
-    fi
+    echo
+    echo "========================================"
 
-    echo "PLATFORM=$PLATFORM"
-    echo "arch=$arch"
     echo
 
     setEnvironment "$arch" "$PLATFORM"
@@ -112,18 +115,16 @@ build() {
     # clean up and recreate md5sums file
     cd "$pkgFolder"
     sudo chmod 777 DEBIAN
-    # ls -l
     sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
     sudo chmod 775 DEBIAN
     sudo mv md5sums DEBIAN
     sudo chmod 644 DEBIAN/md5sums
-    # cd "$cwd"
     cd ..
-    echo "Current directory: $cwd"
 
-    if [ "$buildDeb" = 1 ]; then
+    if [ "$buildDeb" -eq 1 ]; then
 
         echo "Building Debian package for architecture: $arch"
+        echo "PLATFORM=$PLATFORM"
 
         #--------------------------------------------------------
         # for Deb pkg build, remove builddate.txt file
@@ -136,40 +137,47 @@ build() {
         #--------------------------------------------------------
         buildDebianFile "$pkgFolder"
 
-        if [ $? == 0 ];then
-            version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-            filename="${pkg}_${version}_$arch".deb
-            mv "$pkgFolder".deb "$cwd/$filename"
-        else
+        if [ $? -eq 1 ];then
             echo "Errors encountered during build."
-            echo "Press Enter to review errors."
-            read anykey
-            less lintian-E.txt
+            cat lintian-E.txt
         fi
 
+        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+        filename="${pkg}_${version}_$arch".deb
+        mv "$pkgFolder".deb "$cwd/$filename"
     else
+        echo "Building tar package for PLATFORM: $PLATFORM"
         # we are making a tar file, but first  we make a Debian file
-        # use lintian to check for errors
         # then extract the /usr, /etc and /lib folders.
         buildDebianFile "$pkgFolder"
 
-        if [ $? == 0 ];then
-            version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-
-            echo "Extracting contents to tar file"
-            ./scripts/extract-scripts.sh "$pkgFolder".deb
-            filename="${pkg}_${version}_$PLATFORM"
-            mv "$pkgFolder".deb.tar "$cwd/$filename".tar
-        else
+        if [ $? == 1 ];then
             echo "Errors encountered during build."
-            echo "Press Enter to review errors."
-            read anykey
-            less lintian-E.txt
         fi
+
+        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+        echo "Extracting contents to tar file"
+        ./scripts/extract-scripts.sh "$pkgFolder".deb
+        filename="${pkg}_${version}_$PLATFORM".tar
+        mv "$pkgFolder".deb.tar "$cwd/$filename"
 
     fi
 
 }
+
+buildDeb=0
+arch="armhf"
+PLATFORM=arm-android
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "PSFLAGS" "ax"
+build
+
+buildDeb=0
+arch="armhf"
+PLATFORM=arm-android_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "PSFLAGS" "ax"
+build
 
 buildDeb=1
 setOption options "PSFLAGS" "ax"
@@ -189,7 +197,6 @@ build
 
 buildDeb=0
 setOption options "PSFLAGS" "ax"
-#    setOption "mac" '$(ip addr | grep ether | tail -n 1 | awk "{ print $2 }")'
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 arch="i386"
 PLATFORM=x86-etch
@@ -201,20 +208,6 @@ arch="amd64"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 PLATFORM=x86_64-ubuntu16.04
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
-build
-
-buildDeb=0
-arch="armhf"
-PLATFORM=arm-android
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
-build
-
-buildDeb=0
-arch="armhf"
-PLATFORM=arm-android_static
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
 build
 
@@ -240,4 +233,4 @@ setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build
 
-ls -l "${pkg}"*.*
+ls -l "build/${pkg}"*.*

@@ -16,8 +16,10 @@ fi
 FILELOG=etc/connectd/builddate.txt
 echo "Build date: $(date)" > "$FILELOG"
 ls -lR usr >> "$FILELOG"
+ls -lR lib >> "$FILELOG"
 ls -lR etc >> "$FILELOG"
-tar cf $1.tar usr etc
+tar cf $1.tar usr etc lib
 rm -r usr
+rm -r lib
 rm -r etc
 
