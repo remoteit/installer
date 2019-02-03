@@ -30,13 +30,11 @@ setEnvironment()
 
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd.*")
     do
-        # echo "Cleaning up $i"
         rm "$i"
     done
 
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd_schannel.*")
     do
-        # echo "Cleaning up $i"
         rm "$i"
     done
 
@@ -80,25 +78,19 @@ buildDebianFile()
 #-------------------------------------------------
 runLintian()
 {
-    # printf "Running lintian...\n"
     ret_val=0
     # scan debian file for errors and warnings
     lintian -vi --show-overrides "$1"  > lintian-result.txt
-    # lintian -EviIL +pedantic "$1"  > lintian-result.txt
     grep E: lintian-result.txt > lintian-E.txt
     grep W: lintian-result.txt > lintian-W.txt
     grep I: lintian-result.txt > lintian-I.txt
     grep X: lintian-result.txt > lintian-X.txt
-    # rm lintian-result.txt
     if [ -s lintian-E.txt ]; then
 	ret_val=1
     fi
     return $ret_val
 }
 
-# copy build tree to /tmp to do actual build
-# commented out, temporarily disabling this method
-# cp -R "$pkg" "$pkgFolder"
 gzip -9 "$pkgFolder"/usr/share/doc/$pkg/*.man
 
 # change owner of all files to current user for manipulations
@@ -123,14 +115,11 @@ build() {
     # clean up and recreate md5sums file
     cd "$pkgFolder"
     sudo chmod 777 DEBIAN
-    # ls -l
     sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
     sudo chmod 775 DEBIAN
     sudo mv md5sums DEBIAN
     sudo chmod 644 DEBIAN/md5sums
-    # cd "$cwd"
     cd ..
-#    echo "Current directory: $cwd"
 
     if [ "$buildDeb" -eq 1 ]; then
 
@@ -152,10 +141,6 @@ build() {
             echo "Errors encountered during build."
             cat lintian-E.txt
         fi
-#        if [ -s lintian-W.txt ];then
-#            echo "lintian warnings encountered during build."
-#            cat lintian-W.txt
-#        fi
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         filename="${pkg}_${version}_$arch".deb
@@ -212,7 +197,6 @@ build
 
 buildDeb=0
 setOption options "PSFLAGS" "ax"
-#    setOption "mac" '$(ip addr | grep ether | tail -n 1 | awk "{ print $2 }")'
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 arch="i386"
 PLATFORM=x86-etch
@@ -227,6 +211,7 @@ setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build
 
+buildDeb=0
 arch="armhf"
 PLATFORM=arm-linaro-pi
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
