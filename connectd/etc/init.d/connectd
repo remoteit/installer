@@ -1,0 +1,136 @@
+#! /bin/sh
+# Version 0.6 January 21, 2018
+### BEGIN INIT INFO
+# Provides:          connectd
+# Required-Start:    $network $named $portmap $syslog $remote_fs
+# Required-Stop:     $remote_fs $syslog 
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: Remot3.it connectd connection daemon startup
+# Description:       This file should be used to construct scripts to be
+#                    placed in /etc/init.d.
+### END INIT INFO
+
+# Author: Mike Johnson <mike@remote.it>
+#
+
+# Do NOT "set -e"
+# pick up global options, e.g. PLATFORM and BASEDIR
+BASEDIR=
+. "$BASEDIR"/usr/bin/connectd_options
+
+# PATH should only include /usr/* if it runs after the mountnfs.sh script
+PATH=/sbin:/usr/sbin:/bin:/usr/bin
+DESC="remote.it connection service"
+NAME=connectd
+DAEMON="$BIN_DIR"/$NAME.$PLATFORM
+DAEMON_ARGS="--options args"
+START_PIDFILE=/var/run/"$0".pid
+SCRIPTNAME="$BASEDIR"/etc/init.d/$NAME
+
+# Exit if the package is not installed
+#[ -x "$DAEMON" ] || exit 0
+
+# Read configuration variable file if it is present
+[ -r /etc/default/$NAME ] && . /etc/default/$NAME
+
+# Load the VERBOSE setting and other rcS variables (OS dependent)
+# . /lib/init/vars.sh
+
+# Define LSB log_* functions.
+# Depend on lsb-base (>= 3.2-14) to ensure that this file is present
+# and status_of_proc is working.
+. /lib/lsb/init-functions
+
+#
+# Function that starts the daemon/service
+#
+do_start()
+{
+	# startup monitor
+	nohup "$BIN_DIR"/connectd_start > /tmp/remote_start.log 2>&1 &
+	echo $! > $START_PIDFILE  
+	#info=$(connectd_control bprovision all)
+	#logger [remote.it] $info
+
+	# start things up
+	"$BIN_DIR"/connectd_control start all
+	return 0
+}
+
+#
+# Function that stops the daemon/service
+#
+do_stop()
+{
+	# Return
+	#   0 if daemon has been stopped
+	#   1 if daemon was already stopped
+	#   2 if daemon could not be stopped
+	#   other if a failure occurred
+	
+	#kill startup monitor
+	if [ -e $START_PIDFILE ]; then  
+	    pid=`cat $START_PIDFILE`
+	    kill $pid
+	    rm  $START_PIDFILE
+    fi
+
+	"$BIN_DIR"/connectd_control stop all
+	RETVAL="$?"
+	
+	return "$RETVAL"
+}
+
+#
+# Function that sends a SIGHUP to the daemon/service
+#
+do_reload() {
+	#
+	# If the daemon can reload its configuration without
+	# restarting (for example, when it is sent a SIGHUP),
+	# then implement that here.
+	#
+	#connectd_control restart all
+    do_stop
+    do_start
+	return 0
+}
+
+case "$1" in
+  start)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Starting $DESC" "$NAME"
+	do_start
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  stop)
+	[ "$VERBOSE" != no ] && log_daemon_msg "Stopping $DESC" "$NAME"
+	do_stop
+	case "$?" in
+		0|1) [ "$VERBOSE" != no ] && log_end_msg 0 ;;
+		2) [ "$VERBOSE" != no ] && log_end_msg 1 ;;
+	esac
+	;;
+  status)
+	status_of_proc "$DAEMON" "$NAME" && exit 0 || exit $?
+	;;
+  restart|reload|force-reload)
+	#
+	# If do_reload() is not implemented then leave this commented out
+	# and leave 'force-reload' as an alias for 'restart'.
+	#
+	log_daemon_msg "Reloading $DESC" "$NAME"
+	do_reload
+	log_end_msg $?
+	;;
+  *)
+	#echo "Usage: $SCRIPTNAME {start|stop|restart|reload|force-reload}" >&2
+	echo "Usage: $SCRIPTNAME {start|stop|status|restart|force-reload}" >&2
+	exit 3
+	;;
+esac
+
+:
