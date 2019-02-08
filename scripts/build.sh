@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.3
-MODIFIED="February 07, 2019"
+ver=2.1.4
+MODIFIED="February 08, 2019"
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -244,6 +244,6 @@ build x86_64-etch 1 amd64 -etch
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
-build x86_64-etch 1 amd64 -etch
+build x86-etch 1 i386 -etch
 
 echo "======   build.sh $ver completed   =============="
