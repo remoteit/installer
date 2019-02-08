@@ -2,3 +2,5 @@
 /etc/connectd/bulk_identification_code.txt
 /etc/connectd/hardware_id.txt
 /etc/connectd/registration_key.txt
+/etc/init.d/connectd
+/etc/init.d/connectd_schannel
