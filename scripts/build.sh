@@ -4,7 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.1
+ver=2.1.2
+MODIFIED="February 07, 2019"
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -125,6 +126,12 @@ build() {
 
         echo "Building Debian package for architecture: $arch"
         echo "PLATFORM=$PLATFORM"
+        # tag variable was added to allow building different Debian packages with the same architecture
+        # e.g. for Vyos I had to make a package using an older daemon architecture but it's still considered
+        # amd64 or i386 architecture from the dpkg program's point of view
+        if [ "$tag" != "" ]; then
+            echo "tag = $tag"
+        fi
 
         #--------------------------------------------------------
         # for Deb pkg build, remove builddate.txt file
@@ -143,7 +150,7 @@ build() {
         fi
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
-        filename="${pkg}_${version}_$arch".deb
+        filename="${pkg}_${version}_$arch$tag".deb
         mv "$pkgFolder".deb "$cwd/$filename"
     else
         echo "Building tar package for PLATFORM: $PLATFORM"
@@ -158,15 +165,17 @@ build() {
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         echo "Extracting contents to tar file"
         ./scripts/extract-scripts.sh "$pkgFolder".deb
-        filename="${pkg}_${version}_$PLATFORM".tar
+        filename="${pkg}_${version}_$PLATFORM$tag".tar
         mv "$pkgFolder".deb.tar "$cwd/$filename"
 
     fi
+    ls -l "$cwd/$filename"
 
 }
 
 buildDeb=0
 arch="armhf"
+tag=""
 PLATFORM=arm-android
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
@@ -174,6 +183,7 @@ build
 
 buildDeb=0
 arch="armhf"
+tag=""
 PLATFORM=arm-android_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
@@ -183,6 +193,7 @@ buildDeb=1
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 arch="armhf"
+tag=""
 PLATFORM=arm-linaro-pi
 setOption options "BASEDIR" ""
 build
@@ -191,6 +202,7 @@ buildDeb=1
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 arch="armel"
+tag=""
 PLATFORM=arm-linaro-pi
 setOption options "BASEDIR" ""
 build
@@ -199,12 +211,14 @@ buildDeb=0
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 arch="i386"
+tag=""
 PLATFORM=x86-etch
 setOption options "BASEDIR" ""
 build
 
 buildDeb=1
 arch="amd64"
+tag=""
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 PLATFORM=x86_64-ubuntu16.04
 setOption options "BASEDIR" ""
@@ -213,6 +227,7 @@ build
 
 buildDeb=0
 arch="armhf"
+tag=""
 PLATFORM=arm-linaro-pi
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
@@ -220,6 +235,7 @@ build
 
 buildDeb=0
 arch="arm-gnueabi"
+tag=""
 PLATFORM=arm-gnueabi
 setOption options "PSFLAGS" "w"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -227,10 +243,34 @@ build
 
 buildDeb=0
 arch="amd64"
+tag=""
 PLATFORM=x86_64-etch
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build
 
-ls -l "build/${pkg}"*.*
+
+# here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
+# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+buildDeb=1
+tag="-etch"
+arch="amd64"
+PLATFORM=x86_64-etch
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build
+
+# here we are using the tag "-etch" to create an i386 Debian architecture package for the older
+# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+buildDeb=1
+tag="-etch"
+arch="i386"
+PLATFORM=x86-etch
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build
+
+echo "======   build.sh $ver completed   =============="
