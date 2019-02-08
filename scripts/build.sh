@@ -4,7 +4,7 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.2
+ver=2.1.3
 MODIFIED="February 07, 2019"
 pkgFolder="$pkg"
 # set architecture
@@ -103,12 +103,30 @@ sudo chown -R "$user":"$user" "$pkgFolder"
 cwd="$(pwd)/build"
 mkdir -p $cwd
 
+# build() takes 4 parameters: PLATFORM, arch, buildDeb, and tag (optional)
+# PLATFORM indicates the remote.it daemon architecture, e.g. arm-linaro-pi
+# buildDeb=0 means make a tar file.  buildDeb=1 means make a Debian file
+# arch is the Debian architecture, e.g. armhf or amd64
+# not required to pass in "arch" if buildDeb=0
+# tag is an optional string to put in the file name to distinguish Debian packages
+# which have the same "arch" but different "PLATFORM"
+
 build() {
     echo
     echo "========================================"
 
     echo
-
+    PLATFORM=$1
+    buildDeb=$2
+    if [ $buildDeb -eq 1 ]; then
+        arch=$3
+    else
+# give it a default arch, it doesn't matter as we are just building a deb from which to extract the tar file
+        arch="amd64"
+    fi
+    if [ "$4" != "" ]; then
+        tag="$4"
+    fi
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
@@ -173,104 +191,59 @@ build() {
 
 }
 
-buildDeb=0
-arch="armhf"
-tag=""
-PLATFORM=arm-android
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
-build
+build arm-android 0
 
-buildDeb=0
-arch="armhf"
-tag=""
-PLATFORM=arm-android_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
-build
+build arm-android_static 0
 
-buildDeb=1
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-arch="armhf"
-tag=""
-PLATFORM=arm-linaro-pi
 setOption options "BASEDIR" ""
-build
+build arm-linaro-pi 1 armhf
 
-buildDeb=1
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-arch="armel"
-tag=""
-PLATFORM=arm-linaro-pi
 setOption options "BASEDIR" ""
-build
+build arm-linaro-pi 1 armel
 
-buildDeb=0
 setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-arch="i386"
-tag=""
-PLATFORM=x86-etch
 setOption options "BASEDIR" ""
-build
+build x86-etch 0
 
-buildDeb=1
-arch="amd64"
-tag=""
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-PLATFORM=x86_64-ubuntu16.04
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
-build
+build x86_64-ubuntu16.04 1 amd64
 
-buildDeb=0
-arch="armhf"
-tag=""
-PLATFORM=arm-linaro-pi
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
-build
+build arm-linaro-pi 0
 
-buildDeb=0
-arch="arm-gnueabi"
-tag=""
-PLATFORM=arm-gnueabi
 setOption options "PSFLAGS" "w"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-build
+build arm-gnueabi 0
 
-buildDeb=0
-arch="amd64"
-tag=""
-PLATFORM=x86_64-etch
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
-build
-
+build x86_64-etch 0
 
 # here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
-buildDeb=1
-tag="-etch"
-arch="amd64"
-PLATFORM=x86_64-etch
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
-build
+build x86_64-etch 1 amd64 -etch
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
-buildDeb=1
-tag="-etch"
-arch="i386"
-PLATFORM=x86-etch
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
-build
+build x86_64-etch 1 amd64 -etch
 
 echo "======   build.sh $ver completed   =============="
