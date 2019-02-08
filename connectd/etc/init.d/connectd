@@ -1,12 +1,12 @@
 #! /bin/sh
-# Version 0.6 January 21, 2018
+# Version 0.7 February 07, 2019
 ### BEGIN INIT INFO
 # Provides:          connectd
 # Required-Start:    $network $named $portmap $syslog $remote_fs
 # Required-Stop:     $remote_fs $syslog 
 # Default-Start:     2 3 4 5
 # Default-Stop:      0 1 6
-# Short-Description: Remot3.it connectd connection daemon startup
+# Short-Description: remote.it connectd connection daemon startup
 # Description:       This file should be used to construct scripts to be
 #                    placed in /etc/init.d.
 ### END INIT INFO
