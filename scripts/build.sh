@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.4
-MODIFIED="February 08, 2019"
+ver=2.1.5
+MODIFIED="February 12, 2019"
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -190,6 +190,26 @@ build() {
     ls -l "$cwd/$filename"
 
 }
+
+# now define and create each build 1 by 1
+
+# aarch64 package - tar package with static linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build aarm64-ubuntu16.04_static 0
+
+# aarch64 package - tar package with dynamic linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build aarm64-ubuntu16.04 0
+
+# arm64 package - Debian package with dynamic linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build aarm64-ubuntu16.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
