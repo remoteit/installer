@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.5
-MODIFIED="February 12, 2019"
+ver=2.1.6
+MODIFIED="February 13, 2019"
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -238,6 +238,16 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 1 amd64
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build x86-ubuntu16.04 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build x86_64-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "PSFLAGS" "ax"
