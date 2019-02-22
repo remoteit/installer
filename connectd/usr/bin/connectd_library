@@ -1193,19 +1193,25 @@ installProvisioning()
     if [ ! -d "$CONNECTD_CONF_DIR" ]; then
 	mkdir -p "$CONNECTD_CONF_DIR"
     fi
+
 # calculate the project name, given the PLATFORM and PROTOCOL
-    if [ "$PLATFORM" = "x86-etch" ]; then
+# in some cases where there is a "static" version, we grep
+# the base file extension to match static and non static
+
+    if [ $(echo "$PLATFORM" | grep "x86-etch") != "" ]; then
         platformType="4B2"
-    elif [ "$PLATFORM" = "x86_64-etch" ]; then
+    elif [ $(echo "$PLATFORM" | grep "x86_64-etch") != "" ]; then
         platformType="4B2"
-    elif [ "$PLATFORM" = "x86_64-ubuntu16.04" ]; then
+    elif [ $(echo "$PLATFORM" | grep "x86-ubuntu16.04") != "" ]; then
         platformType="460"
-    elif [ "$PLATFORM" = "x86-ubuntu16.04" ]; then
+    elif [ $(echo "$PLATFORM" | grep "x86_64-ubuntu16.04") != "" ]; then
         platformType="460"
     elif [ "$PLATFORM" = "arm-linaro-pi" ]; then
         platformType="430"
     elif [ $(echo "$PLATFORM" | grep "arm") != "" ]; then
-        platformtype="4B0"
+        platformType="4B0"
+    elif [ $(echo "$PLATFORM" | grep "mips") != "" ]; then
+        platformType="4B1"
     else
        echo "Not currently supported: $PLATFORM"
        echo "Please contact support@remote.it."
