@@ -39,6 +39,8 @@ PROVISION_DEFAULT="$CONNECTD_DIR/pfiles"
 DEVICES_AVAILABLE="$CONNECTD_DIR/available"
 #active devices are sym linked in active
 DEVICES_ACTIVE="$CONNECTD_DIR/active"
+#running devices have pidfiles of the same name in running
+DEVICES_RUNNING="$PID_DIR/connectd"
 #
 CONNECTD_BULK_ID="$CONNECTD_DIR/bulk_identification_code.txt"
 CONNECTD_VERSION="$CONNECTD_DIR/connectd_version.txt"
