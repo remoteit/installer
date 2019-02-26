@@ -39,7 +39,7 @@ isRunningCmd()
     if [ -f "$PIDPATH" ]; then
         runningPID="$(cat $PIDPATH)"
         # see if there is a corresponding entry in /proc
-        if [ ! -d /proc/$runningPID ]; then
+        if [ -d /proc/$runningPID ]; then
             isRunning=1
         fi
     fi
@@ -47,16 +47,14 @@ isRunningCmd()
 
 stopConnectd()
 {
-	isRunningCmd
-	if [ $isRunning != 0 ]; then
-            if [ $psPID = $runningPID ]; then
-		echo "Stopping $CONNECTD_PORT..."
-		kill $runningPID 2> /dev/null
-		rm $PIDPATH 2> /dev/null
-	    else
-		echo "$CONNECTD_PORT is not currently active. Nothing to stop."
-	    fi
-        fi
+    isRunningCmd
+    if [ $isRunning != 0 ]; then
+       echo "Stopping $CONNECTD_PORT..."
+       kill $runningPID 2> /dev/null
+       rm $PIDPATH 2> /dev/null
+    else
+       echo "$CONNECTD_PORT is not currently active. Nothing to stop."
+    fi
 }
 
 startConnectd()
