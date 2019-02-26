@@ -8,19 +8,15 @@
 
 VERSION="v1.8"
 AUTHOR="Gary Worsham"
-MODIFIED="February 25, 2019"
+MODIFIED="February 26, 2019"
 BASEDIR=
 . "$BASEDIR"/usr/bin/connectd_options
 
 DAEMON=connectd_schannel."$PLATFORM"
 CONF_FILE="$BASEDIR"/etc/connectd/schannel.conf
 
-# BIN_DIR=/usr/bin
 BIN_PATH=$BIN_DIR/$DAEMON
 PIDPATH=$PID_DIR/$DAEMON.pid
-# LOG_FILE=/dev/null
-# LOG_DIR=/var/log
-
 
 ##### Version #####
 displayVersion()

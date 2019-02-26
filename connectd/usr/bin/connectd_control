@@ -26,7 +26,7 @@ BASEDIR=
 
 #### Settings #####
 VERSION=2.1.14
-MODIFIED="February 25, 2019"
+MODIFIED="February 26, 2019"
 
 #
 # Config Dir CONNECTD_DIR is read from connectd_options

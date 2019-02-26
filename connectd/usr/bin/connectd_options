@@ -1,9 +1,9 @@
 #===================================
 # remote.it connectd package options
 #===================================
-MODIFIED="January 12, 2019"
+MODIFIED="February 26, 2019"
 #===================================
-BUILDDATE="Tue Feb 26 12:43:53 PST 2019"    
+BUILDDATE="Tue Feb 26 13:42:58 PST 2019"    
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -69,7 +69,7 @@ CURL_OPTS="-s -S -X"
 # PSFLAGS needs to be left in for backwards compatibility
 # as of 2.2.6 it is not actually used, but previously created
 # startup files depend on it
-PSFLAGS=ax    
+PSFLAGS="ax"
 #===================================
 # If ENFORCEROOT is 1, then we check for root user (id = 0)
 # print warning and exit if not
