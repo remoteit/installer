@@ -3,7 +3,7 @@
 #===================================
 MODIFIED="January 12, 2019"
 #===================================
-BUILDDATE="Mon Oct  8 06:57:20 PDT 2018"    
+BUILDDATE="Tue Feb 26 12:09:13 PST 2019"    
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -49,10 +49,11 @@ INIT_DIR="$BASEDIR"/etc/init.d
 #===================================
 # folder to keep pids per connectd process
 PID_DIR=/var/run
+DEVICES_RUNNING="$PID_DIR/connectd"
 #===================================
 # PLATFORM is the extension for the binaries, depends on CPU architecture
 # and shared libraries
-PLATFORM=x86_64-ubuntu16.04    
+PLATFORM=x86-etch    
 #===================================
 # startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
 startupScripts=3
