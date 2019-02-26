@@ -6,16 +6,16 @@
 #  remot3.it, Inc. Copyright 2019. All rights reserved.
 #
 
-VERSION="v1.8"
+VERSION="v1.9"
 AUTHOR="Gary Worsham"
-MODIFIED="January 02, 2019"
+MODIFIED="February 25, 2019"
 # BASEDIR is used to allow the package to be installed relative to any folder location
 BASEDIR=
 . "$BASEDIR"/usr/bin/connectd_options
 
 CONNECTD_PORT=
 DAEMON=connectd."$PLATFORM"
-PIDPATH="$PID_DIR"/"$CONNECTD_PORT".pid
+PIDPATH="$DEVICES_RUNNING"/"$CONNECTD_PORT".pid
 LOG_DIR=/tmp
 
 ##### Version #####
@@ -24,8 +24,8 @@ displayVersion()
     printf "Connectd daemon start/stop script Version: %s \n" "$VERSION"
     # check for root user at this point
     if ! [ "$(id -u)" = 0 ]; then
-        echo "Running $CONNECTD_PORT requires root access." 1>&2
-        echo "Please run sudo $CONNECTD_PORT" 1>&2
+        echo "Running $0 requires root access." 1>&2
+        echo "Please run sudo $0" 1>&2
 	exit 1
     fi
 }
@@ -34,31 +34,16 @@ displayVersion()
 
 isRunningCmd()
 {
-	if [ -f "$PIDPATH" ]; then
-		runningPID="$(cat $PIDPATH)"
-	fi
-	# see if there is ANY matching line with connectd and $CONNECTD_PORT.conf
-	# isRunning will be 0 if NOTHING matches
-	isRunningLine=$(ps "$PSFLAGS" | grep connectd | grep -w "$CONNECTD_PORT.conf" | grep -v grep)
-	isRunningps=$(echo -n $isRunningLine | wc -w)
-	ps "$PSFLAGS" | grep connectd | grep -w "$CONNECTD_PORT.conf" | grep -v grep > /tmp/connectdps.txt
-	#-------------	
-	# this next part is to ensure, when  remote.it connectd services are installed on
-	# a VM and containers within that VM, that we can correctly identify 
-	# the PID corresponding the the service running on the VM. This is the
-	# one which has a matching PID in /var/run/$CONNECTD_PORT.pid
-	#-------------	
-	isRunning=0
-	while read p; do
-  	    psPID=$(echo $p | awk '{ print $1 }')
-	    if [ "$psPID" = "$runningPID" ]; then
-                if [ "$isRunningps" != "0" ]; then
-#		echo "Matching PID! $psPID"
-		    isRunning=1
-		    return
-	        fi
-            fi
-	done < /tmp/connectdps.txt
+    ret=1
+    # get the PID from the file that is created by this script
+    if [ -f "$PIDPATH" ]; then
+        runningPID="$(cat $PIDPATH)"
+    fi
+    # see if there is a corresponding entry in /proc
+    if [ ! -d /proc/$runningPID ]; then
+        ret=0;
+    fi
+    return $ret
 }
 
 stopConnectd()
