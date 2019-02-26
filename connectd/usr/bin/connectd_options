@@ -3,7 +3,7 @@
 #===================================
 MODIFIED="January 12, 2019"
 #===================================
-BUILDDATE="Tue Feb 26 12:09:13 PST 2019"    
+BUILDDATE="Tue Feb 26 12:43:53 PST 2019"    
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -66,11 +66,9 @@ mac=$(ip addr | grep ether | tail -n 1 | awk '{ print $2 }')
 # -X must be the final option as the command (POST or GET) comes immediately after
 CURL_OPTS="-s -S -X"
 #===================================
-# PSFLAGS is the option to be sent to the "ps" command to find the running daemons
-# For systems with root login and busybox implementation of ps, this should probably be: 
-# PSFLAGS=
-# For Ubuntu/Raspberry Pi/etc. running bash and standalone ps binary, it should be:
-# PSFLAGS="ax"
+# PSFLAGS needs to be left in for backwards compatibility
+# as of 2.2.6 it is not actually used, but previously created
+# startup files depend on it
 PSFLAGS=ax    
 #===================================
 # If ENFORCEROOT is 1, then we check for root user (id = 0)
