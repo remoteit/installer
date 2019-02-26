@@ -34,16 +34,15 @@ displayVersion()
 
 isRunningCmd()
 {
-    ret=1
+    isRunning=0
     # get the PID from the file that is created by this script
     if [ -f "$PIDPATH" ]; then
         runningPID="$(cat $PIDPATH)"
+        # see if there is a corresponding entry in /proc
+        if [ ! -d /proc/$runningPID ]; then
+            isRunning=1
+        fi
     fi
-    # see if there is a corresponding entry in /proc
-    if [ ! -d /proc/$runningPID ]; then
-        ret=0;
-    fi
-    return $ret
 }
 
 stopConnectd()
