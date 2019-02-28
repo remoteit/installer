@@ -6,23 +6,17 @@
 #  remot3.it, Inc. Copyright 2019. All rights reserved.
 #
 
-VERSION="v1.7"
+VERSION="v1.8"
 AUTHOR="Gary Worsham"
-MODIFIED="January 02, 2019"
+MODIFIED="February 26, 2019"
 BASEDIR=
 . "$BASEDIR"/usr/bin/connectd_options
 
 DAEMON=connectd_schannel."$PLATFORM"
 CONF_FILE="$BASEDIR"/etc/connectd/schannel.conf
 
-# BIN_DIR=/usr/bin
-# PID_DIR=/var/run
 BIN_PATH=$BIN_DIR/$DAEMON
 PIDPATH=$PID_DIR/$DAEMON.pid
-# LOG_FILE=/dev/null
-# LOG_DIR=/var/log
-# PSFLAGS="ax"
-
 
 ##### Version #####
 displayVersion()
@@ -38,22 +32,23 @@ displayVersion()
 ##### End Version #####
 
 
-checkPID()
+# using same isRunningCmd that are in the connectd startup routines
+isRunningCmd()
 {
-	if [ -f $PIDPATH ]; then
-		runningPID="$(cat $PIDPATH)"
-	fi
-}
-
-isRunning()
-{
-	isRunning=$(ps "$PSFLAGS" | grep -w "$DAEMON" | grep -v grep | wc -l)
+    isRunning=0
+    # get the PID from the file that is created by this script
+    if [ -f "$PIDPATH" ]; then
+        runningPID="$(cat $PIDPATH)"
+        # see if there is a corresponding entry in /proc
+        if [ -d /proc/$runningPID ]; then
+            isRunning=1
+        fi
+    fi
 }
 
 stopConnectd()
 {
-	isRunning
-	checkPID
+	isRunningCmd
 	if [ $isRunning != 0 ]; then
 		if [ "$2" != "-q" ]; then
 			echo "Stopping $DAEMON..."
@@ -69,7 +64,7 @@ stopConnectd()
 
 startConnectd()
 {
-	isRunning
+	isRunningCmd
 	if [ $isRunning = 0 ]; then
 		if [ "$2" != "-q" ]; then
 			echo "Starting $DAEMON..."
