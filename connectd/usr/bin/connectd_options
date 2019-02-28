@@ -1,7 +1,13 @@
 #===================================
 # remote.it connectd package options
 #===================================
-MODIFIED="January 12, 2019"
+#  There is no "#!/bin/sh" at the top as this file is intended to be
+#  inserted into other scripts using the "." command to supply global variables
+#  to other scripts.
+#  Any script which includes this file must have #!/bin/sh as its first line.
+#  connectd_options is never executed directly.
+#===================================
+MODIFIED="February 28, 2019"
 #===================================
 BUILDDATE="Mon Oct  8 06:57:20 PDT 2018"    
 #===================================

@@ -1,3 +1,7 @@
+#  There is no "#!/bin/sh" here as this file is a library intended to be
+#  inserted into another script using the "." command.  The script which 
+#  includes this file must have #!/bin/sh as its first line.
+#  connectd_library is never executed directly.
 
 #  attachment services for tcp listeners.
 #  Interactive and preconfigured modes supported.
@@ -6,9 +10,9 @@
 #  Copyright 2019. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.10
+LIBVERSION=lib_v2.1.11
 AUTHOR="Gary Worsham"
-LIBMODIFIED="January 03, 2019"
+LIBMODIFIED="February 28, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
