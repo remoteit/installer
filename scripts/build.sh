@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.6
-MODIFIED="February 13, 2019"
+ver=2.1.7
+MODIFIED="February 28, 2019"
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -165,6 +165,7 @@ build() {
         if [ $? -eq 1 ];then
             echo "Errors encountered during build."
             cat lintian-E.txt
+            exit 1
         fi
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
@@ -178,6 +179,7 @@ build() {
 
         if [ $? == 1 ];then
             echo "Errors encountered during build."
+            exit 1
         fi
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
@@ -277,3 +279,4 @@ setOption options "PSFLAGS" "ax"
 build x86-etch 1 i386 -etch
 
 echo "======   build.sh $ver completed   =============="
+exit 0
