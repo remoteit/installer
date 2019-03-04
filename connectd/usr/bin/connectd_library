@@ -527,7 +527,6 @@ proxySelection()
 protocolSelection()
 {
     CONNECTD_PORT=""
-    CUSTOM=0
     
      #   clear
 #    checkforServices
@@ -598,28 +597,20 @@ protocolSelection()
         fi    
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 5 ]; then
-        CUSTOM=1
         if ask "Does this protocol use a web browser (e.g. HTTP on port 8080 vs. 80)"; then
             PROTOCOL=web
         else
             PROTOCOL=tcp
         fi
-        printf "Please enter the protocol name (e.g., ssh, http, nfs): \n"
-        read port_name
-        CUSTOM_PROTOCOL="$(echo "$port_name" | tr 'A-Z' 'a-z' | tr -d ' ')"
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
-        setConnectdPort "$CUSTOM_PROTOCOL"
+        setConnectdPort "$PROTOCOL"
     fi
 # process the entry for all menu choices other than MAXSEL  
     if [ $get_num -ne $MAXSEL ]; then
       #  clear
         printf "We will attach a remote.it Service to the following Application:\n\n"
-        if [ "$CUSTOM" = 1 ]; then
-            printf "Protocol: %s " "$CUSTOM_PROTOCOL"
-        else
-            printf "Protocol: %s " "$PROTOCOL"
-        fi
+        printf "Protocol: %s " "$PROTOCOL"
         if [ "$PROTOCOL" != "rmt3" ]; then
             printf "\nPort #: %s\n" "$PORT"
 	fi
