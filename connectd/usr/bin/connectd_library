@@ -10,9 +10,9 @@
 #  Copyright 2019. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.11
+LIBVERSION=lib_v2.1.12
 AUTHOR="Gary Worsham"
-LIBMODIFIED="February 28, 2019"
+LIBMODIFIED="March 04, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -597,11 +597,7 @@ protocolSelection()
         fi    
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 5 ]; then
-        if ask "Does this protocol use a web browser (e.g. HTTP on port 8080 vs. 80)"; then
-            PROTOCOL=web
-        else
-            PROTOCOL=tcp
-        fi
+        PROTOCOL=tcp
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
         setConnectdPort "$PROTOCOL"
