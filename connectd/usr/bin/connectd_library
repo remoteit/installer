@@ -10,9 +10,9 @@
 #  Copyright 2019. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.11
+LIBVERSION=lib_v2.1.12
 AUTHOR="Gary Worsham"
-LIBMODIFIED="February 28, 2019"
+LIBMODIFIED="March 04, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -151,6 +151,61 @@ connectdCompatibility()
 }
 ##### End Compatibility checker #####
 
+##### askResetDevice #########
+# if the user deletes a Device at the remote.it portal, then the next time
+# they run connectd_installer, they get an API error because the UID found
+# in the provisioning file(s) don't match any account.  It could also be the
+# result of logging in with the wrong account.
+# So here we give them options: a) Log in again b) Clear all provisioning files
+# c) Exit the installer (with an "are you sure" speed bump).
+
+askResetDevice()
+{
+    echo
+    echo "The Service configuration on this device does not match the remote.it account"
+    echo "registered to $username."
+    echo
+    echo "This can happen if you deleted a Device using the remote.it web portal, in which case you"
+    echo "should reset the configuration on this device to start over (option 1)."
+    echo
+    echo "This can also happen if you logged into this script with an account other than the one"
+    echo "used to configure the Services on this Device initially, in which case you"
+    echo "should login with the proper account credentials to start over (option 2)."
+    echo
+    echo "You can exit if you want to check the configuration before proceeding (option 3)."
+    echo
+    echo "==========================================================="
+    echo "                                                                   "
+    echo "    1) Clear the configuration on this device. "
+    echo "    2) Log in with a different account user name. "
+    echo "    3) Exit                                                        "
+    echo "                                                                   "
+    echo "==========================================================="
+
+    # getNumRange sets gobal variable getNumRangeValue
+    getNumRange 1 3 "Choose an option"
+    if [ $getNumRangeValue -eq 1 ]; then
+        if ask "Are you sure you want to clear this device's configuration?" ; then
+            echo
+            echo "Clearing configuration..."
+            echo
+            rm /etc/connectd/services/*.conf
+        fi
+    elif [ $getNumRangeValue -eq 2 ]; then
+        userLogin
+        testLogin
+#        showMenuHeader
+    elif [ $getNumRangeValue -eq 3 ]; then
+        if ask "Are you sure you want to exit?" ; then
+            exit 0
+        fi
+    fi
+
+}
+
+
+##### askResetDevice #########
+
 ##### set HardwareID #####
 # HardwareID is a UUID concatenated with eth0 MAC address
 # mac is also determined here as it is used for the SERVICEBASENAME
@@ -203,6 +258,14 @@ getHardwareID()
 
 ##### end getHardwareID #####
 
+showMenuHeader()
+{
+    echo
+    echo "=========================  Installed remote.it Services  ======================"
+    printf " %-18s | %-10s | %-18s | %-4s | %-16s\n" "Service Name" "Protocol" "LAN Address" "Port" "Application" 
+    echo "-------------------------------------------------------------------------------"
+}
+
 ##### Check for existing services #####
 checkforServices()
 {
@@ -228,10 +291,7 @@ checkforServices()
 # get HardwareID to display - it is assumed that if only one service exists, it
 # is the rmt3 service
     getHardwareID
-    echo
-    echo "=========================  Installed remote.it Services  ======================"
-    printf " %-18s | %-10s | %-18s | %-4s | %-16s\n" "Service Name" "Protocol" "LAN Address" "Port" "Application" 
-    echo "-------------------------------------------------------------------------------"
+    showMenuHeader
     WARNING="0"
     confFiles=$(find "$CONNECTD_CONF_DIR" -name "*.conf")
     DeviceName=""
@@ -249,7 +309,7 @@ checkforServices()
             debug "$yooareell"
 
 	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
-            checkAPIResult "$yooareell" "$resp"
+            # checkAPIResult "$yooareell" "$resp"
 
 	    # this next test checks to see if device is registered.  
 	    # If not, it was probably deleted at the web portal.
@@ -326,14 +386,23 @@ checkforServices()
                         lanAddress="$proxyAddress"
                     fi
                     printf " %-18s | %-10s | %-18s | %-4s | %-16s \n" "$serviceName" "$protocol" "$lanAddress" "$port" "$service" 
-		else
-		    DeviceName="$serviceName"
+                else
+-                   DeviceName="$serviceName"
                 fi
             else
-               printf "Warning - %s is not registered to this account.\n" "$file"
+                # services not registered, need to break out of this loop and ask
+                # user what to do
+                serviceNotRegistered=1
+                break
             fi
         fi
     done
+    if [ $serviceNotRegistered -eq 1 ]; then
+       printf "Warning - %s is not registered to this account.\n" "$file"
+       askResetDevice
+       checkForDeviceName
+       showMenuHeader
+    fi
     echo "-------------------------------------------------------------------------------"
     echo " Device Name: $DeviceName" " Platform: $PLATFORM"
     echo " Hardware ID: $HardwareID"
@@ -527,7 +596,6 @@ proxySelection()
 protocolSelection()
 {
     CONNECTD_PORT=""
-    CUSTOM=0
     
      #   clear
 #    checkforServices
@@ -598,28 +666,16 @@ protocolSelection()
         fi    
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 5 ]; then
-        CUSTOM=1
-        if ask "Does this protocol use a web browser (e.g. HTTP on port 8080 vs. 80)"; then
-            PROTOCOL=web
-        else
-            PROTOCOL=tcp
-        fi
-        printf "Please enter the protocol name (e.g., ssh, http, nfs): \n"
-        read port_name
-        CUSTOM_PROTOCOL="$(echo "$port_name" | tr 'A-Z' 'a-z' | tr -d ' ')"
+        PROTOCOL=tcp
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
-        setConnectdPort "$CUSTOM_PROTOCOL"
+        setConnectdPort "$PROTOCOL"
     fi
 # process the entry for all menu choices other than MAXSEL  
     if [ $get_num -ne $MAXSEL ]; then
       #  clear
         printf "We will attach a remote.it Service to the following Application:\n\n"
-        if [ "$CUSTOM" = 1 ]; then
-            printf "Protocol: %s " "$CUSTOM_PROTOCOL"
-        else
-            printf "Protocol: %s " "$PROTOCOL"
-        fi
+        printf "Protocol: %s " "$PROTOCOL"
         if [ "$PROTOCOL" != "rmt3" ]; then
             printf "\nPort #: %s\n" "$PORT"
 	fi
@@ -1116,7 +1172,7 @@ checkForDeviceName()
 	    yooareell="$deviceURL/$uid"
 
 	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
-            checkAPIResult "$yooareell" "$resp"
+            # checkAPIResult "$yooareell" "$resp"
 
 	    # this next test checks to see if device is registered.  
 	    # If not, it was probably deleted at the web portal.
@@ -1567,6 +1623,9 @@ registerDevice()
 		#       finally copy valid assembled enablement file to $CONNECTD_CONF_DIR
 		mv "$TMP_DIR"/"$CONNECTD_PORT".conf "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf
      	        debug "Secret: $secret"
+                if [ "$PROTOCOL" = "rmt3" ]; then
+                    DeviceName="$alias"
+                fi
             fi
        	fi
 
