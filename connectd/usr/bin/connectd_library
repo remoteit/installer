@@ -10,9 +10,9 @@
 #  Copyright 2019. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.12
+LIBVERSION=lib_v2.1.13
 AUTHOR="Gary Worsham"
-LIBMODIFIED="March 04, 2019"
+LIBMODIFIED="March 07, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -275,6 +275,8 @@ checkforServices()
                 elif [ "$protocol" = "Basic Web" ]; then
 		    protocol="WebPxy"
                     port=80
+                elif [ "$protocol" = "HTTPS" ]; then
+                    port=443
                 elif [ "$protocol" = "HTTP" ]; then
                     port=80
                 elif [ "$protocol" = "VNC" ]; then
@@ -540,15 +542,16 @@ protocolSelection()
     printf "                                             \n"
     printf "     1) SSH on port 22                       \n"
     printf "     2) Web (HTTP) on port 80                \n"
-    printf "     3) VNC on port 5900                     \n"
-    printf "     4) nxWitness on port 7001               \n"
-    printf "     5) Custom (TCP)                         \n"
-    printf "     6) Return to previous menu              \n"
+    printf "     3) Secure Web (HTTPS) on port 443       \n"
+    printf "     4) VNC on port 5900                     \n"
+    printf "     5) nxWitness on port 7001               \n"
+    printf "     6) Custom (TCP)                         \n"
+    printf "     7) Return to previous menu              \n"
     printf "                                             \n"
     printf "***********************************************\n\n"
     printf " You can change the port value during install  \n\n"
     printf "***********************************************\n\n"
-    MAXSEL=6
+    MAXSEL=7
     unset get_port
 
     getNumRange 1 "$MAXSEL" "Choose a menu selection"
@@ -576,6 +579,16 @@ protocolSelection()
         fi
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 3 ]; then
+        PROTOCOL=webs
+        printf "The default port for Secure Web (https) is 443.\n"
+        if ask "Would you like to continue with the default port assignment?"; then
+            PORT=443
+        else
+            getNumRange 1 65535 "Enter the port value to use"   
+            PORT="$getNumRangeValue"
+        fi
+        setConnectdPort "$PROTOCOL"
+    elif [ $get_num -eq 4 ]; then
         PROTOCOL=vnc
         printf "The default port for RealVNC is 5900.\n"
         printf "The default port for tightVNC is 5901.\n"
@@ -586,7 +599,7 @@ protocolSelection()
             PORT="$getNumRangeValue"
         fi    
         setConnectdPort "$PROTOCOL"
-    elif [ $get_num -eq 4 ]; then
+    elif [ $get_num -eq 5 ]; then
         PROTOCOL=nxw
         printf "The default port for nxWitness is 7001.\n"
         if ask "Would you like to continue with port 7001?"; then
@@ -596,7 +609,7 @@ protocolSelection()
             PORT="$getNumRangeValue"
         fi    
         setConnectdPort "$PROTOCOL"
-    elif [ $get_num -eq 5 ]; then
+    elif [ $get_num -eq 6 ]; then
         PROTOCOL=tcp
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
@@ -1249,6 +1262,8 @@ installProvisioning()
             contentType="28"
         elif [ "$PROTOCOL" = "rmt3" ]; then
             contentType="35"
+        elif [ "$PROTOCOL" = "webs" ]; then
+            contentType="33"
         elif [ "$PROTOCOL" = "web" ]; then
             contentType="7"
         elif [ "$PROTOCOL" = "vnc" ]; then
