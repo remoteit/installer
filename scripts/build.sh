@@ -208,6 +208,12 @@ setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 1 amd64
 
+"TEST_DIR"/dpkg/dpkg-install.sh
+if [ $? -ne 0 ]; then
+    echo "dpkg installation failure!"
+    exit 1
+fi
+
 "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
