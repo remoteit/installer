@@ -28,6 +28,7 @@ BULKIDCODE="36AC4A2A-AC89-E374-13CE-75E4231FE164"
 #---------------------------------------------
 # script execution starts here
 echo "API:"
+sed -i -e 's/\/api/\/apv\/v27.5/' /usr/bin/connectd_options
 grep ^api /usr/bin/connectd_options
 echo
 
