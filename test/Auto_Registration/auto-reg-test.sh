@@ -7,6 +7,7 @@
 
 VERSION=0.96
 MODIFIED="March 10, 2019"
+SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 #---------------------------------------------
 # Set the predefined Bulk ID code used in an Auto Registration.
 # This one is from the faultline1989 account.
@@ -26,6 +27,9 @@ BULKIDCODE="36AC4A2A-AC89-E374-13CE-75E4231FE164"
 
 #---------------------------------------------
 # script execution starts here
+echo "API:"
+grep ^api /usr/bin/connectd_options
+echo
 
 #---------------------------------------------
 # make sure user is running with root access (sudo is OK)
@@ -58,7 +62,7 @@ sh -x /usr/bin/connectd_control -v dprovision > /tmp/dprov.txt 2> debug.txt
 
 # compare stdio output to the reference
 
-diff /tmp/dprov.txt dprov_result.txt
+diff /tmp/dprov.txt "$SCRIPT_DIR"/dprov_result.txt
 result=$?
 echo "dprov test result: $result"
 if [ $result -eq 1 ]; then
@@ -74,7 +78,7 @@ sh -x /usr/bin/connectd_control bprovision all 2>> debug.txt | grep -v "RETRY" >
 # compare stdio output to the reference
 # some variation in request throttling is expected so we filter those out
 
-diff /tmp/bprov.txt bprov_result.txt
+diff /tmp/bprov.txt "$SCRIPT_DIR"/bprov_result.txt
 result=$?
 echo "bprov test result: $result"
 if [ $result -eq 1 ]; then
@@ -87,7 +91,7 @@ connectd_control -v status all > /tmp/status.txt
 
 # compare stdio output to the reference
 
-diff /tmp/status.txt status_result.txt
+diff /tmp/status.txt "$SCRIPT_DIR"/status_result.txt
 result=$?
 echo "status test result: $result"
 if [ $result -eq 1 ]; then
@@ -100,7 +104,7 @@ connectd_control -v stop all > /tmp/stop.txt
 
 # compare stdio output to the reference
 # it is possible that the script will report "still running" prior to shutdown of the daemon
-diff /tmp/stop.txt stop_result.txt | grep -v "still running"
+diff /tmp/stop.txt "$SCRIPT_DIR"/stop_result.txt | grep -v "still running"
 result=$?
 echo "stop test result: $result"
 if [ $result -eq 1 ]; then

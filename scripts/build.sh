@@ -4,8 +4,10 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.7
-MODIFIED="February 28, 2019"
+ver=2.1.8
+MODIFIED="March 10, 2019"
+SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
+TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
@@ -193,7 +195,24 @@ build() {
 
 }
 
+#
+echo $SCRIPT_DIR
+echo $TEST_DIR
+
 # now define and create each build 1 by 1
+# the amd64 Debian package should be first as we test installing that package and running
+# several registration scenarios prior to building everything else
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build x86_64-ubuntu16.04 1 amd64
+
+"$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+if [ $? -ne 0 ]; then
+    echo "Auto Registration failure!"
+    exit 1
+fi
 
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -235,11 +254,6 @@ setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-etch 0
-
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
-build x86_64-ubuntu16.04 1 amd64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
