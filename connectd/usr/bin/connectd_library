@@ -10,9 +10,9 @@
 #  Copyright 2019. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.13
+LIBVERSION=lib_v2.1.14
 AUTHOR="Gary Worsham"
-LIBMODIFIED="March 07, 2019"
+LIBMODIFIED="March 11, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -204,7 +204,7 @@ getHardwareID()
 ##### end getHardwareID #####
 
 ##### Check for existing services #####
-checkforServices()
+checkForServices()
 {
     services="$CONNECTD_CONF_DIR/Connectd*.conf"
     firstFile=$(echo $services | awk '{print $1}')
@@ -389,7 +389,7 @@ menuLoop()
 {
     while [ true ]; do
    #     clear
-        checkforServices
+        checkForServices
 	alias=""	# reset alias,so you will be asked
         printf "============================ Main Menu ============================\n"
         printf "                                                                   \n"
@@ -531,7 +531,7 @@ protocolSelection()
     CONNECTD_PORT=""
     
      #   clear
-#    checkforServices
+#    checkForServices
     printf "\n"
     if [ "$proxyAddress" != "" ]; then
         printf "************ LAN Proxy Connection  ************\n"
@@ -1432,8 +1432,8 @@ fetchUID()
 checkUID()
 {
     printf "."
-    checkforUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
-    if [ "$checkforUID" = 2 ]; then
+    checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
+    if [ "$checkForUID" = 2 ]; then
 	uid=$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )
 	printf "\n==========================================\nAllocated UID: %s. \n\n" "$uid"
     else
@@ -1449,16 +1449,16 @@ retryFetchUID()
     for run in $(seq 1 15)
     do
 	fetchUID
-	checkforUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID)"
-	if [ "$checkforUID" = 2 ]; then
+	checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID)"
+	if [ "$checkForUID" = 2 ]; then
 #	    uid="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep UID | awk '{print $2}' | xargs echo)"
 	    uid="$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )"
 	    #       printf "\n\nAllocated UID: %s. \n\n" "$uid"
 	    break
 	fi
     done
-    checkforUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
-    if [ "$checkforUID" != 2 ]; then
+    checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
+    if [ "$checkForUID" != 2 ]; then
 	printf "We have unsuccessfully retried to obtain a UID.\n"
         printf "Please contact remote.it Support at support@remote.it for help.\n\n"
         exit
