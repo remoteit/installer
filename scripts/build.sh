@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.8
-MODIFIED="March 10, 2019"
+ver=2.1.9
+MODIFIED="March 15, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
