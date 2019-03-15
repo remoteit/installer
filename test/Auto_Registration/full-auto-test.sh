@@ -25,7 +25,7 @@ echo "About to start initial auto-registration"
 echo "Make sure the bulk id code is for an auto registration with at least service."
 echo "Press Enter when ready."
 read anykey
-sed -i -e 's/36AC4A2A-AC89-E374-13CE-75E4231FE164/DA664353-2479-C05A-3BA2-B89B795F00E5/' ./auto-reg-test.sh
+sed -i -e 's/1233F068-A3F9-9C3F-006F-FBFA9D018813/1233F068-A3F9-9C3F-006F-FBFA9D018813/' ./auto-reg-test.sh
 ./auto-reg-test.sh
 connectd_control start all
 echo
