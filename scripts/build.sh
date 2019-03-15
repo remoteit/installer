@@ -214,6 +214,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+"$TEST_DIR"/Interactive/full-interactive-test.sh
+if [ $? -ne 0 ]; then
+    echo "Interactive Registration failure!"
+    exit 1
+fi
+
 "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
