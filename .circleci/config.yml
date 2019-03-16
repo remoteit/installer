@@ -36,7 +36,19 @@ jobs:
             - ~/.npm
             - ~/.cache
       - run:
-          name: "Show environment variables"
+          name: "Show environment variables - bash"
+          command: ./scripts/showenv_bash.sh
+      - run:
+          name: "Show environment variables - sudo bash"
+          command: sudo ./scripts/showenv_bash.sh
+      - run:
+          name: "Show environment variables - sh"
+          command: ./scripts/showenv_sh.sh
+      - run:
+          name: "Show environment variables - sudo sh"
+          command: sudo ./scripts/showenv_sh.sh
+      - run:
+          name: "Show environment variables - echo"
           command: echo "$TESTUSERNAME"
       - run:
           name: Build binaries
