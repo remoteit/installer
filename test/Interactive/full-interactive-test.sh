@@ -33,7 +33,7 @@ count_schannel()
 check_service_counts()
 {
 echo "Starting interactive install test with keystroke file $3..."
-sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3" > console.txt
+sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
 sleep 1
 
 count_services
