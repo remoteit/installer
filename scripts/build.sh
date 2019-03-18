@@ -4,14 +4,43 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.7
-MODIFIED="February 28, 2019"
+ver=2.1.10
+MODIFIED="March 16, 2019"
+SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
+TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
 # set architecture
 controlFilePath="$pkgFolder"/DEBIAN
 controlFile="$controlFilePath"/control
 # current user account
 user=$(whoami)
+echo $user
+# debugging flag, set to 0 to skip tests
+runtests=1
+
+#---------------------------------------------------------------------------------
+# add_creds takes the environment variables and puts them into the file
+# for use by the intereactive installer tests
+add_creds()
+{
+# get account login credentials from environment variables (set in Circle CI)
+if [ "${TESTUSERNAME}" = "" ]; then
+    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
+    exit 1
+elif [ "${TESTPASSWORD}" = "" ]; then
+    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
+    exit 1
+fi
+
+testusername=${TESTUSERNAME}
+testpassword=${TESTPASSWORD}
+
+file1=/usr/bin/connectd_installer
+sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
+sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+grep USERNAME "$file1"
+}
+
 
 #-------------------------------------------------
 # setOption() is used to change settings in the connectd_$1 file
@@ -19,24 +48,25 @@ user=$(whoami)
 setOption()
 {
     sedFilename="$pkgFolder"/usr/bin/connectd_$1
-    sed -i '/'"^$2"'/c\'"$2=$3 $4 $5 $6 $7"'' "$sedFilename"
+    sudo sed -i '/'"^$2"'/c\'"$2=$3 $4 $5 $6 $7"'' "$sedFilename"
 }
 
 #-------------------------------------------------
 setEnvironment()
 {
-    sed -i "/Architecture:/c\Architecture: $1" "$controlFile"
+    sudo sed -i "/Architecture:/c\Architecture: $1" "$controlFile"
 
     setOption "options" "Architecture" "$1"
 
+# delete any remaining binary files from the previous pass
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd.*")
     do
-        rm "$i"
+        sudo rm "$i"
     done
 
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd_schannel.*")
     do
-        rm "$i"
+        sudo rm "$i"
     done
 
     sudo cp ./assets/connectd."$2" "$pkgFolder"/usr/bin
@@ -73,6 +103,7 @@ buildDebianFile()
         dpkg-deb --build "$1"
         ret=$?
     fi
+    sudo chown -R $user:$user "$1"
     return $ret
 }
 
@@ -92,6 +123,8 @@ runLintian()
     return $ret_val
 }
 
+#-----------------------------------
+echo "build.sh starting..."
 gzip -9 "$pkgFolder"/usr/share/doc/$pkg/*.man
 
 # change owner of all files to current user for manipulations
@@ -133,6 +166,12 @@ build() {
 
     # clean up and recreate md5sums file
     cd "$pkgFolder"
+    if [ -e md5sums ]; then
+        sudo rm md5sums
+    fi
+    if [ -e DEBIAN/md5sums ]; then
+        sudo rm DEBIAN/md5sums
+    fi
     sudo chmod 777 DEBIAN
     sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
     sudo chmod 775 DEBIAN
@@ -170,7 +209,7 @@ build() {
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         filename="${pkg}_${version}_$arch$tag".deb
-        mv "$pkgFolder".deb "$cwd/$filename"
+        sudo mv "$pkgFolder".deb "$cwd/$filename"
     else
         echo "Building tar package for PLATFORM: $PLATFORM"
         # we are making a tar file, but first  we make a Debian file
@@ -186,14 +225,55 @@ build() {
         echo "Extracting contents to tar file"
         ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
-        mv "$pkgFolder".deb.tar "$cwd/$filename"
+        sudo mv "$pkgFolder".deb.tar "$cwd/$filename"
 
     fi
     ls -l "$cwd/$filename"
 
 }
 
+#
+echo $SCRIPT_DIR
+echo $TEST_DIR
+
 # now define and create each build 1 by 1
+# the amd64 Debian package should be first as we test installing that package and running
+# several registration scenarios prior to building everything else
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+setOption options "PSFLAGS" "ax"
+build x86_64-ubuntu16.04 1 amd64
+
+if [ $runtests -eq 1 ]; then
+sudo "$TEST_DIR"/dpkg/dpkg-install.sh
+if [ $? -ne 0 ]; then
+    echo "dpkg installation failure!"
+    exit 1
+fi
+
+# add the test account credentials.
+add_creds
+
+"$TEST_DIR"/Interactive/full-interactive-test.sh
+if [ $? -ne 0 ]; then
+    echo "Interactive Registration failure!"
+    exit 1
+fi
+
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+if [ $? -ne 0 ]; then
+    echo "Auto Registration failure!"
+    exit 1
+fi
+
+sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
+if [ $? -ne 0 ]; then
+    echo "dpkg purge failure!"
+    exit 1
+fi
+
+fi
 
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -235,11 +315,6 @@ setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-etch 0
-
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
-build x86_64-ubuntu16.04 1 amd64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
