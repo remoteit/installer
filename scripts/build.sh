@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.9
-MODIFIED="March 15, 2019"
+ver=2.1.10
+MODIFIED="March 16, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -14,6 +14,9 @@ controlFilePath="$pkgFolder"/DEBIAN
 controlFile="$controlFilePath"/control
 # current user account
 user=$(whoami)
+echo $user
+# debugging flag, set to 0 to skip tests
+runtests=1
 
 #-------------------------------------------------
 # setOption() is used to change settings in the connectd_$1 file
@@ -21,24 +24,25 @@ user=$(whoami)
 setOption()
 {
     sedFilename="$pkgFolder"/usr/bin/connectd_$1
-    sed -i '/'"^$2"'/c\'"$2=$3 $4 $5 $6 $7"'' "$sedFilename"
+    sudo sed -i '/'"^$2"'/c\'"$2=$3 $4 $5 $6 $7"'' "$sedFilename"
 }
 
 #-------------------------------------------------
 setEnvironment()
 {
-    sed -i "/Architecture:/c\Architecture: $1" "$controlFile"
+    sudo sed -i "/Architecture:/c\Architecture: $1" "$controlFile"
 
     setOption "options" "Architecture" "$1"
 
+# delete any remaining binary files from the previous pass
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd.*")
     do
-        rm "$i"
+        sudo rm "$i"
     done
 
     for i in $(find "$pkgFolder"/usr/bin/ -type f -name "connectd_schannel.*")
     do
-        rm "$i"
+        sudo rm "$i"
     done
 
     sudo cp ./assets/connectd."$2" "$pkgFolder"/usr/bin
@@ -75,6 +79,7 @@ buildDebianFile()
         dpkg-deb --build "$1"
         ret=$?
     fi
+    sudo chown -R $user:$user "$1"
     return $ret
 }
 
@@ -135,6 +140,12 @@ build() {
 
     # clean up and recreate md5sums file
     cd "$pkgFolder"
+    if [ -e md5sums ]; then
+        sudo rm md5sums
+    fi
+    if [ -e DEBIAN/md5sums ]; then
+        sudo rm DEBIAN/md5sums
+    fi
     sudo chmod 777 DEBIAN
     sudo find -type f ! -regex '.*?DEBIAN.*' -exec md5sum "{}" + | grep -v md5sums > md5sums
     sudo chmod 775 DEBIAN
@@ -172,7 +183,7 @@ build() {
 
         version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         filename="${pkg}_${version}_$arch$tag".deb
-        mv "$pkgFolder".deb "$cwd/$filename"
+        sudo mv "$pkgFolder".deb "$cwd/$filename"
     else
         echo "Building tar package for PLATFORM: $PLATFORM"
         # we are making a tar file, but first  we make a Debian file
@@ -188,7 +199,7 @@ build() {
         echo "Extracting contents to tar file"
         ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
-        mv "$pkgFolder".deb.tar "$cwd/$filename"
+        sudo mv "$pkgFolder".deb.tar "$cwd/$filename"
 
     fi
     ls -l "$cwd/$filename"
@@ -208,7 +219,8 @@ setOption options "BASEDIR" ""
 setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 1 amd64
 
-"$TEST_DIR"/dpkg/dpkg-install.sh
+if [ $runtests -eq 1 ]; then
+sudo "$TEST_DIR"/dpkg/dpkg-install.sh
 if [ $? -ne 0 ]; then
     echo "dpkg installation failure!"
     exit 1
@@ -220,10 +232,18 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-"$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
+fi
+
+sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
+if [ $? -ne 0 ]; then
+    echo "dpkg purge failure!"
+    exit 1
+fi
+
 fi
 
 # aarch64 package - tar package with static linking

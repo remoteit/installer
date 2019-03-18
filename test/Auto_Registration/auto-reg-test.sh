@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=0.98
-MODIFIED="March 11, 2019"
+VERSION=0.99
+MODIFIED="March 16, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
@@ -23,8 +23,11 @@ BULKIDCODE="1233F068-A3F9-9C3F-006F-FBFA9D018813"
 
 #---------------------------------------------
 # script execution starts here
+echo "Test $0 starting..."
+echo
 echo "API:"
 # the next line can be used as needed to override a specific API version
+# comment this line out to return to default API
 sed -i -e 's/\/api/\/apv\/v27.5/' /usr/bin/connectd_options
 grep ^api /usr/bin/connectd_options
 echo
@@ -95,6 +98,6 @@ if [ $result -eq 1 ]; then
     exit 1
 fi
 
-echo "Basic Auto Registration test passed."
+echo "Basic Auto Registration test $0 passed."
 exit 0
 

@@ -21,24 +21,27 @@ elif [ "${TESTPASSWORD}" = "" ]; then
     exit 1
 fi
 
+testusername=${TESTUSERNAME}
+testpassword=${TESTPASSWORD}
+
 file1=/usr/bin/connectd_installer
-sed -i "/USERNAME/c\USERNAME=${TESTUSERNAME}" "$file1"
-sed -i "/PASSWORD/c\PASSWORD=${TESTPASSWORD}" "$file1"
+sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
+sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
 }
 
 #-----------------------------------------------------------------------
 count_services()
 {
-    ps ax | grep "connectd\." | grep -v grep > /tmp/nservices
-    services="$(wc -l /tmp/nservices  | awk '{ print $1 }')"
+    ps ax | grep "connectd\." | grep -v grep > ~/nservices
+    services="$(wc -l ~/nservices  | awk '{ print $1 }')"
     return $services
 }
 
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel" | grep -v grep > /tmp/nschannel
-    schannel="$(wc -l /tmp/nschannel  | awk '{ print $1 }')"
+    ps ax | grep "connectd_schannel" | grep -v grep > ~/nschannel
+    schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
 
@@ -48,7 +51,8 @@ count_schannel()
 
 check_service_counts()
 {
-"$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3" > console.txt
+echo "Starting interactive install test with keystroke file $3..."
+sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3" > console.txt
 sleep 1
 
 count_services
@@ -69,7 +73,7 @@ echo "Interactive installer $3 test passed."
 # main program starts here
 echo "------------------------------------------------"
 echo "Interactive installer test suite - begin"
-checkForRoot
+# checkForRoot
 #-------------------------------------------------------------------
 # get test account credentials from environment variables
 add_creds
@@ -89,7 +93,7 @@ check_service_counts 7 1 configure-02.key
 # expected result is that 0 connectd services and 0 schannel service will be running
 check_service_counts 0 0 remove-all.key
 
+echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
-echo "Interactive installer test suite - end"
 
 exit 0
