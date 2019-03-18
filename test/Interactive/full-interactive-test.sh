@@ -8,7 +8,7 @@
 # set -e
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
-
+user=$(whoami)
 
 add_creds()
 {
@@ -73,10 +73,11 @@ echo "Interactive installer $3 test passed."
 # main program starts here
 echo "------------------------------------------------"
 echo "Interactive installer test suite - begin"
+echo "user=$user"
 # checkForRoot
 #-------------------------------------------------------------------
 # get test account credentials from environment variables
-add_creds
+# add_creds
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 3 services

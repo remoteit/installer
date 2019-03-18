@@ -18,6 +18,28 @@ echo $user
 # debugging flag, set to 0 to skip tests
 runtests=1
 
+# add_creds takes the environment variables and puts them into the file
+# for use by the intereactive installer tests
+add_creds()
+{
+# get account login credentials from environment variables (set in Circle CI)
+if [ "${TESTUSERNAME}" = "" ]; then
+    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
+    exit 1
+elif [ "${TESTPASSWORD}" = "" ]; then
+    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
+    exit 1
+fi
+
+testusername=${TESTUSERNAME}
+testpassword=${TESTPASSWORD}
+
+file1=/usr/bin/connectd_installer
+sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
+sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+}
+
+
 #-------------------------------------------------
 # setOption() is used to change settings in the connectd_$1 file
 
@@ -99,6 +121,8 @@ runLintian()
     return $ret_val
 }
 
+#-----------------------------------
+echo "build.sh starting..."
 gzip -9 "$pkgFolder"/usr/share/doc/$pkg/*.man
 
 # change owner of all files to current user for manipulations
@@ -225,6 +249,9 @@ if [ $? -ne 0 ]; then
     echo "dpkg installation failure!"
     exit 1
 fi
+
+# add the test account credentials.
+add_creds
 
 "$TEST_DIR"/Interactive/full-interactive-test.sh
 if [ $? -ne 0 ]; then
