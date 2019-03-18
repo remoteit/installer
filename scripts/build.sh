@@ -18,6 +18,7 @@ echo $user
 # debugging flag, set to 0 to skip tests
 runtests=1
 
+#---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
 # for use by the intereactive installer tests
 add_creds()
@@ -37,6 +38,7 @@ testpassword=${TESTPASSWORD}
 file1=/usr/bin/connectd_installer
 sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
 sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+grep USERNAME "$file1"
 }
 
 
