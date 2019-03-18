@@ -10,25 +10,6 @@ SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
 user=$(whoami)
 
-add_creds()
-{
-# get account login credentials from environment variables (set in Circle CI)
-if [ "${TESTUSERNAME}" = "" ]; then
-    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
-    exit 1
-elif [ "${TESTPASSWORD}" = "" ]; then
-    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
-    exit 1
-fi
-
-testusername=${TESTUSERNAME}
-testpassword=${TESTPASSWORD}
-
-file1=/usr/bin/connectd_installer
-sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
-sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
-}
-
 #-----------------------------------------------------------------------
 count_services()
 {
@@ -76,8 +57,10 @@ echo "Interactive installer test suite - begin"
 echo "user=$user"
 # checkForRoot
 #-------------------------------------------------------------------
-# get test account credentials from environment variables
-# add_creds
+# show test account credentials from environment variables
+echo "USERNAME from environment variable"
+grep USERNAME /usr/bin/connectd_installer
+echo
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 3 services
