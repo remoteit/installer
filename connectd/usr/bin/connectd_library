@@ -190,6 +190,7 @@ askResetDevice()
             echo "Clearing configuration..."
             echo
             rm /etc/connectd/services/*.conf
+            checkForDeviceName
         fi
     elif [ $getNumRangeValue -eq 2 ]; then
         userLogin
@@ -203,8 +204,7 @@ askResetDevice()
 
 }
 
-
-##### askResetDevice #########
+##### End askResetDevice #########
 
 ##### set HardwareID #####
 # HardwareID is a UUID concatenated with eth0 MAC address
@@ -399,9 +399,11 @@ checkforServices()
     done
     if [ $serviceNotRegistered -eq 1 ]; then
        printf "Warning - %s is not registered to this account.\n" "$file"
-       askResetDevice
-       checkForDeviceName
-       showMenuHeader
+       printf "This is unexpected.  You may wish to exit and review your\n"
+       printf "configuration. \n"
+       if ask "Do you want to exit?"; then
+           exit
+       fi
     fi
     echo "-------------------------------------------------------------------------------"
     echo " Device Name: $DeviceName" " Platform: $PLATFORM"
@@ -1184,6 +1186,8 @@ checkForDeviceName()
             
 	        protocol=$(jsonval "$resp" "title")
 		debug "protocol: $protocol"
+            else
+                askResetDevice
             fi
         else
             echo "UID $uid was not pre-registered successfully."
