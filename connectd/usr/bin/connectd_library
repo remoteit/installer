@@ -162,24 +162,25 @@ connectdCompatibility()
 askResetDevice()
 {
     echo
-    echo "The Service configuration on this device does not match the remote.it account"
-    echo "registered to $username."
+    echo "The Service configuration on this device does not match the remote.it"
+    echo "account registered to $username."
     echo
-    echo "This can happen if you deleted a Device using the remote.it web portal, in which case you"
-    echo "should reset the configuration on this device to start over (option 1)."
+    echo "This can happen if you deleted a Device using the remote.it web portal"
+    echo "in which case you should reset the configuration on this device to "
+    echo "start over (option 1)."
     echo
-    echo "This can also happen if you logged into this script with an account other than the one"
-    echo "used to configure the Services on this Device initially, in which case you"
-    echo "should login with the proper account credentials to start over (option 2)."
+    echo "This can also happen if you logged into this script with an account "
+    echo "other than the one used to configure the Services on this Device "
+    echo "initially, in which case you should login with the proper account "
+    echo "credentials to start over (option 2)."
     echo
-    echo "You can exit if you want to check the configuration before proceeding (option 3)."
+    echo "You can exit if you want to check the configuration before proceeding"
+    echo "(option 3)."
     echo
     echo "==========================================================="
-    echo "                                                                   "
     echo "    1) Clear the configuration on this device. "
     echo "    2) Log in with a different account user name. "
     echo "    3) Exit                                                        "
-    echo "                                                                   "
     echo "==========================================================="
 
     # getNumRange sets gobal variable getNumRangeValue
@@ -189,7 +190,31 @@ askResetDevice()
             echo
             echo "Clearing configuration..."
             echo
-            rm /etc/connectd/services/*.conf
+            # look through all installed provisioning files
+            for file in $CONNECTD_CONF_DIR/*.conf; do
+                filebase=$(basename $file)
+                fileroot=$(echo $filebase | awk -F".conf" '{ print $1 }')
+                # look for the matching startup file
+                startupfile="$BIN_DIR/$fileroot"
+                if [ -e "$startupfile" ]; then
+                    # stop any running service and suppress output
+                    $($startupfile stop > /dev/null)
+                    # finally remove the startup file
+                    debug "Deleting $startupfile..."
+                    rm $startupfile
+                fi
+                # delete the "start all script"
+                if [ -e "$BIN_DIR/connectd_start_all" ]; then
+                    rm $BIN_DIR/connectd_start_all
+                fi
+                # delete the orphaned provisioning file
+                debug "Deleting $file..."
+                rm $file
+                printf "."
+            done
+            # stop the server channel daemon 
+            connectd_schannel stop > /dev/null
+            echo
             checkForDeviceName
         fi
     elif [ $getNumRangeValue -eq 2 ]; then
@@ -387,8 +412,9 @@ checkforServices()
                     fi
                     printf " %-18s | %-10s | %-18s | %-4s | %-16s \n" "$serviceName" "$protocol" "$lanAddress" "$port" "$service" 
                 else
--                   DeviceName="$serviceName"
+                   DeviceName="$serviceName"
                 fi
+                serviceNotRegistered=0
             else
                 # services not registered, need to break out of this loop and ask
                 # user what to do
