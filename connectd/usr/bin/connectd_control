@@ -721,23 +721,28 @@ dconfig()
         	    result=$(grep "$timestamp" "$PROVISION_DOWNLOAD/$i.conf")
         	    if [ "$?" = "1" ]; then
         	        if [ $VERBOSE -gt 0 ]; then 
-                            printf "timestamp not same, update\n"  
-                        fi
-        	        #
-                        # need to generate conf file and pfile, update available
-                        write_config "$i" "$resp2"
-                        #
-                        # Generate new pfile
+                        printf "timestamp not same, update\n"  
+                    fi
+                    #
+                    # need to generate conf file and pfile, update available
+                    write_config "$i" "$resp2"
+                    #
+                    # Generate new pfile
                         generate_pfile "$1"
 					#
-		        # update the active file
+                    # update the active file
 	       	        update_afile "$1"
-
+                    #
+                    # activate if disabled
+                    if [ ! -f "$DEVICES_ACTIVE/$1" ]; then
+                        ln -s "$DEVICES_AVAILABLE/$1" "$DEVICES_ACTIVE"
+                        startit "$1"
+                    fi
            	    else
             	        if [ $VERBOSE -gt 0 ]; then printf "timestamp same, no update\n" ; fi
 	            fi
 			else
-			    # disabled, check if we need to disable it from startup
+                # disabled, check if we need to disable it from startup
                 if [ -e "$DEVICES_ACTIVE/$1" ]; then
                     stopit "$1"
                     rm "$DEVICES_ACTIVE/$1"
@@ -792,9 +797,9 @@ dprovision()
                                     -o "$PROVISION_DOWNLOAD/$i.tmp" "$ProvisionDownloadDirect/$i")
                     if [ "$resp2" = "200" ]; then
                         # if return code is 200 we keep the file
-			mv "$PROVISION_DOWNLOAD/$i.tmp" "$PROVISION_DOWNLOAD/$i"
-			update=1
-			if [ $VERBOSE -gt 0 ]; then printf "downloaded provisioning ok (%s)\n" $resp2 ; fi		
+                        mv "$PROVISION_DOWNLOAD/$i.tmp" "$PROVISION_DOWNLOAD/$i"
+                        update=1
+                        if [ $VERBOSE -gt 0 ]; then printf "downloaded provisioning ok (%s)\n" $resp2 ; fi		
                     else
                         # do not keep, bad
                         rm "$PROVISION_DOWNLOAD/$i.tmp"
@@ -942,10 +947,10 @@ bprovision()
                         bprovisionit $base
                         if [ "$?" -eq 0 ]; then
                             # set that we have done something
-			    update=1
+                            update=1
                             rc=0
                         fi
-			sleep 1
+                        sleep 1
                     fi
                 fi
             done
@@ -955,7 +960,7 @@ bprovision()
             fi
         else
             if [ -e "$PROVISION_DEFAULT/$1" ]; then   
-                if [ ! -f "$DEVICES_AVAILABLE/$1)" ]; then 
+                if [ ! -f "$DEVICES_AVAILABLE/$1" ]; then 
                     # Try to bulk provision
                     bprovisionit $1
                 fi
