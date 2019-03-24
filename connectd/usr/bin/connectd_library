@@ -156,8 +156,8 @@ connectdCompatibility()
 # they run connectd_installer, they get an API error because the UID found
 # in the provisioning file(s) don't match any account.  It could also be the
 # result of logging in with the wrong account.
-# So here we give them options: a) Log in again b) Clear all provisioning files
-# c) Exit the installer (with an "are you sure" speed bump).
+# So here we give them options: 1) Clear all provisioning files 2) Log in again 
+# 3) Exit the installer (1 & 3 include an "are you sure" speed bump).
 
 askResetDevice()
 {
