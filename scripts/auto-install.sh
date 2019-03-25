@@ -19,7 +19,8 @@ downloadAndTestDaemon()
     if [ ! -e "$testDaemon" ]; then
         curl -sLkO https://github.com/remoteit/misc_bins_and_scripts/raw/master/connectd/"$testDaemon" > /dev/null
         if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           exit 1
+            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
+	    exit 1
         fi
     else
         printf "%s\n" "$testDaemon already in current directory, testing now..." | tee -a $LOGFILE   
@@ -33,7 +34,8 @@ downloadAndTestDaemon()
 	retval=0
     else
         echo "."
-        # printf "%s\n" "$testDaemon is not compatible!" | tee -a $LOGFILE       rm "$testDaemon"
+        # printf "%s\n" "$testDaemon is not compatible!" | tee -a $LOGFILE       
+	rm "$testDaemon"
         retval=1
     fi
     return $retval
@@ -48,7 +50,8 @@ downloadSchannel()
     if [ ! -e "$testDaemon" ]; then
         curl -sLkO https://github.com/remoteit/Server-Channel/raw/master/pre-built/"$testDaemon" > /dev/null
         if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           exit 1
+            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
+	    exit 1
         fi
     fi
     sleep 2
