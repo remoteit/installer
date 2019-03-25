@@ -372,15 +372,15 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build mips-gcc-4.7.3_static 0
 
-# mips-gcc342_static
+# mipsel-gcc342_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mips-gcc342_static 0
+build mipsel-gcc342_static 0
 
-# mips-bmc5354_static
+# mipsel-bmc5354_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mips-bmc5354_static 0
+build mipsel-bmc5354_static 0
 
 echo "======   build.sh $ver completed   =============="
 exit 0
