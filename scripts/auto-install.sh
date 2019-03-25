@@ -6,35 +6,36 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-FOLDER=2.1
 VERSION=2.2.5
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
+LOGFILE=remote.itBinaryTestLog.txt
 
 downloadAndTestDaemon()
 {
     testArch=$1
     testDaemon=connectd."$testArch"
     printf "\n"
-    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a remote.itBinaryTestLog.txt
+    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
         curl -sLkO https://github.com/remoteit/misc_bins_and_scripts/raw/master/connectd/"$testDaemon" > /dev/null
         if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a remote.itBinaryTestLog.txt
-            exit 1
+            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
+	    exit 1
         fi
     else
-        printf "%s\n" "$testDaemon already in current directory, testing now..." | tee -a remote.itBinaryTestLog.txt
+        printf "%s\n" "$testDaemon already in current directory, testing now..." | tee -a $LOGFILE   
     fi
     sleep 2
     chmod +x "$testDaemon"
     ./"$testDaemon" -n > /dev/null
     if [ "$?" = "0" ]; then
-        printf "%s\n" "$testDaemon is compatible!" | tee -a remote.itBinaryTestLog.txt
+        printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
         mv $testDaemon /usr/bin/"$testDaemon"
 	retval=0
     else
-        printf "%s\n" "$testDaemon is not compatible!" | tee -a remote.itBinaryTestLog.txt
-        rm "$testDaemon"
+        echo "."
+        # printf "%s\n" "$testDaemon is not compatible!" | tee -a $LOGFILE       
+	rm "$testDaemon"
         retval=1
     fi
     return $retval
@@ -45,12 +46,12 @@ downloadSchannel()
     testArch=$1
     testDaemon=schannel."$testArch"
     printf "\n"
-    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a remote.itBinaryTestLog.txt
+    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
         curl -sLkO https://github.com/remoteit/Server-Channel/raw/master/pre-built/"$testDaemon" > /dev/null
         if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a remote.itBinaryTestLog.txt
-            exit 1
+            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
+	    exit 1
         fi
     fi
     sleep 2
@@ -81,7 +82,7 @@ check_x86_64()
         return 2
     fi
     if [ "$?" != 0 ]; then
-        printf "%s\n" "Couldn't find a compatible daemon for $arch!" | tee -a remote.itBinaryTestLog.txt
+        printf "%s\n" "Couldn't find a compatible daemon for $arch!" | tee -a $LOGFILE       
         exit 1
     fi
 }
@@ -99,13 +100,19 @@ checkForUtilities()
 
 # main program starts here
 #
+# clear log file each time
+if [ -e $LOGFILE ]; then
+    rm $LOGFILE
+fi
+
 # Add a timestamp and divider line as headers to the log file and console
 #
 PWD=$(pwd)
-echo "********************************************************"  | tee -a remote.itBinaryTestLog.txt
-echo "remote.it platform and binary tester for current directory $PWD" | tee -a remote.itBinaryTestLog.txt
-date  | tee -a remote.itBinaryTestLog.txt
-echo "********************************************************" | tee -a remote.itBinaryTestLog.txt
+echo "********************************************************"  | tee -a $LOGFILE
+echo "remote.it platform and binary tester version $VERSION " | tee -a $LOGFILE
+echo "Current directory $PWD" | tee -a $LOGFILE
+date  | tee -a $LOGFILE
+echo "********************************************************" | tee -a $LOGFILE
 #
 signature=$(uname -a)
 if [ $? = 127 ]; then
@@ -113,8 +120,7 @@ if [ $? = 127 ]; then
     echo "Please contact support@remote.it."
     exit
 fi
-echo "$signature" | tee -a remote.itBinaryTestLog.txt
-
+echo "$signature" | tee -a $LOGFILE
 # check for architecture
 if [ "$(echo "$signature" | grep -i mips)" != "" ]; then
     BASEPLATFORM="mips"
@@ -133,8 +139,17 @@ fi
 
 echo "Detected architecture is $BASEPLATFORM"
 
-dpkg --help > /dev/null
-if [ $? = 127 ]; then
+# see if Debian "dpkg" utility is installed.
+useTar=1
+which dpkg
+
+if [ $? -eq 0 ]; then
+    dpkg --help > /dev/null
+    if [ $? = 0 ]; then
+        useTar=0
+    fi
+fi
+if [ $useTar -eq 1 ]; then
     echo "using tar file installer..."
     if [ "$BASEPLATFORM" = "mips" ]; then
         daemon=mips-24kec
@@ -229,7 +244,6 @@ if [ $? = 127 ]; then
         fi
     fi
 
-    echo "daemon $daemon"
     downloadSchannel "$daemon"
     currentFolder=$(pwd)
     filename=connectd_"$VERSION"_"$daemon"".tar"
@@ -257,5 +271,9 @@ else
     echo "filepath $filepath"
     curl -sLkO "$filepath" > /dev/null
     sudo dpkg -i "$filename"
+    if [ $? -ne 0 ]; then
+        echo "dpkg error!"
+        exit 1
+    fi
 fi
 exit 0
