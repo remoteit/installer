@@ -346,16 +346,17 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build mips-gcc-4.7.3 0
 
-# mips-gcc342
+# mipsel-gcc342
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mips-gcc342
+build mipsel-gcc342
 
-# mips-bmc5354
+# mipsel-bmc5354
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mips-bmc5354 0
+build mipsel-bmc5354 0
 
+# now build static versions of all MIPS tar packages
 # mips-24kec_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
