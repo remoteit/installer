@@ -331,11 +331,55 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build x86_64-etch 1 amd64 -etch
 
-# here we are using the tag "-etch" to create an i386 Debian architecture package for the older
-# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+# mips-24kec
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86-etch 1 i386 -etch
+build mips-24kec 0
+
+# mips-34kc
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-34kc 0
+
+# mips-gcc-4.7.3
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc-4.7.3 0
+
+# mips-gcc342
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc342
+
+# mips-bmc5354
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-bmc5354 0
+
+# mips-24kec_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-24kec_static 0
+
+# mips-34kc_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-34kc_static 0
+
+# mips-gcc-4.7.3_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc-4.7.3_static 0
+
+# mips-gcc342_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc342_static 0
+
+# mips-bmc5354_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-bmc5354_static 0
 
 echo "======   build.sh $ver completed   =============="
 exit 0
