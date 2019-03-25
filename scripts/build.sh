@@ -157,8 +157,11 @@ build() {
 # give it a default arch, it doesn't matter as we are just building a deb from which to extract the tar file
         arch="amd64"
     fi
+    # get the optional 4th parameter to use as a file name tag
     if [ "$4" != "" ]; then
         tag="$4"
+    else
+        tag=""
     fi
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
