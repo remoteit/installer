@@ -242,7 +242,6 @@ echo $TEST_DIR
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 1 amd64
 
 if [ $runtests -eq 1 ]; then
@@ -278,79 +277,64 @@ fi
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04_static 0
 
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04 0
 
 # arm64 package - Debian package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-android 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-android_static 0
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build arm-linaro-pi 1 armhf
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build arm-linaro-pi 1 armel
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-etch 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-linaro-pi 0
 
-setOption options "PSFLAGS" "w"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-gnueabi 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-etch 0
 
 # here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-etch 1 amd64 -etch
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86-etch 1 i386 -etch
 
 echo "======   build.sh $ver completed   =============="
