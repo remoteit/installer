@@ -203,16 +203,16 @@ askResetDevice()
                     debug "Deleting $startupfile..."
                     rm $startupfile
                 fi
-                # delete the "start all script"
-                if [ -e "$BIN_DIR/connectd_start_all" ]; then
-                    rm $BIN_DIR/connectd_start_all
-                fi
-                # delete the orphaned provisioning file
+               # delete the orphaned provisioning file
                 debug "Deleting $file..."
                 rm $file
                 printf "."
             done
-            # stop the server channel daemon 
+            # delete the "start all script"
+            if [ -e "$BIN_DIR/connectd_start_all" ]; then
+                rm $BIN_DIR/connectd_start_all
+            fi
+             # stop the server channel daemon 
             connectd_schannel stop > /dev/null
             echo
             checkForDeviceName
