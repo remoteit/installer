@@ -157,8 +157,11 @@ build() {
 # give it a default arch, it doesn't matter as we are just building a deb from which to extract the tar file
         arch="amd64"
     fi
+    # get the optional 4th parameter to use as a file name tag
     if [ "$4" != "" ]; then
         tag="$4"
+    else
+        tag=""
     fi
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
@@ -242,8 +245,11 @@ echo $TEST_DIR
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 1 amd64
+
+#---------------------------------------------------
+# in this section we do some basic installer tests using the amd64 Debian
+# package running on the build container
 
 if [ $runtests -eq 1 ]; then
 sudo "$TEST_DIR"/dpkg/dpkg-install.sh
@@ -274,84 +280,125 @@ if [ $? -ne 0 ]; then
 fi
 
 fi
+#---------------------------------------------------
+# 32-bit i386 Debian package
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-ubuntu16.04 1 i386
 
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04_static 0
 
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04 0
 
 # arm64 package - Debian package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build aarm64-ubuntu16.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-android 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-android_static 0
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build arm-linaro-pi 1 armhf
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build arm-linaro-pi 1 armel
 
-setOption options "PSFLAGS" "ax"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-etch 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "PSFLAGS" "ax"
 build arm-linaro-pi 0
 
-setOption options "PSFLAGS" "w"
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-gnueabi 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86_64-etch 0
-
-# here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
-# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
-build x86_64-etch 1 amd64 -etch
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-setOption options "PSFLAGS" "ax"
 build x86-etch 1 i386 -etch
+
+# here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
+# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86_64-etch 1 amd64 -etch
+
+# mips-24kec
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-24kec 0
+
+# mips-34kc
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-34kc 0
+
+# mips-gcc-4.7.3
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc-4.7.3 0
+
+# mipsel-gcc342
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mipsel-gcc342
+
+# mipsel-bmc5354
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mipsel-bmc5354 0
+
+# now build static versions of all MIPS tar packages
+# mips-24kec_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-24kec_static 0
+
+# mips-34kc_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-34kc_static 0
+
+# mips-gcc-4.7.3_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-gcc-4.7.3_static 0
+
+# mipsel-gcc342_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mipsel-gcc342_static 0
+
+# mipsel-bmc5354_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mipsel-bmc5354_static 0
 
 echo "======   build.sh $ver completed   =============="
 exit 0
