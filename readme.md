@@ -81,3 +81,9 @@ To generate a build, you must first be on a Linux system, then run the following
 ```shell
 npm run build
 ```
+
+### Running installer in debug mode
+
+```shell
+sudo sh -x path/to/usr/bin/connectd_installer 2> debug.txt
+```

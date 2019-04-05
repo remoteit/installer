@@ -10,7 +10,7 @@ VERSION="v1.9"
 AUTHOR="Gary Worsham"
 MODIFIED="February 26, 2019"
 # BASEDIR is used to allow the package to be installed relative to any folder location
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_options
 
 CONNECTD_PORT=

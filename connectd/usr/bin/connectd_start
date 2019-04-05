@@ -5,7 +5,7 @@
 #  remot3.it, Inc : https://remote.it
 #
 #
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_options
 # include shell script lib, must be in path or specify path here
 . "$BIN_DIR"/connectd_wlib

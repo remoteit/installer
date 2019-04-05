@@ -24,7 +24,7 @@ MAXSEL=6
 # path to connectd_options has to be hardwired here and edited if needed
 # e.g. INSTALLPATH=/media/usb
 # ----------------------------------------
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_library
 # ----------------------------------------
 

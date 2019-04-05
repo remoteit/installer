@@ -9,7 +9,7 @@
 VERSION="v1.8"
 AUTHOR="Gary Worsham"
 MODIFIED="February 26, 2019"
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_options
 
 DAEMON=connectd_schannel."$PLATFORM"

@@ -19,7 +19,7 @@ apikey="remote.it.developertoolsHW9iHnd"
 # ----------------------------------------
 # Set BASEDIR here.  (installation folder)
 #
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_options
 filename=$(basename "$0")
 
@@ -69,7 +69,7 @@ checkForRoot()
     if ! [ "$(id -u)" = 0 ]; then
         echo "Running this program requires root access." 1>&2
         echo "Please run sudo $0 instead of $0." 1>&2
-	exit 1
+    exit 1
     fi
 }
 ##### End Version #####
@@ -85,7 +85,7 @@ checkForUtilities()
         echo "Running this program requires curl with SSL support." 1>&2
         echo "Please install curl with SSL support." 1>&2
         echo "Contact support@remote.it if you are not sure what to do." 1>&2
-	exit 1
+    exit 1
     else
         echo "curl with SSL support installed."
     fi
@@ -97,8 +97,8 @@ checkForUtilities()
 
 mv()
 {
-	cp "$1" "$2"
-	rm "$1"
+    cp "$1" "$2"
+    rm "$1"
 }
 
 
@@ -240,7 +240,7 @@ setHardwareID()
 # updated mac expression to support Raspbian Stretch  
     mac=$(ip addr | grep ether | tail -n 1 | awk '{ print $2 }') 
     num=20
-    random=$(tr -dc A-Za-z0-9 < /dev/urandom | dd bs=$num count=1 2> /dev/null)
+    random=$(LC_CTYPE=C tr -dc A-Za-z0-9 < /dev/urandom | dd bs=$num count=1 2> /dev/null)
     HardwareID="$mac-$random"
     logger "remote.it Setting HardwareID to $HardwareID"
     debug "Setting HardwareID to $HardwareID"
@@ -268,12 +268,12 @@ getHardwareID()
         fi
         debug "password=$secret"
         if [ "$token" = "" ]; then
-	    userLogin
+        userLogin
         fi
         result=$(curl ${CURL_OPTS} 'POST' $getHWIDURL -d "{\"deviceaddress\":\"$deviceaddress\", \"secret\":\"$secret\" }" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
         HardwareID=$(jsonval "$result" "hardware_id")
     else
-	setHardwareID
+    setHardwareID
     fi
     echo
     debug "Get HardwareID: $HardwareID"
@@ -289,19 +289,19 @@ checkForServices()
     firstFile=$(echo $services | awk '{print $1}')
     echo "" > "$TMP_DIR"/.uidlist.txt
     if [ -e "$firstFile" ]; then
-	ls "$CONNECTD_CONF_DIR"/Connectd*.conf > "$TMP_DIR/.legacy_instances"
-	instanceNumber=$(wc -l "$TMP_DIR/.legacy_instances" | awk '{ print $1 }')
-	if [ -f "$TMP_DIR/.instances" ]; then
-	    rm "$TMP_DIR/.instances"
-	fi
-	echo "" > "$TMP_DIR/.instances"
-	for i in $(seq 1 "$instanceNumber"); do
-	    instanceName=$(awk "NR==$i" "$TMP_DIR"/.legacy_instances | xargs basename | awk -F "." '{print $1}')
-	    echo "$instanceName" >> "$TMP_DIR/.instances"
-	done 
+    ls "$CONNECTD_CONF_DIR"/Connectd*.conf > "$TMP_DIR/.legacy_instances"
+    instanceNumber=$(wc -l "$TMP_DIR/.legacy_instances" | awk '{ print $1 }')
+    if [ -f "$TMP_DIR/.instances" ]; then
+        rm "$TMP_DIR/.instances"
+    fi
+    echo "" > "$TMP_DIR/.instances"
+    for i in $(seq 1 "$instanceNumber"); do
+        instanceName=$(awk "NR==$i" "$TMP_DIR"/.legacy_instances | xargs basename | awk -F "." '{print $1}')
+        echo "$instanceName" >> "$TMP_DIR/.instances"
+    done 
     else
-	echo "" > "$TMP_DIR/.legacy_instances"
-	echo "" > "$TMP_DIR/.instances"
+    echo "" > "$TMP_DIR/.legacy_instances"
+    echo "" > "$TMP_DIR/.instances"
     fi
     legacyInstances=$(cat "$TMP_DIR"/.instances)
 # get HardwareID to display - it is assumed that if only one service exists, it
@@ -319,39 +319,36 @@ checkForServices()
     for file in $confFiles; do
 #	debug $file
         uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	echo "$uid" >> "$TMP_DIR"/.uidlist.txt
+    echo "$uid" >> "$TMP_DIR"/.uidlist.txt
 
         if [ "$uid" != "" ]; then
             port="$(grep '^port' "$file" | awk '{print $2}')"
-	    debug "$port"
+        debug "$port"
             yooareell="$deviceURL/$uid"
             debug "$yooareell"
 
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
+        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
 
-	    # this next test checks to see if device is registered.  
-	    # If not, it was probably deleted at the web portal.
+        # this next test checks to see if device is registered.  
+        # If not, it was probably deleted at the web portal.
 
-	    unknownDevice=$(echo "$resp" | grep "unknown device")
+        unknownDevice=$(echo "$resp" | grep "unknown device")
             if [ "$unknownDevice" = "" ]; then
 
-	        serviceName=$(jsonval "$resp" "name")
+            serviceName=$(jsonval "$resp" "name")
+            debug "serviceName: $serviceName"
+            protocol=$(jsonval "$resp" "title")
+            debug "protocol: $protocol"
 
-		debug "serviceName: $serviceName"
-            
-	        protocol=$(jsonval "$resp" "title")
-
-		debug "protocol: $protocol"
-
-	        # rename "Bulk Service" and "Basic Web" to shorten them
+            # rename "Bulk Service" and "Basic Web" to shorten them
 
                 if [ "$protocol" = "Bulk Service" ]; then
-		    protocol="rmt3"
-		    port=65535
+                    protocol="rmt3"
+                    port=65535
                 elif [ "$protocol" = "SSH" ]; then
                     port=22
                 elif [ "$protocol" = "Basic Web" ]; then
-		    protocol="WebPxy"
+                    protocol="WebPxy"
                     port=80
                 elif [ "$protocol" = "HTTPS" ]; then
                     port=443
@@ -359,12 +356,13 @@ checkForServices()
                     port=80
                 elif [ "$protocol" = "VNC" ]; then
                     port=5900
-	        # trim this one's name so it fits on display
+                # TODO: Add other service types here too...
+            # trim this one's name so it fits on display
                 elif [ "$protocol" = "Generic TCP" ]; then
                     protocol="TCP"
                 fi
 
-	        #if conf file has port override, use that instead
+            #if conf file has port override, use that instead
 
                 port_override=$(grep proxy_dest_port "$file" | tail -n 1 | awk '{print $2}')
 
@@ -372,24 +370,24 @@ checkForServices()
                     port=$port_override
                 fi 
 
-	        # get service process name which is using that tcp port, if any
+            # get service process name which is using that tcp port, if any
                 proxyAddress=$(grep ^proxy_dest_ip $file | tail -n 1 | awk '{print $2}')
 
                 if [ "$proxyAddress" = "" ]; then
                     service=$(netstat -lpn 2> /dev/null | grep ${GREPFLAGS} tcp | grep ${GREPFLAGS} "0.0.0.0:$port" | awk -F"/" '{print $2}')
 
-	            # if no service, show warning
+                # if no service, show warning
                     if [ "$service" = "" ]; then
-		        if [ "$protocol" != "rmt3" ]; then
+                if [ "$protocol" != "rmt3" ]; then
                             service="not detected"
-		            WARNING="1"
-		        fi
+                    WARNING="1"
+                fi
                     else
-			service="OK: $service"
+            service="OK: $service"
                     fi
                 else
                    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "$proxyAddress":"$port" > "$TMP_DIR"/.ncerror
-		   grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
+           grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
 
                    result=$?
                    if [ $result = 1 ]; then
@@ -398,7 +396,7 @@ checkForServices()
                         service="not detected"
                    fi
                 fi
-		# don't show rmt3 service in Service List - it's the "Device Name"
+        # don't show rmt3 service in Service List - it's the "Device Name"
                 if [ "$protocol" != "rmt3" ]; then
                     if [ "$proxyAddress" = "" ]; then
                         lanAddress="localhost"
@@ -455,8 +453,8 @@ getNumRange()
             if [ "$num" != "" ]; then
                 echo
                 if [ $(validateInput "$num" "0123456789") -ne 0 ]; then
-	            printf "\nSorry, enter numbers only.\n"
-	        else
+                printf "\nSorry, enter numbers only.\n"
+            else
 #		    echo "You entered: $num"
                     if [ "${num}" -ge "$1" ]; then
                         if [ "${num}" -le "$2" ]; then
@@ -480,7 +478,7 @@ menuLoop()
     while [ true ]; do
    #     clear
         checkForServices
-	alias=""	# reset alias,so you will be asked
+    alias=""	# reset alias,so you will be asked
         printf "============================ Main Menu ============================\n"
         printf "                                                                   \n"
         printf "    1) Attach/reinstall a remote.it Service to an application      \n"
@@ -504,7 +502,7 @@ menuLoop()
             protocolSelection
 # in protocolSelection, get_num will be set to MAXSEL to indicate "return to previous menu"
             if [ "$get_num" != "$MAXSEL" ]; then
-            	configureConnection
+                configureConnection
             fi
         elif [ "$get_num" = 2 ]; then
             proxySelection
@@ -556,9 +554,9 @@ platformDetection()
 setConnectdPort()
 {
     if [ "$proxyAddress" = "" ]; then
-	CONNECTD_PORT="Connectd$1$PORT"
+    CONNECTD_PORT="Connectd$1$PORT"
     else
-	CONNECTD_PORT="Connectd_$proxyAddress""_$1$PORT"
+    CONNECTD_PORT="Connectd_$proxyAddress""_$1$PORT"
     fi
 }
 ######## End setConnectdPort ####################
@@ -590,16 +588,16 @@ proxySelection()
                 for i in 1 2 3 4; do
                     if [ $(echo "$ip" | cut -d. -f$i) -gt 255 ]; then
                         echo "Invalid IP address: $ip. Please try again."
-			echo "Press Enter to continue."
-			read anykey
+            echo "Press Enter to continue."
+            read anykey
                         error=1
-			break
+            break
                     fi
                 done
-		if [ $error -eq 0 ]; then
-                	# echo "IP pattern success ($p)"
-                	proxyAddress="$p"
-		fi
+        if [ $error -eq 0 ]; then
+                    # echo "IP pattern success ($p)"
+                    proxyAddress="$p"
+        fi
             else
                 echo "Invalid IP address, please try again. ($p)"
                 #  exit 1
@@ -628,6 +626,8 @@ protocolSelection()
         printf "* Creating proxy connection to the device at: *\n"
         printf "\n $proxyAddress\n\n"
     fi
+    # TODO: Add all services:
+    # https://docs.google.com/spreadsheets/d/11P1dX8tNZ3HIzwVg1-R8dWwsxMQJC1OlOZhQXDHKHGw/edit#gid=103484131
     printf "*********** Protocol Selection Menu ***********\n"
     printf "                                             \n"
     printf "     1) SSH on port 22                       \n"
@@ -712,9 +712,9 @@ protocolSelection()
         printf "Protocol: %s " "$PROTOCOL"
         if [ "$PROTOCOL" != "rmt3" ]; then
             printf "\nPort #: %s\n" "$PORT"
-	fi
+    fi
             
-	alreadyThere=$(grep $GREPFLAGS "$CONNECTD_PORT" "$TMP_DIR/.legacy_instances")
+    alreadyThere=$(grep $GREPFLAGS "$CONNECTD_PORT" "$TMP_DIR/.legacy_instances")
         if [ "$alreadyThere"  != "" ]; then
             printf "A remote.it Service is already attached to this Application.\n" 
             if ask "Do you wish to overwrite your previous settings?"; then
@@ -738,7 +738,7 @@ protocolSelection()
                 protocolSelection
             fi
         else
-		#     userLogin
+        #     userLogin
             testLogin
         fi
     fi
@@ -788,27 +788,27 @@ deleteConnection()
 
     for file in "$CONNECTD_CONF_DIR"/*.conf; do
         uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	yooareell="$deviceURL/$uid"
+    yooareell="$deviceURL/$uid"
 
-	resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
+    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
 
         serviceName=$(jsonval "$resp" "name")
 
         if [ "$deviceToDelete" = "$DeviceName" ]; then  
-	    printf "\nSorry, you are not allowed to remove the Device Name service with this option.\n"
-	    printf "You may use the option to remove all services if you wish to start over.\n"
+        printf "\nSorry, you are not allowed to remove the Device Name service with this option.\n"
+        printf "You may use the option to remove all services if you wish to start over.\n"
             printf "Press Enter to continue."
             read anyKey
             return
         elif [ "$serviceName" = "$deviceToDelete" ]; then  
-	    #      printf "\n$deviceInfo found...\n"
+        #      printf "\n$deviceInfo found...\n"
             deviceFound=1
-	    # get the protocol name
-	    deviceType=$(jsonval "$resp" "title")
-	    if ask "Are you sure you want to delete the remote.it $deviceType Service $serviceName?"; then
-		printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
+        # get the protocol name
+        deviceType=$(jsonval "$resp" "title")
+        if ask "Are you sure you want to delete the remote.it $deviceType Service $serviceName?"; then
+        printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
 
-		result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
+        result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
 
                 checkAPIResult "$deleteURL" "$result"
 
@@ -817,16 +817,16 @@ deleteConnection()
                 fileNameRoot="${fn%.conf}"
 
 #		echo $fileNameRoot
- 		# if daemon pid exists, stop daemon and remove start/stop script
- 		if [ -f "$PID_DIR"/"$fileNameRoot".pid ]; then
- 		    if [ -f "$BIN_DIR"/"$fileNameRoot" ]; then
- 			"$BIN_DIR"/"$fileNameRoot" stop -q
- 			rm "$BIN_DIR"/"$fileNameRoot"
-		    fi
-		fi
-		if [ -f "$file" ]; then
-		    rm "$file"
-		fi
+         # if daemon pid exists, stop daemon and remove start/stop script
+         if [ -f "$PID_DIR"/"$fileNameRoot".pid ]; then
+             if [ -f "$BIN_DIR"/"$fileNameRoot" ]; then
+             "$BIN_DIR"/"$fileNameRoot" stop -q
+             rm "$BIN_DIR"/"$fileNameRoot"
+            fi
+        fi
+        if [ -f "$file" ]; then
+            rm "$file"
+        fi
            fi
         fi
     done
@@ -848,38 +848,38 @@ deleteAllConnections()
     # now iterate through all provisioning files to find it
     # stop all daemons.  
 
-    	for file in "$CONNECTD_CONF_DIR"/*.conf; do
-	# get service name from UID
+        for file in "$CONNECTD_CONF_DIR"/*.conf; do
+    # get service name from UID
             uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
+        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
             serviceName="$(jsonval "$resp" name)"
 
-	    printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
-	    result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
+        printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
+        result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
             checkAPIResult "$deleteURL" "$result"
 
-	    fn=$(basename "$file")
-	    fileNameRoot="${fn%.conf}"
+        fn=$(basename "$file")
+        fileNameRoot="${fn%.conf}"
 #	    echo "filenameroot =  $fileNameRoot"
- 	    # if daemon pid exists, stop daemon and remove start/stop script
- 	    if [ -f "$PID_DIR"/"$fileNameRoot".pid ]; then
- 	        if [ -f "$BIN_DIR"/"$fileNameRoot" ]; then
- 		    "$BIN_DIR"/"$fileNameRoot" stop -q
- 		    rm "$BIN_DIR"/"$fileNameRoot"
-		fi
-	    fi
-	    if [ -f "$file" ]; then
-		rm "$file"
-	    fi
+         # if daemon pid exists, stop daemon and remove start/stop script
+         if [ -f "$PID_DIR"/"$fileNameRoot".pid ]; then
+             if [ -f "$BIN_DIR"/"$fileNameRoot" ]; then
+             "$BIN_DIR"/"$fileNameRoot" stop -q
+             rm "$BIN_DIR"/"$fileNameRoot"
+        fi
+        fi
+        if [ -f "$file" ]; then
+        rm "$file"
+        fi
        done
         if [ -f "$BIN_DIR"/"$STARTEMUP" ]; then
-	    rm "$BIN_DIR"/"$STARTEMUP"
+        rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
-   	fi
+       fi
 # also should clear out crontab at this point
-	disableStartup
+    disableStartup
 # stop schannel
-	connectd_schannel stop
+    connectd_schannel stop
         exit
     fi
 }
@@ -891,13 +891,13 @@ bashCheck()
 {
     if [ "$BASH_VERSION" = '' ]; then
 #	clear
-	printf "You executed this script with dash vs bash! \n\n"
-	printf "Please execute \"chmod +x %s \" and then \n" "$filename"
-	printf "execute \"./%s\".  \n\n" "$filename"
-	printf "Thank you! \n"
-	exit
+    printf "You executed this script with dash vs bash! \n\n"
+    printf "Please execute \"chmod +x %s \" and then \n" "$filename"
+    printf "execute \"./%s\".  \n\n" "$filename"
+    printf "Thank you! \n"
+    exit
     else
-	echo "Now launching the remote.it connectd daemon installer..." > /dev/null
+    echo "Now launching the remote.it connectd daemon installer..." > /dev/null
     fi
 }
 ##### End Bash Check #####
@@ -905,8 +905,8 @@ bashCheck()
 ######### Begin askRegisterLogin #########
 askRegisterLogin()
 {
-	value="false"
-	while [ "$value" = "false" ]; do
+    value="false"
+    while [ "$value" = "false" ]; do
    #     clear
 #        printf "\n\n"
         printf "********************* Sign In Menu *********************\n"
@@ -923,25 +923,25 @@ askRegisterLogin()
         debug "get_num: $get_num"
 
         if [ "$get_num" = 2 ]; then
-		registerUser
+        registerUser
 #		askVerificationCode
-		value="false"
+        value="false"
         elif [ "$get_num" = 1 ]; then
-		userLogin
-		testLogin
-		value="true"
+        userLogin
+        testLogin
+        value="true"
         elif [ "$get_num" = 3 ]; then
-		if [ "$username" = "" ]; then
-		    getEmail
-		fi
+        if [ "$username" = "" ]; then
+            getEmail
+        fi
                 enterVerificationCode
 #		value="true"
         elif [ "$get_num" = 4 ]; then
-	    if ask "Are you sure?"; then
-		exit
-	    fi
-	fi
-	done
+        if ask "Are you sure?"; then
+        exit
+        fi
+    fi
+    done
 }
 
 ######### End askRegisterLogin #########
@@ -951,9 +951,9 @@ getEmail()
 {
     printf "Enter your e-mail address to create a new remote.it account.\n"
     if [ "$USERNAME" != "" ]; then 
-	username="$USERNAME"
+    username="$USERNAME"
     else        
-	read username
+    read username
     fi
 }
 ######### End getEmail #########
@@ -968,12 +968,12 @@ registerUser()
     value=$(jsonval "$resp" "status") 
     reason=$(jsonval "$resp" "reason") 
     if [ "$value" != "true" ]; then
-    	echo "E-mail registration error: " "$reason"
+        echo "E-mail registration error: " "$reason"
     else
-    	printf "\nA verification code has been sent to %s.\n" "$username"
-    	printf "If you do not receive this e-mail with your code\n"
-    	printf "within a few minutes, select option 2 to try again.\n"
-    	printf "Once you receive the code, select option 3 to enter it.\n\n"
+        printf "\nA verification code has been sent to %s.\n" "$username"
+        printf "If you do not receive this e-mail with your code\n"
+        printf "within a few minutes, select option 2 to try again.\n"
+        printf "Once you receive the code, select option 3 to enter it.\n\n"
    fi
    printf "Press Enter to continue."
    read anyKey
@@ -989,7 +989,7 @@ enterVerificationCode()
     read registrationCode
     while [ "$passwordOK" != 1 ]; do
         echo
-    	getNewPassword
+        getNewPassword
     done
 
      resp=$(curl ${CURL_OPTS} 'POST' $regAccountURLVerified -d "{\"email\":\"$username\", \"password\":\"$password\", \"shortcode\":\"$registrationCode\"}" -H "content-type:application/json" -H "apikey:$apikey" 2> "$TMP_DIR"/.curlerr)
@@ -997,20 +997,20 @@ enterVerificationCode()
     debug "$resp"
     value=$(jsonval "$resp" "status") 
     if [ "$value" != "true" ]; then
-	reason=$(jsonval "$resp" "reason")
-    	echo "Account registration error:" "$reason"
+    reason=$(jsonval "$resp" "reason")
+        echo "Account registration error:" "$reason"
         echo "Hit Enter to continue."
-	value="false"
-	read anyKey
+    value="false"
+    read anyKey
     else
         echo
         echo "Your remote.it account has been created."
-	echo "Now log in."
+    echo "Now log in."
         echo
 # now log in
         userLogin
-	signInAPI
-	testLogin
+    signInAPI
+    testLogin
     fi
 }
 
@@ -1019,14 +1019,14 @@ enterVerificationCode()
 ######### Begin getNewPassword #########
 getNewPassword() {
     if [ "$PASSWORD" != "" ]; then
-	password="$PASSWORD"
+    password="$PASSWORD"
     else
-	printf "\nChoose a password to use with your remote.it account.\n"
-	printf "It should be between 7 and 15 characters in length.\n"
-	printf "Valid special characters are limited to ! . - @ _ $ \n"
-	printf "Please enter it now:\n"
-	password=""
-	#  CTD-249 use stty to suppress password, if stty exists.
+    printf "\nChoose a password to use with your remote.it account.\n"
+    printf "It should be between 7 and 15 characters in length.\n"
+    printf "Valid special characters are limited to ! . - @ _ $ \n"
+    printf "Please enter it now:\n"
+    password=""
+    #  CTD-249 use stty to suppress password, if stty exists.
         if [ "$(which stty)" != "" ]; then
             stty -echo
         fi
@@ -1036,29 +1036,29 @@ getNewPassword() {
         fi
 
         if [ $(validateInput "$password" "\$ \@ \! \- \_ \. [a-zA-Z0-9]") != 0 ]; then
-	    printf "\nSorry, password contains one or more invalid characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	fi 
+        printf "\nSorry, password contains one or more invalid characters.\n"
+        password=""
+        passwordOK=-1
+        return
+    fi 
 
-	length=${#password}
+    length=${#password}
 #	echo "Length of $password is $length".
 
-	if [ "$length" -lt 7 ] ; then
-	    printf "\nPassword length should be between 7 and 15 characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	elif [ "$length" -gt 15 ] ; then
-	    printf "\nPassword length should be between 7 and 15 characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	fi
+    if [ "$length" -lt 7 ] ; then
+        printf "\nPassword length should be between 7 and 15 characters.\n"
+        password=""
+        passwordOK=-1
+        return
+    elif [ "$length" -gt 15 ] ; then
+        printf "\nPassword length should be between 7 and 15 characters.\n"
+        password=""
+        passwordOK=-1
+        return
+    fi
 
         printf "\nPlease confirm your remote.it password: \n"
-	#  CTD-249 use stty to suppress password, if stty exists.
+    #  CTD-249 use stty to suppress password, if stty exists.
         if [ "$(which stty)" != "" ]; then
             stty -echo
         fi
@@ -1068,13 +1068,13 @@ getNewPassword() {
         fi
 
         if [ "$password" != "$passwordConfirm" ]; then
-	    echo
-	    printf "Passwords don't match!"
-	    echo
-	    passwordOK=-1
+        echo
+        printf "Passwords don't match!"
+        echo
+        passwordOK=-1
         else
-	    passwordOK=1
-	fi
+        passwordOK=1
+    fi
     fi
 }
 
@@ -1086,27 +1086,27 @@ userLogin() #Portal login function
 #    echo "connectd_library Username = $USERNAME Password = $PASSWORD"
 
     if [ "$USERNAME" != "" ]; then 
-	username="$USERNAME"
+    username="$USERNAME"
     else        
-	printf "Please enter your remote.it Username (e-mail address): \n"
-	read username
+    printf "Please enter your remote.it Username (e-mail address): \n"
+    read username
     fi
     if [ "$AUTHHASH" != "REPLACE_AUTHHASH" ]; then
-	authhash="$AUTHHASH"
+    authhash="$AUTHHASH"
     else
         if [ "$PASSWORD" != "" ]; then
-	    password="$PASSWORD"
+        password="$PASSWORD"
         else
-	# use stty to suppress password, if stty exists.
+    # use stty to suppress password, if stty exists.
             if [ "$(which stty)" != "" ]; then
                 stty -echo
-	    fi
-	    printf "\nPlease enter your remote.it password: \n"
-	    password=""
-	    read password
+        fi
+        printf "\nPlease enter your remote.it password: \n"
+        password=""
+        read password
            if [ "$(which stty)" != "" ]; then
                 stty echo
-	    fi
+        fi
         fi
    fi
    debug $username $password $authhash
@@ -1130,19 +1130,19 @@ signInAPI()
     status=$(jsonval "$resp" 'status')
     debug "Status = $status"
     if [ "$status" = 'true' ]; then
-	token=$(jsonval "$resp" "token")
+        token=$(jsonval "$resp" "token")
         debug "Login token: $token"
     else
-    	noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
-    	loginFailed=$(echo "$resp" | grep "The username or password are invalid" | sed 's/"//g')
-    	slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
+        noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
+        loginFailed=$(echo "$resp" | grep "The username or password are invalid" | sed 's/"//g')
+        slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
 # 404 is triggered when you enter some special character in e-mail.  this specific search may fail if API
 # "$apiServer" is moved
-    	login404=$(echo "$resp" | grep "404 Page Not Found" | sed 's/"//g')
-    	login400=$(echo "$resp" | grep "400 Bad Request" | sed 's/"//g')
-    	apikeyerror=$(echo "$resp" | grep "The API application key is invalid" | sed 's/"//g')
+        login404=$(echo "$resp" | grep "404 Page Not Found" | sed 's/"//g')
+        login400=$(echo "$resp" | grep "400 Bad Request" | sed 's/"//g')
+        apikeyerror=$(echo "$resp" | grep "The API application key is invalid" | sed 's/"//g')
         devkeyerror=$(echo "$resp" | grep "api key failed validation" | sed 's/"//g')
-	debug "Login Error: $noSuchUser $loginFailed $slimError $login404 $login400 $apikeyerror $devkeyerror" 
+    debug "Login Error: $noSuchUser $loginFailed $slimError $login404 $login400 $apikeyerror $devkeyerror" 
     fi
     # invalid cert can happen if system date is set to before current date
     invalidCert=$(grep "SSL certificate problem" "$TMP_DIR"/.curlerr)
@@ -1156,20 +1156,20 @@ testLogin()
     echo "."
     while [ "$noSuchUser" != "" ] || [ "$loginFailed" != "" ] || [ "$slimError" != "" ] || [ "$login400" != "" ] || [ "$login404" != "" ] || [ "$apikeyerror" != "" ] || [ "$devkeyerror" != "" ]; do
 #	clear
-	printf "\n\nYou have entered either an incorrect username or password.\n"
+    printf "\n\nYou have entered either an incorrect username or password.\n"
         sleep 1
-	printf "\nPlease try again.  Press the 'Enter' key to continue.\n"
+    printf "\nPlease try again.  Press the 'Enter' key to continue.\n"
         read dummyValue
         printf "\nOne moment please...\n\n"
         sleep 4
-	noSuchUser=
-	loginFailed=
+    noSuchUser=
+    loginFailed=
         slimError=
         login400=
         login404=
         apikeyerror=
         devkeyerror=
-	userLogin
+    userLogin
     done
     if [ "$invalidCert" != "" ]; then
  #       clear
@@ -1199,24 +1199,24 @@ checkForDeviceName()
     if [ -e "$rmt3provFile" ]; then
 #	debug "Found rmt3 conf file: $rmt3provFile"
         uid="$(grep '^UID' "$rmt3provFile" | awk '{print $2}')"
-	echo "$uid" >> "$TMP_DIR"/.uidlist.txt
+    echo "$uid" >> "$TMP_DIR"/.uidlist.txt
 
         if [ "$uid" != "" ]; then
             port="$(grep '^port' "$rmt3provFile" | awk '{print $2}')"
-	    yooareell="$deviceURL/$uid"
+        yooareell="$deviceURL/$uid"
 
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
+        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
 
-	    # this next test checks to see if device is registered.  
-	    # If not, it was probably deleted at the web portal.
+        # this next test checks to see if device is registered.  
+        # If not, it was probably deleted at the web portal.
 
-	    unknownDevice=$(echo "$resp" | grep "unknown device")
+        unknownDevice=$(echo "$resp" | grep "unknown device")
             if [ "$unknownDevice" = "" ]; then
-	        serviceName=$(jsonval "$resp" "name")
-		debug "serviceName: $serviceName"
+            serviceName=$(jsonval "$resp" "name")
+        debug "serviceName: $serviceName"
             
-	        protocol=$(jsonval "$resp" "title")
-		debug "protocol: $protocol"
+            protocol=$(jsonval "$resp" "title")
+        debug "protocol: $protocol"
             else
                 askResetDevice
             fi
@@ -1242,7 +1242,7 @@ checkForDeviceName()
 #
 convertExistingUIDs()
 {
-	debug "convertExistingUIDs"
+    debug "convertExistingUIDs"
 # check to make sure there is an existing directory before trying to iterate.
 # HardwareID is assumed set and valid upon entry.
 
@@ -1250,23 +1250,23 @@ convertExistingUIDs()
         logger "updating existing services to add HardwareID"
         getHardwareID
         debug "HardwareID:$HardwareID"
-    	for file in "$CONNECTD_CONF_DIR"/*.conf; do
-	    debug "$(basename $file)"
+        for file in "$CONNECTD_CONF_DIR"/*.conf; do
+        debug "$(basename $file)"
             if [ "$(basename $file)" != "Connectdrmt365535.conf" ]; then
-	# get service name from UID
+    # get service name from UID
                 uid="$(grep '^UID' "$file" | awk '{print $2}')"
 
                 result=$(curl ${CURL_OPTS} 'POST' $deviceHWIDURL -d "{\"deviceaddress\":\"$uid\", \"hardwareid\":\"$HardwareID\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token" 2> /"$TMP_DIR"/.curlerr)
 
                 checkAPIResult "$deviceHWIDURL" "$result"
 
-	        addHWIDResult=$(jsonval "$result" "status")
+            addHWIDResult=$(jsonval "$result" "status")
 
-		echo "Updating $file"
-	        logger "connectd: Adding HardwareID $HardwareID to $serviceName UID $uid - $addHWIDResult"
+        echo "Updating $file"
+            logger "connectd: Adding HardwareID $HardwareID to $serviceName UID $uid - $addHWIDResult"
 # now update start/stop script
-		CONNECTD_PORT=$(basename "$file" ".conf")
-		installStartStop
+        CONNECTD_PORT=$(basename "$file" ".conf")
+        installStartStop
             fi
         done
     fi
@@ -1286,7 +1286,7 @@ installProvisioning()
 
     printf "."
     if [ ! -d "$CONNECTD_CONF_DIR" ]; then
-	mkdir -p "$CONNECTD_CONF_DIR"
+    mkdir -p "$CONNECTD_CONF_DIR"
     fi
 
 # calculate the project name, given the PLATFORM and PROTOCOL
@@ -1297,6 +1297,8 @@ installProvisioning()
         platformType="4B2"
     elif [ "$(echo "$PLATFORM" | grep "x86_64-etch")" != "" ]; then
         platformType="4B2"
+    elif [ "$(echo "$PLATFORM" | grep "x86_64-osx")" != "" ]; then
+        platformType="440"
     elif [ "$(echo "$PLATFORM" | grep "x86-ubuntu16.04")" != "" ]; then
         platformType="460"
     elif [ "$(echo "$PLATFORM" | grep "x86_64-ubuntu16.04")" != "" ]; then
@@ -1327,7 +1329,7 @@ installProvisioning()
 #    echo "$resp"
 #    read anykey
     # parse the sections into individual lines
-    name=$(echo "$resp" | sed -e 's/[{\"]//g' | sed -e 's/[[}]/\n\n''/g') 
+    name=$(echo "$resp" | sed -e 's/[{\"]//g' | sed -e 's/[[}]/\\n\\n''/g') 
 
 # write the entire device list to a file
     if [ '$(echo $name | grep "$1")' != "" ]; then
@@ -1338,13 +1340,13 @@ installProvisioning()
         findLine="$(echo $line | grep $projectName)"
         if [ "$findLine" != "" ] ; then
 #            echo "Found existing project: $projectName"
-	    break
+        break
         fi
     done < "$projectListFile"
 
 #   echo "findLine: $findLine"
     if [ "$findLine" = "" ]; then
-	debug "project $projectName not found! creating..."
+    debug "project $projectName not found! creating..."
 #        echo "platform: $PLATFORM"
 #        echo "PROTOCOL: $PROTOCOL"
 #        read anykey
@@ -1372,10 +1374,11 @@ installProvisioning()
         result=$(curl ${CURL_OPTS} 'POST' $projectCreateURL -d "{\"projectname\":\"$projectName\", \"projecttype\":\"device\", \"platformversion\":\"1.0\",\"platformtype\":\"$platformType\",\"contenttype\":\"$contentType\",\"contentport\":\"$PORT\" }" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
 #        echo "$result"
         checkAPIResult "$projectCreateURL" "$result"
-        projectID=$(jsonval "$result" "projectid") 
+        projectID=$(sonval "$result" "projectid") 
     else
        debug "Found existing project"
-       projectID="$(echo $findLine | sed -e 's/,/\n''/g' | grep "projectid" | awk -F":" '{print $2 }')"
+       # TODO: Figure out why this isn't parsing the project ID properly
+       projectID="$(echo $findLine | sed -e 's/,/\\n''/g' | grep "projectid" | awk -F":" '{ print $2 }')"
     fi
     debug "Project ID: $projectID"
     resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$projectFileLinkURL/$projectID")
@@ -1471,11 +1474,11 @@ installStartStop()
     fi
     # 3: crontab approach
     if [ $startupScripts = 3 ]; then
-	checkCron=$(crontab -l 2> /dev/null | grep -c "$STARTEMUP" )
-	debug "CheckCron: $checkCron\n"
-	if [ "$checkCron" = 0 ]; then
-	    enableStartup
-	fi
+    checkCron=$(crontab -l 2> /dev/null | grep -c "$STARTEMUP" )
+    debug "CheckCron: $checkCron\n"
+    if [ "$checkCron" = 0 ]; then
+        enableStartup
+    fi
  #   elif [ $startupScripts = 1 ]; then
  #       ln -s /usr/bin/connectd_start /etc/init.d/connectd
     fi
@@ -1483,8 +1486,8 @@ installStartStop()
     checkStartConnectd=$(grep -c "$CONNECTD_PORT" "$BIN_DIR"/"$STARTEMUP" )
     # if not, add it
     if [ "$checkStartConnectd" = 0 ]; then
-	sed s/REPLACE_TEXT/"$CONNECTD_PORT"/ < "$CONNECTD_LIB_DIR"/scripts/connectd_start.add > "$TMP_DIR"/connectd_start.add
-	sh -c "cat $TMP_DIR/connectd_start.add >> $BIN_DIR/$STARTEMUP"
+    sed s/REPLACE_TEXT/"$CONNECTD_PORT"/ < "$CONNECTD_LIB_DIR"/scripts/connectd_start.add > "$TMP_DIR"/connectd_start.add
+    sh -c "cat $TMP_DIR/connectd_start.add >> $BIN_DIR/$STARTEMUP"
         rm "$TMP_DIR"/connectd_start.add
     fi
     # see if there is an entry to start the listener service daemon connectd_schannel.x already
@@ -1525,10 +1528,10 @@ checkUID()
     printf "."
     checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
     if [ "$checkForUID" = 2 ]; then
-	uid=$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )
-	printf "\n==========================================\nAllocated UID: %s. \n\n" "$uid"
+    uid=$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )
+    printf "\n==========================================\nAllocated UID: %s. \n\n" "$uid"
     else
-	retryFetchUID
+    retryFetchUID
     fi
 }
 ######### Check for UID #########
@@ -1539,18 +1542,18 @@ retryFetchUID()
     printf "."
     for run in $(seq 1 15)
     do
-	fetchUID
-	checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID)"
-	if [ "$checkForUID" = 2 ]; then
+    fetchUID
+    checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID)"
+    if [ "$checkForUID" = 2 ]; then
 #	    uid="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep UID | awk '{print $2}' | xargs echo)"
-	    uid="$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )"
-	    #       printf "\n\nAllocated UID: %s. \n\n" "$uid"
-	    break
-	fi
+        uid="$(grep ^UID "$TMP_DIR"/"$CONNECTD_PORT".conf | awk '{print $2}' )"
+        #       printf "\n\nAllocated UID: %s. \n\n" "$uid"
+        break
+    fi
     done
     checkForUID="$(tail "$TMP_DIR"/"$CONNECTD_PORT".conf | grep -c UID )"
     if [ "$checkForUID" != 2 ]; then
-	printf "We have unsuccessfully retried to obtain a UID.\n"
+    printf "We have unsuccessfully retried to obtain a UID.\n"
         printf "Please contact remote.it Support at support@remote.it for help.\n\n"
         exit
     fi
@@ -1573,16 +1576,16 @@ preregisterUID()
     test2="$(echo "$preregUID" | grep -c "api token")"
     test3="$(echo "$preregUID" | grep -c "false")"
     if [ "$test1" = 1 ]; then
-	printf "Pre-registration of UID: %s successful. \n\n" "$uid" > /dev/null
+    printf "Pre-registration of UID: %s successful. \n\n" "$uid" > /dev/null
     elif [ "$test2" = 1 ]; then
-	printf "You are not currently logged in. \n"
-	userLogin
-	testLogin
-	preregisterUID
+    printf "You are not currently logged in. \n"
+    userLogin
+    testLogin
+    preregisterUID
     elif [ "$test3" = 1 ]; then
-	printf "Sorry, the pre-registration of UID: %s is failing."
-	printf "Please send an e-mail to support@remote.it."
-	exit
+    printf "Sorry, the pre-registration of UID: %s is failing."
+    printf "Please send an e-mail to support@remote.it."
+    exit
     fi
 }
 ######### End Pre-register Device #########
@@ -1595,12 +1598,12 @@ registerDevice()
     printf "."
     while [ "$alias" = "" ]; do
         if [ "$PROTOCOL" = "rmt3" ]; then
-	    printf "\n\nEnter a name for your device (e.g. my_Pi_001).\n\n"
-	    printf "The Device Name identifies your device in the remote.it portal.\n"
+        printf "\n\nEnter a name for your device (e.g. my_Pi_001).\n\n"
+        printf "The Device Name identifies your device in the remote.it portal.\n"
             printf "Your services will be grouped under the Device Name.\n\n"
-	else
-	    printf "\n\nEnter a name for this remote.it service (e.g. %s-Pi). \n" "$PROTOCOL"
-	    printf "This name will be shown in your remote.it Service List.\n\n"
+    else
+        printf "\n\nEnter a name for this remote.it service (e.g. %s-Pi). \n" "$PROTOCOL"
+        printf "This name will be shown in your remote.it Service List.\n\n"
         fi    
         printf "Only letters, numbers, underscore, space and dash are allowed.\n\n"
         read alias
@@ -1618,7 +1621,7 @@ registerDevice()
         if [ "$PROTOCOL" = "rmt3" ]; then
             secretCall="$(curl ${CURL_OPTS} 'POST' $regdeviceURL -d "{\"deviceaddress\":\"$uid\",  \"devicetype\":\"$DEVICETYPE\", \"devicealias\":\"$alias\", \"skipsecret\":\"true\", \"hardwareid\":\"$HardwareID\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")"    
         else
-	# if it's not the bulk service, set the "skip email" flag so that only one regsitration e-mail 
+    # if it's not the bulk service, set the "skip email" flag so that only one regsitration e-mail 
         # per device is sent
             secretCall="$(curl ${CURL_OPTS} 'POST' $regdeviceURL -d "{\"deviceaddress\":\"$uid\",  \"devicetype\":\"$DEVICETYPE\", \"devicealias\":\"$alias\", \"skipsecret\":\"true\", \"hardwareid\":\"$HardwareID\", \"skipemail\":\"true\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")"
         fi
@@ -1629,42 +1632,42 @@ registerDevice()
         if [ "$result" = "false" ]; then
             if [ "$error" = "DuplicateName:" ]; then
                 echo
-	        echo "There is already a Service registered to your account as $alias."
-	        echo "Hit Enter to continue."
-	        read AnyKey
+            echo "There is already a Service registered to your account as $alias."
+            echo "Hit Enter to continue."
+            read AnyKey
                 alias=
                 registerDevice
             elif [ "$error" = "DuplicateAddress:" ]; then
                 echo
-	        echo "Duplicate Address error while attempting to register $alias."
-	        echo "Hit Enter to continue."
-	        read AnyKey
+            echo "Duplicate Address error while attempting to register $alias."
+            echo "Hit Enter to continue."
+            read AnyKey
                 exit 1
             else
-	    	test2="$(echo $secretCall | grep -E "missing api token|api token missing" | wc -l)"
-	    	test3="$(echo $secretCall | grep "false" | wc -l)"
-	    	if [ $test2 = 1 ]; then
-			printf "For some reason, you were logged out and must log back in. \n"
-			userLogin
-			testLogin
-			getSecret
-	    	fi
+            test2="$(echo $secretCall | grep -E "missing api token|api token missing" | wc -l)"
+            test3="$(echo $secretCall | grep "false" | wc -l)"
+            if [ $test2 = 1 ]; then
+            printf "For some reason, you were logged out and must log back in. \n"
+            userLogin
+            testLogin
+            getSecret
             fi
-	else 
+            fi
+    else 
             test1="$(echo $secretCall | grep "true" | wc -l)"
-	    if [ $test1 = 1 ]; then
-	        secret="$(getJSONSecret "$secretCall" "secret")"
+        if [ $test1 = 1 ]; then
+            secret="$(getJSONSecret "$secretCall" "secret")"
 #		secret="$(echo $secretCall | awk -F "," '{print $2}' | awk -F "\"" '{print $4}' | sed s/://g)"
-		echo "# password - erase this line to unregister the device" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
-		echo "password $secret" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
-		#       finally copy valid assembled enablement file to $CONNECTD_CONF_DIR
-		mv "$TMP_DIR"/"$CONNECTD_PORT".conf "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf
-     	        debug "Secret: $secret"
+        echo "# password - erase this line to unregister the device" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
+        echo "password $secret" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
+        #       finally copy valid assembled enablement file to $CONNECTD_CONF_DIR
+        mv "$TMP_DIR"/"$CONNECTD_PORT".conf "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf
+                 debug "Secret: $secret"
                 if [ "$PROTOCOL" = "rmt3" ]; then
                     DeviceName="$alias"
                 fi
             fi
-       	fi
+           fi
 
     done
 
@@ -1687,11 +1690,11 @@ overridePort()
 {
     portdef=$(grep proxy_dest_port "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf | awk '{ print $2 }')
     if [ "$portdef" = "" ]; then
-	mv "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf "$TMP_DIR"/
-	echo "proxy_dest_port $PORT" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
-	mv "$TMP_DIR"/"$CONNECTD_PORT".conf "$CONNECTD_CONF_DIR"/
+    mv "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf "$TMP_DIR"/
+    echo "proxy_dest_port $PORT" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
+    mv "$TMP_DIR"/"$CONNECTD_PORT".conf "$CONNECTD_CONF_DIR"/
     else
-	sed -i "/proxy_dest_port/c\proxy_dest_port $PORT" "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf
+    sed -i "/proxy_dest_port/c\proxy_dest_port $PORT" "$CONNECTD_CONF_DIR"/"$CONNECTD_PORT".conf
     fi
 }
 ######### End Port Override #########
@@ -1721,7 +1724,7 @@ deleteDeviceByUid()
 debug()
 {
     if [ "$DEBUG" = "1" ]; then
-	echo "$1"
+    echo "$1"
     fi
 }
 
@@ -1757,11 +1760,11 @@ configureConnection()
     registerDevice
 
     if [ "$error" != "DuplicateName:" ]; then
-    	overridePort
-    	startService
-	# there should only be one UDP listener startup regardless of the number of services
-	# the startup script will only start one instance
-	"$BIN_DIR"/connectd_schannel start > /dev/null
+        overridePort
+        startService
+    # there should only be one UDP listener startup regardless of the number of services
+    # the startup script will only start one instance
+    "$BIN_DIR"/connectd_schannel start > /dev/null
     else
         if [ "$1" = "skipIfDuplicateName" ]; then
             echo "Duplicate Name!"
@@ -1797,7 +1800,8 @@ interactiveInstall()
 #                                                   
 jsonval()                                              
 {
-    temp=$(echo "$1" | sed -e 's/[{}\"]//g' | sed -e 's/,/\n/g' | grep -w ${GREPFLAGS} "$2" | cut -d"[" -f2- | cut -d":" -f2-)
+    temp=$(echo $1 | ./connectd/usr/bin/connectd_json -l | grep -w "$2" | awk '{ print $2 }' | sed 's/\"//g')
+    # temp=$(echo "$1" | sed -e 's/[{}\"]//g' | sed -e 's/,/\\n/g' | grep -w ${GREPFLAGS} "$2" | cut -d"[" -f2- | cut -d":" -f2-)
     echo "${temp##*|}"         
 }                                                   
 
@@ -1822,28 +1826,28 @@ ask()
 {
     echo
     while true; do
-	if [ "${2:-}" = "Y" ]; then
-	    prompt="Y/n"
-	    default=Y
-	elif [ "${2:-}" = "N" ]; then
-	    prompt="y/N"
-	    default=N
-	else
-	    prompt="y/n"
-	    default=
-	fi
-	# Ask the question
+    if [ "${2:-}" = "Y" ]; then
+        prompt="Y/n"
+        default=Y
+    elif [ "${2:-}" = "N" ]; then
+        prompt="y/N"
+        default=N
+    else
+        prompt="y/n"
+        default=
+    fi
+    # Ask the question
         echo "$1 [$prompt] "
-	read REPLY
-	# Default?
-	if [ -z "$REPLY" ]; then
-	    REPLY=$default
-	fi
-	# Check if the reply is valid
-	case "$REPLY" in
-	    Y*|y*) return 0 ;;
-	    N*|n*) return 1 ;;
-	esac
+    read REPLY
+    # Default?
+    if [ -z "$REPLY" ]; then
+        REPLY=$default
+    fi
+    # Check if the reply is valid
+    case "$REPLY" in
+        Y*|y*) return 0 ;;
+        N*|n*) return 1 ;;
+    esac
     done
 }
 ######### End Ask Function #########

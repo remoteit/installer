@@ -2,7 +2,7 @@
 
 # connectd_stop, stops all running connectd services
 
-BASEDIR=
+BASEDIR=/Users/danawoodman/code/remote.it/installer/connectd
 . "$BASEDIR"/usr/bin/connectd_options
 
 for f in "$BIN_DIR"/Connectd*; do
