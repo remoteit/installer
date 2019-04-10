@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.3.16
+VERSION=2.3.17
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -124,6 +124,8 @@ echo "$signature" | tee -a $LOGFILE
 # check for architecture
 if [ "$(echo "$signature" | grep -i mips)" != "" ]; then
     BASEPLATFORM="mips"
+elif [ "$(echo "$signature" | grep -i aarch64)" != "" ]; then
+    BASEPLATFORM="arm"
 elif [ "$(echo "$signature" | grep -i arm)" != "" ]; then
     BASEPLATFORM="arm"
 elif [ "$(echo "$signature" | grep -i x86_64)" != "" ]; then
@@ -202,15 +204,23 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-gnueabi_static
+            daemon=arm-gnueabi_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-linaro-pi
+            daemon=arm-linaro-pi
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-linaro-pi_static
+            daemon=arm-linaro-pi_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=aarm64-ubuntu16.04
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=aarm64-ubuntu16.04_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
