@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.3.16
+VERSION=2.3.17
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -124,6 +124,8 @@ echo "$signature" | tee -a $LOGFILE
 # check for architecture
 if [ "$(echo "$signature" | grep -i mips)" != "" ]; then
     BASEPLATFORM="mips"
+elif [ "$(echo "$signature" | grep -i aarch64)" != "" ]; then
+    BASEPLATFORM="arm64"
 elif [ "$(echo "$signature" | grep -i arm)" != "" ]; then
     BASEPLATFORM="arm"
 elif [ "$(echo "$signature" | grep -i x86_64)" != "" ]; then
@@ -190,6 +192,27 @@ if [ $useTar -eq 1 ]; then
             daemon=mipsel-gcc342-static
             downloadAndTestDaemon $daemon
         fi
+        if [ "$?" != 0 ]; then
+            echo "Could not locate a compatible package."
+            echo "Please contact support@remote.it with the following info:"
+            echo "$(uname -a)"
+            echo "$(cat /proc/cpuinfo")
+            exit 1
+        fi
+    elif [ "$BASEPLATFORM" = "arm64" ]; then
+        daemon=aarm64-ubuntu16.04
+        downloadAndTestDaemon $daemon
+        if [ "$?" != 0 ]; then
+            daemon=aarm64-ubuntu16.04_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            echo "Could not locate a compatible package."
+            echo "Please contact support@remote.it with the following info:"
+            echo "$(uname -a)"
+            echo "$(cat /proc/cpuinfo")
+            exit 1
+        fi
     elif [ "$BASEPLATFORM" = "arm" ]; then
         daemon=arm-android
         downloadAndTestDaemon $daemon
@@ -202,24 +225,31 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-gnueabi_static
+            daemon=arm-gnueabi_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-linaro-pi
+            daemon=arm-linaro-pi
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-linaro-pi_static
+            daemon=arm-linaro-pi_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-v5tle
+            daemon=arm-v5tle
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-        daemon=arm-v5tle_static
+            daemon=arm-v5tle_static
             downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            echo "Could not locate a compatible package."
+            echo "Please contact support@remote.it with the following info:"
+            echo "$(uname -a)"
+            echo "$(cat /proc/cpuinfo")
+            exit 1
         fi
     elif [ "$BASEPLATFORM" = "x86_64" ]; then
         check_x86_64
@@ -241,6 +271,13 @@ if [ $useTar -eq 1 ]; then
         if [ "$?" != 0 ]; then
             daemon=x86-etch
             downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            echo "Could not locate a compatible package."
+            echo "Please contact support@remote.it with the following info:"
+            echo "$(uname -a)"
+            echo "$(cat /proc/cpuinfo")
+            exit 1
         fi
     fi
 
