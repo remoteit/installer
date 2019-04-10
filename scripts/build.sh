@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.10
-MODIFIED="March 16, 2019"
+ver=2.1.11
+MODIFIED="April 10, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -166,6 +166,8 @@ build() {
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
+    # create symlink so that /usr/bin/connectd points to the installed daemon
+    ln -s /usr/bin/connectd.$PLATFORM "$pkgFolder"/usr/bin/connectd
 
     # clean up and recreate md5sums file
     cd "$pkgFolder"
