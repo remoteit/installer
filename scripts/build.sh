@@ -167,7 +167,7 @@ build() {
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
     # create symlink so that /usr/bin/connectd points to the installed daemon
-    ln -s /usr/bin/connectd.$PLATFORM "$pkgFolder"/usr/bin/connectd
+    ln -s /usr/bin/connectd."$PLATFORM" "$pkgFolder"/usr/bin/connectd
 
     # clean up and recreate md5sums file
     cd "$pkgFolder"
