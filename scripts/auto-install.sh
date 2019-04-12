@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.3.17
+VERSION=2.3.16
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
