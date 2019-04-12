@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.10
-MODIFIED="March 16, 2019"
+ver=2.1.11
+MODIFIED="April 12, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -321,21 +321,37 @@ build x86-etch 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
+build x86_64-etch 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
 build x86-ubuntu16.04 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-ubuntu16.04_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86_64-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86_64-ubuntu16.04_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-pi 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-gnueabi 0
-
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-build x86_64-etch 0
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
@@ -367,7 +383,7 @@ build mips-gcc-4.7.3 0
 # mipsel-gcc342
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mipsel-gcc342
+build mipsel-gcc342 0
 
 # mipsel-bmc5354
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
