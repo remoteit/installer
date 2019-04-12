@@ -16,7 +16,7 @@ controlFile="$controlFilePath"/control
 user=$(whoami)
 echo $user
 # debugging flag, set to 0 to skip tests
-runtests=1
+runtests=0
 
 #---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
@@ -330,6 +330,14 @@ build x86-ubuntu16.04 0
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-ubuntu16.04_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
