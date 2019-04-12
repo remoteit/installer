@@ -194,7 +194,8 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
             echo "$(cat /proc/cpuinfo)"
             exit 1
@@ -208,7 +209,8 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
             echo "$(cat /proc/cpuinfo)"
             exit 1
@@ -246,7 +248,8 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
             echo "$(cat /proc/cpuinfo)"
             exit 1
