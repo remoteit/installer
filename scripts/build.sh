@@ -166,6 +166,9 @@ build() {
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
+    # create symlink so that /usr/bin/connectd points to the installed daemon
+    # use -f to force overwrite if it's already there
+    ln -sf "/usr/bin/connectd.$PLATFORM" "$pkgFolder/usr/bin/connectd"
 
     # get Version string from DEBIAN/control file and write it to connectd_options
     # for tar files, since there is no concept of package "version" there
