@@ -167,6 +167,11 @@ build() {
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
 
+    # get Version string from DEBIAN/control file and write it to connectd_options
+    # for tar files, since there is no concept of package "version" there
+    version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+    setOption options "VERSION" "$version"
+
     # clean up and recreate md5sums file
     cd "$pkgFolder"
     if [ -e md5sums ]; then
@@ -210,7 +215,6 @@ build() {
             exit 1
         fi
 
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         filename="${pkg}_${version}_$arch$tag".deb
         sudo mv "$pkgFolder".deb "$cwd/$filename"
     else
@@ -224,7 +228,6 @@ build() {
             exit 1
         fi
 
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         echo "Extracting contents to tar file"
         ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
