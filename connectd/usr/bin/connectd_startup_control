@@ -6,12 +6,12 @@
 #  installed remote.it attachment services for tcp listeners.
 #  This controls services registered using bulk and auto registration.
 #
-#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 #
 ##### Settings #####
 VERSION=2.1.6
 AUTHOR="Gary Worsham"
-MODIFIED="January 15, 2019"
+MODIFIED="April 13, 2019"
 DEBUG="1"
 
 #==========================================================================
