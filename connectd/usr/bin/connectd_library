@@ -381,8 +381,18 @@ checkForServices()
 	            # if no service, show warning
                     if [ "$service" = "" ]; then
 		        if [ "$protocol" != "rmt3" ]; then
-                            service="not detected"
-		            WARNING="1"
+                            # double check using connectd -nc mode, as some apps do not report on netstat ipv4 but
+                            # work nevertheless
+                            "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "127.0.0.1":"$port" > "$TMP_DIR"/.ncerror
+		            grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
+
+                            result=$?
+                            if [ $result = 1 ]; then
+                                service="OK"
+                            else
+                                service="not detected"
+		                WARNING="1"
+                            fi
 		        fi
                     else
 			service="OK: $service"

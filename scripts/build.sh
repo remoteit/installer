@@ -16,7 +16,7 @@ controlFile="$controlFilePath"/control
 user=$(whoami)
 echo $user
 # debugging flag, set to 0 to skip tests
-runtests=1
+runtests=0
 
 #---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
