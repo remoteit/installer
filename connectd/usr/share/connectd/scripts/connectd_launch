@@ -3,12 +3,12 @@
 #  connectd_launch - template file for start/stop of individual services
 #  
 #
-#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 #
 
-VERSION="v1.9"
+VERSION="v1.91"
 AUTHOR="Gary Worsham"
-MODIFIED="February 26, 2019"
+MODIFIED="April 13, 2019"
 # BASEDIR is used to allow the package to be installed relative to any folder location
 BASEDIR=
 . "$BASEDIR"/usr/bin/connectd_options
