@@ -6,13 +6,12 @@
 #  attachment services for tcp listeners.
 #  Interactive and preconfigured modes supported.
 #
-#  connectd by remot3.it, Inc. 
-#  Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.15
+LIBVERSION=lib_v2.1.16
 AUTHOR="Gary Worsham"
-LIBMODIFIED="April 10, 2019"
+LIBMODIFIED="April 13, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 

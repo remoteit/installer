@@ -3,7 +3,7 @@
 #  connectd_schannel.sh
 #  startup script for the server channel listener
 #  one instance of this can serve all installed Connectd daemons
-#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 #
 
 VERSION="v1.8"

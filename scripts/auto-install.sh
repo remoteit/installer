@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.3.17
+VERSION=2.3.16
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -194,9 +194,10 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
-            echo "$(cat /proc/cpuinfo")
+            echo "$(cat /proc/cpuinfo)"
             exit 1
         fi
     elif [ "$BASEPLATFORM" = "arm64" ]; then
@@ -208,9 +209,10 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
-            echo "$(cat /proc/cpuinfo")
+            echo "$(cat /proc/cpuinfo)"
             exit 1
         fi
     elif [ "$BASEPLATFORM" = "arm" ]; then
@@ -246,9 +248,10 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
-            echo "$(cat /proc/cpuinfo")
+            echo "$(cat /proc/cpuinfo)"
             exit 1
         fi
     elif [ "$BASEPLATFORM" = "x86_64" ]; then
@@ -274,9 +277,10 @@ if [ $useTar -eq 1 ]; then
         fi
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
-            echo "Please contact support@remote.it with the following info:"
+            echo "Please contact support@remote.it."
+            echo "Press ENTER to display system information."
             echo "$(uname -a)"
-            echo "$(cat /proc/cpuinfo")
+            echo "$(cat /proc/cpuinfo)"
             exit 1
         fi
     fi

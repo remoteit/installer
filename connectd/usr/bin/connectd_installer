@@ -5,13 +5,13 @@
 #  Run 'sudo connectd_installer' to interactively install, configure or remove remote.it
 #  connectd attachment services for tcp listeners.
 #
-#  remot3.it, Inc. Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 #
 
 ##### Settings #####
-VERSION=v2.0.4
+VERSION=v2.0.5
 AUTHOR="Gary Worsham"
-MODIFIED="January 02, 2019"
+MODIFIED="April 13, 2019"
 
 USERNAME=""
 PASSWORD=""
