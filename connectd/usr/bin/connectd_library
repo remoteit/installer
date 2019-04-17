@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.16
+LIBVERSION=lib_v2.1.17
 AUTHOR="Gary Worsham"
-LIBMODIFIED="April 13, 2019"
+LIBMODIFIED="April 17, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -647,13 +647,14 @@ protocolSelection()
     printf "     6) Samba (SMB) on port 445              \n"
     printf "     7) Remote Desktop (RDP) on port 3389    \n"
     printf "     8) NextCloud on port 443                \n"
-    printf "     9) Custom (TCP)                         \n"
-    printf "     10) Return to previous menu              \n"
+    printf "     9) OpenVPN on port 1194                 \n"
+    printf "     10) Custom (TCP)                        \n"
+    printf "     11) Return to previous menu             \n"
     printf "                                             \n"
     printf "***********************************************\n\n"
     printf " You can change the port value during install  \n\n"
     printf "***********************************************\n\n"
-    MAXSEL=10
+    MAXSEL=11
     unset get_port
 
     getNumRange 1 "$MAXSEL" "Choose a menu selection"
@@ -742,6 +743,16 @@ protocolSelection()
         fi    
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 9 ]; then
+        PROTOCOL=vpn
+        printf "The default port for OpenVPN is 1194.\n"
+        if ask "Would you like to continue with port 1194?"; then
+            PORT=1194
+        else
+            getNumRange 1 65535 "Enter the port value to use"   
+            PORT="$getNumRangeValue"
+        fi    
+        setConnectdPort "$PROTOCOL"
+    elif [ $get_num -eq 10 ]; then
         PROTOCOL=tcp
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
@@ -821,7 +832,7 @@ checkAPIResult()
 ##### Delete Connection
 deleteConnection()
 {
-    printf "\nEnter the name of the remote.it Service you wish to detach.\n"
+    printf "\nEnter the name of the remote.it Service you wish to remove.\n"
     printf "This will not affect the installed application.\n"
     read deviceToDelete
     deviceFound=0
@@ -847,7 +858,7 @@ deleteConnection()
             deviceFound=1
 	    # get the protocol name
 	    deviceType=$(jsonval "$resp" "title")
-	    if ask "Are you sure you want to delete the remote.it $deviceType Service $serviceName?"; then
+	    if ask "Are you sure you want to remove the remote.it $deviceType Service $serviceName?"; then
 		printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
 
 		result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
@@ -885,7 +896,7 @@ deleteConnection()
 ##### Delete All Connections
 deleteAllConnections()
 {
-    if ask "Are you sure you want to delete ALL remote.it Services?"; then
+    if ask "Are you sure you want to remove ALL remote.it Services?"; then
 
     # now iterate through all provisioning files to find it
     # stop all daemons.  
@@ -1411,6 +1422,8 @@ installProvisioning()
             contentType="34"
         elif [ "$PROTOCOL" = "ncl" ]; then
             contentType="38"
+        elif [ "$PROTOCOL" = "vpn" ]; then
+            contentType="39"
         else
             echo "Not currently supported: $PROTOCOL $PORT"
             echo "Please contact support@remote.it."
