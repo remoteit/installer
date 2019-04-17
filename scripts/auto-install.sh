@@ -219,7 +219,7 @@ if [ $useTar -eq 1 ]; then
         daemon=arm-android
         downloadAndTestDaemon $daemon
         if [ "$?" != 0 ]; then
-            daemon=arm-android_static
+            daemon=arm-linaro-pi
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -227,19 +227,19 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
+            daemon=arm-v5tle
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=arm-android_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
             daemon=arm-gnueabi_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=arm-linaro-pi
-            downloadAndTestDaemon $daemon
-        fi
-        if [ "$?" != 0 ]; then
             daemon=arm-linaro-pi_static
-            downloadAndTestDaemon $daemon
-        fi
-        if [ "$?" != 0 ]; then
-            daemon=arm-v5tle
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -260,19 +260,19 @@ if [ $useTar -eq 1 ]; then
         daemon=x86-ubuntu16.04
         downloadAndTestDaemon $daemon
         if [ "$?" != 0 ]; then
-            daemon=x86-ubuntu16.04_static
-            downloadAndTestDaemon $daemon
-        fi
-        if [ "$?" != 0 ]; then
             daemon=x86-linaro_uClibc
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=x86-linaro_uClibc_static
+            daemon=x86-etch
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=x86-etch
+            daemon=x86-ubuntu16.04_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=x86-linaro_uClibc_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
