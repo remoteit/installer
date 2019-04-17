@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.10
-MODIFIED="March 16, 2019"
+ver=2.1.11
+MODIFIED="April 12, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -166,6 +166,14 @@ build() {
     setEnvironment "$arch" "$PLATFORM"
     # put build date into connected_options
     setOption options "BUILDDATE" "\"$(date)\""
+    # create symlink so that /usr/bin/connectd points to the installed daemon
+    # use -f to force overwrite if it's already there
+    ln -sf "/usr/bin/connectd.$PLATFORM" "$pkgFolder/usr/bin/connectd"
+
+    # get Version string from DEBIAN/control file and write it to connectd_options
+    # for tar files, since there is no concept of package "version" there
+    version=$(grep -i version "$controlFile" | awk '{ print $2 }')
+    setOption options "VERSION" "$version"
 
     # clean up and recreate md5sums file
     cd "$pkgFolder"
@@ -210,7 +218,6 @@ build() {
             exit 1
         fi
 
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         filename="${pkg}_${version}_$arch$tag".deb
         sudo mv "$pkgFolder".deb "$cwd/$filename"
     else
@@ -224,7 +231,6 @@ build() {
             exit 1
         fi
 
-        version=$(grep -i version "$controlFile" | awk '{ print $2 }')
         echo "Extracting contents to tar file"
         ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
@@ -321,21 +327,37 @@ build x86-etch 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
+build x86_64-etch 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
 build x86-ubuntu16.04 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-ubuntu16.04_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86-linaro_uClibc_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86_64-ubuntu16.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build x86_64-ubuntu16.04_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-pi 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-gnueabi 0
-
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-build x86_64-etch 0
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
@@ -367,7 +389,7 @@ build mips-gcc-4.7.3 0
 # mipsel-gcc342
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build mipsel-gcc342
+build mipsel-gcc342 0
 
 # mipsel-bmc5354
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"

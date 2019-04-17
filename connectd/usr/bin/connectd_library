@@ -6,13 +6,12 @@
 #  attachment services for tcp listeners.
 #  Interactive and preconfigured modes supported.
 #
-#  connectd by remot3.it, Inc. 
-#  Copyright 2019. All rights reserved.
+#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.15
+LIBVERSION=lib_v2.1.16
 AUTHOR="Gary Worsham"
-LIBMODIFIED="April 10, 2019"
+LIBMODIFIED="April 13, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -381,8 +380,18 @@ checkForServices()
 	            # if no service, show warning
                     if [ "$service" = "" ]; then
 		        if [ "$protocol" != "rmt3" ]; then
-                            service="not detected"
-		            WARNING="1"
+                            # double check using connectd -nc mode, as some apps do not report on netstat ipv4 but
+                            # work nevertheless
+                            "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "127.0.0.1":"$port" > "$TMP_DIR"/.ncerror
+		            grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
+
+                            result=$?
+                            if [ $result = 1 ]; then
+                                service="OK"
+                            else
+                                service="not detected"
+		                WARNING="1"
+                            fi
 		        fi
                     else
 			service="OK: $service"

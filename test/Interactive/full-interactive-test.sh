@@ -63,14 +63,21 @@ grep USERNAME /usr/bin/connectd_installer
 echo
 
 #-------------------------------------------------------------------
+# create random string to serve as part of device/service names
+# this allows overlapping CI tests to run
+TESTNAME=$(cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 2>/dev/null)
+sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-01.key > "$SCRIPT_DIR"/configure-01-test.key
+sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/configure-02-test.key
+
+#-------------------------------------------------------------------
 # run installer for first time, add device name and 3 services
 # expected result is that 4 connectd services and 1 schannel service will be running
-check_service_counts 4 1 configure-01.key
+check_service_counts 4 1 configure-01-test.key
 
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-check_service_counts 10 1 configure-02.key
+check_service_counts 10 1 configure-02-test.key
 
 #-------------------------------------------------------------------
 # run installer for third time, remove all services

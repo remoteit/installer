@@ -7,9 +7,11 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="February 28, 2019"
+MODIFIED="April 15, 2019"
 #===================================
-BUILDDATE="Tue Feb 26 13:42:58 PST 2019"    
+BUILDDATE=
+#===================================
+VERSION=
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -58,7 +60,7 @@ PID_DIR=/var/run
 #===================================
 # PLATFORM is the extension for the binaries, depends on CPU architecture
 # and shared libraries
-PLATFORM=x86-etch    
+PLATFORM=
 #===================================
 # startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
 startupScripts=3
