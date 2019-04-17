@@ -637,7 +637,7 @@ protocolSelection()
     printf "     5) nxWitness on port 7001               \n"
     printf "     6) Samba (SMB) on port 445              \n"
     printf "     7) Remote Desktop (RDP) on port 3389    \n"
-    printf "     8) NextCloud on port 80                 \n"
+    printf "     8) NextCloud on port 443                \n"
     printf "     9) Custom (TCP)                         \n"
     printf "     10) Return to previous menu              \n"
     printf "                                             \n"
@@ -724,9 +724,9 @@ protocolSelection()
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 8 ]; then
         PROTOCOL=ncl
-        printf "The default port for NextCloud is 80.\n"
-        if ask "Would you like to continue with port 80?"; then
-            PORT=80
+        printf "The default port for NextCloud is 443.\n"
+        if ask "Would you like to continue with port 443?"; then
+            PORT=443
         else
             getNumRange 1 65535 "Enter the port value to use"   
             PORT="$getNumRangeValue"
