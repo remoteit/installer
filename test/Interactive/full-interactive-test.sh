@@ -75,9 +75,9 @@ sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/c
 check_service_counts 4 1 configure-01-test.key
 
 #-------------------------------------------------------------------
-# run installer for second time, add 3 more services
-# expected result is that 6 connectd services and 1 schannel service will be running
-check_service_counts 7 1 configure-02-test.key
+# run installer for second time, add 6 more services
+# expected result is that 9 connectd services and 1 schannel service will be running
+check_service_counts 10 1 configure-02-test.key
 
 #-------------------------------------------------------------------
 # run installer for third time, remove all services

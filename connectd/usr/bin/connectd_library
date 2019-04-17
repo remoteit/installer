@@ -644,13 +644,16 @@ protocolSelection()
     printf "     3) Secure Web (HTTPS) on port 443       \n"
     printf "     4) VNC on port 5900                     \n"
     printf "     5) nxWitness on port 7001               \n"
-    printf "     6) Custom (TCP)                         \n"
-    printf "     7) Return to previous menu              \n"
+    printf "     6) Samba (SMB) on port 445              \n"
+    printf "     7) Remote Desktop (RDP) on port 3389    \n"
+    printf "     8) NextCloud on port 443                \n"
+    printf "     9) Custom (TCP)                         \n"
+    printf "     10) Return to previous menu              \n"
     printf "                                             \n"
     printf "***********************************************\n\n"
     printf " You can change the port value during install  \n\n"
     printf "***********************************************\n\n"
-    MAXSEL=7
+    MAXSEL=10
     unset get_port
 
     getNumRange 1 "$MAXSEL" "Choose a menu selection"
@@ -709,6 +712,36 @@ protocolSelection()
         fi    
         setConnectdPort "$PROTOCOL"
     elif [ $get_num -eq 6 ]; then
+        PROTOCOL=smb
+        printf "The default port for Samba is 445.\n"
+        if ask "Would you like to continue with port 445?"; then
+            PORT=445
+        else
+            getNumRange 1 65535 "Enter the port value to use"   
+            PORT="$getNumRangeValue"
+        fi    
+        setConnectdPort "$PROTOCOL"
+    elif [ $get_num -eq 7 ]; then
+        PROTOCOL=rdp
+        printf "The default port for Remote Desktop is 3389.\n"
+        if ask "Would you like to continue with port 3389?"; then
+            PORT=3389
+        else
+            getNumRange 1 65535 "Enter the port value to use"   
+            PORT="$getNumRangeValue"
+        fi    
+        setConnectdPort "$PROTOCOL"
+    elif [ $get_num -eq 8 ]; then
+        PROTOCOL=ncl
+        printf "The default port for NextCloud is 443.\n"
+        if ask "Would you like to continue with port 443?"; then
+            PORT=443
+        else
+            getNumRange 1 65535 "Enter the port value to use"   
+            PORT="$getNumRangeValue"
+        fi    
+        setConnectdPort "$PROTOCOL"
+    elif [ $get_num -eq 9 ]; then
         PROTOCOL=tcp
         getNumRange 1 65535 "Enter the port value to use"   
         PORT="$getNumRangeValue"
@@ -1368,10 +1401,16 @@ installProvisioning()
             contentType="7"
         elif [ "$PROTOCOL" = "vnc" ]; then
             contentType="4"
+        elif [ "$PROTOCOL" = "rdp" ]; then
+            contentType="5"
         elif [ "$PROTOCOL" = "tcp" ]; then
             contentType="29"
         elif [ "$PROTOCOL" = "nxw" ]; then
             contentType="37"
+        elif [ "$PROTOCOL" = "smb" ]; then
+            contentType="34"
+        elif [ "$PROTOCOL" = "ncl" ]; then
+            contentType="38"
         else
             echo "Not currently supported: $PROTOCOL $PORT"
             echo "Please contact support@remote.it."
