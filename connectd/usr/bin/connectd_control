@@ -25,8 +25,8 @@ BASEDIR=
 #set -x
 
 #### Settings #####
-VERSION=1.1.13
-MODIFIED="January 12, 2019"
+VERSION=1.1.14
+MODIFIED="April 18, 2019"
 
 #
 # Config Dir CONNECTD_DIR is read from connectd_options
@@ -689,6 +689,12 @@ update_afile()
 #
 dconfig()
 {
+    local resp2
+    local status
+    local timestamp
+    local enabled
+    local result
+    local ret=0
 
     #download the config for the passed provisioning file
     resp2=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProvisionConfig/$1/$2/")
@@ -728,7 +734,7 @@ dconfig()
                     write_config "$i" "$resp2"
                     #
                     # Generate new pfile
-                        generate_pfile "$1"
+                    generate_pfile "$1"
 					#
                     # update the active file
 	       	        update_afile "$1"
@@ -738,6 +744,9 @@ dconfig()
                         ln -s "$DEVICES_AVAILABLE/$1" "$DEVICES_ACTIVE"
                         startit "$1"
                     fi
+                    #
+                    # set ret=1 that something changed
+                    ret=1
            	    else
             	        if [ $VERBOSE -gt 0 ]; then printf "timestamp same, no update\n" ; fi
 	            fi
@@ -752,6 +761,7 @@ dconfig()
     else
     	if [ $VERBOSE -gt 0 ]; then printf "Provisioning Config Failed (%s)\n" $status ; fi
     fi
+    return $ret
 }
 
 #
@@ -761,11 +771,16 @@ dconfig()
 dprovision()
 {
 # keep track of whether anything requires a call to OEM_save_config
-    update=0
-    ret=1
-    rc=1
-    p1=$bulk_id_code
-    p2=
+    local update=0
+    local ret=1
+    local rc=1
+    local p1=$bulk_id_code
+    local p2=
+    local status
+    local resp
+    local resp2
+    local lines
+
     #if [ "$#" -ne 2 ]; then
     #if [ -z "${@}" ]; then
     #    ret=3
@@ -812,7 +827,11 @@ dprovision()
 
                 #if provision exists lets try to get the config
                 if [ -f "$PROVISION_DOWNLOAD/$i" ]; then
+                    # dconfig checks if there is a modified configuration, and updates if it is modified 
                     dconfig "$i" "$hardware_id" 
+                    if [ "$?" -eq 1 ]; then
+                        update=1
+                    fi
                 fi    
             done
         else
@@ -828,6 +847,11 @@ dprovision()
 #bulk provision a specific pfile do not call directly call bprovision()
 bprovisionit()
 {
+    local retry_count
+    local data
+    local resp
+    local status
+
     echo "."
     if [ $VERBOSE -gt 0 ]; then
         printf "Bulk provisioning %s\n" $1
@@ -927,9 +951,9 @@ bprovisionit()
 # bulk provision
 bprovision()
 {
-    update=0
-    ret=1
-    rc=1
+    local update=0
+    local ret=1
+    local rc=1
     if [ -z "${@}" ]; then
         ret=3
         echo "ERROR: enable requires one parameter, either specific device name or all for all devices"
