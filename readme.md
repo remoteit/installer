@@ -6,15 +6,16 @@
 
 ## Install
 
-### All type of Linux
+### All types of Linux
 
-The easiest way to install remote.it on a Debian system is to run the following on the command line:
+The easiest way to install remote.it on a Linux system is to run the following on the command line:
 
 ```
 curl -LkO https://raw.githubusercontent.com/remoteit/installer/master/scripts/auto-install.sh
 chmod +x ./auto-install.sh
 sudo ./auto-install.sh
 ```
+This script tests all available daemon architectures, then downloads a compatible package.  If your system is Debian based, a deb package file will be downloaded and installed.  Otherwise a tar file is downloaded and installed.
 
 Now you should have the `connectd` tools installed on your system. To run the installer, type:
 
@@ -27,7 +28,7 @@ And follow the interactive prompts to setup your device.
 
 ### Notes for developers
 
-1. The connectd folder contains the source files for the Debian package creation process.
+1. The connectd folder contains the source files for the Debian and tar package creation process.
 2. scripts/build.sh is the script which handles building all packages.
 
 ### Available Characters
