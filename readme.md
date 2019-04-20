@@ -6,16 +6,16 @@
 
 ## Install
 
-### Debian Install
+### All types of Linux
 
-#### Install using apt
-
-The easiest way to install remote.it on a Debian system is to run the following on the command line:
+The easiest way to install remote.it on a Linux system is to run the following on the command line:
 
 ```
-sudo apt-get update
-sudo apt-get install connectd
+curl -LkO https://raw.githubusercontent.com/remoteit/installer/master/scripts/auto-install.sh
+chmod +x ./auto-install.sh
+sudo ./auto-install.sh
 ```
+This script tests all available daemon architectures, then downloads a compatible package.  If your system is Debian based, a deb package file will be downloaded and installed.  Otherwise a tar file is downloaded and installed.
 
 Now you should have the `connectd` tools installed on your system. To run the installer, type:
 
@@ -25,36 +25,11 @@ sudo connectd_installer
 
 And follow the interactive prompts to setup your device.
 
-#### Manual install
-
-To manually install remote.it connectd services to your Debian system:
-
-1. Determine your _Debian_ system architecture:
-
-```shell
-sudo dpkg --print-architecture
-```
-
-Then type your system password and you should see something like:
-
-```
-amd64
-```
-
-2. Copy the deb file whose file name includes the architecture of your system.
-3. Run `sudo dpkg -i <debfilename>`
-4. Now run `sudo connectd_installer` to install services interactively.
 
 ### Notes for developers
 
-1. The connectd folder contains the source files for the Debian package creation process.
-2. lintpkg.sh is a script you can run on your Debian/Ubuntu system to build a Debian package.
-
-It will also let you build an archive "tar" file which can be exrtacted on a target system by placing the file into the root folder `/` and running: `sudo tar xvf <tarfilename>`.
-
-3. `sgwi.sh` is handy during development when repeatedly editing the installer scripts since it deletes the backup file and runs as su, so you don't have to change permissions on the file itself (which messes things up during package
-   creation).
-4. `sgwd.sh` is handy during development when repeatedly editing the Debian package control files and maintainer scripts since it deletes the backup file and runs as su, so you don't have to change permissions on the files themselves.
+1. The connectd folder contains the source files for the Debian and tar package creation process.
+2. scripts/build.sh is the script which handles building all packages.
 
 ### Available Characters
 
