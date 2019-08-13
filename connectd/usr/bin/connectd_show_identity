@@ -1,0 +1,29 @@
+#!/bin/sh 
+#
+#  remote.it Show Identity Script shows the system identity
+#
+#  NOTE: This is a development script and not used in a production device
+#
+#  connectd_show_identity 
+#
+#  only shows information - no changes are made with this script
+#
+#  remot3.it, Inc. : https://remote.it
+
+os=$(uname -a)
+r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
+cpu=$(awk '/Serial/ {print $3}' /proc/cpuinfo)
+mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
+hw_mac=$(cat /sys/class/net/wlan0/address | sed 's/://g')
+hwid=$(cat /etc/connectd/hardware_id.txt)
+rk_mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
+rk=$(cat /etc/connectd/registration_key.txt)
+
+echo "OS:$os"
+echo "CPU ID:$cpu"
+echo "MAC:$mac"
+echo "Hardware ID manufacturer:$hw_mac"
+echo "Hardware ID default:$hwid"
+echo "Registration Key default:$rk_mac"
+echo "Registration Key manufacturer:$rk"
+echo "remote.it Package:$r3"

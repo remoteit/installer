@@ -1,0 +1,48 @@
+#!/bin/sh 
+#
+#  remote.it Check Production Readiness Script allows developers to know if the deviceis cloneable
+#    and will help reset a device to make it ready for production
+#
+#  NOTE: This is a development script and not used in a production device
+#
+#  connectd_check_production_ready  
+#
+#  will alter contents in CONNECTD_DIR
+#
+#  remot3.it, Inc. : https://remote.it
+
+DIRECTORY=/etc/connectd/services
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it services folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/pfiles
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it provisioning folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/dfiles
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it configuration folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/active
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it active service folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/available
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it available service folder exist"
+    STATUS=0
+fi
+
+if [[ ! -v STATUS ]]; then
+    echo "Ok:  device is cloneable for production"
+else
+    echo "Error: No device is not safe to clone for production. Fix issue(s) listed and try again" 
+fi
