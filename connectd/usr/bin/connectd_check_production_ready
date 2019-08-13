@@ -41,7 +41,7 @@ if [ -d "$DIRECTORY" ]; then
     STATUS=0
 fi
 
-if [[ ! -v STATUS ]]; then
+if [ -z "$STATUS" ] ; then
     echo "Ok:  device is cloneable for production"
 else
     echo "Error: No device is not safe to clone for production. Fix issue(s) listed and try again" 

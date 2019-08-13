@@ -804,12 +804,14 @@ sendDeviceInfo()
 	os=$(uname -a)
         r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
         
+    tcp=$(netstat -antp 2>/dev/null | grep 0.0.0.0: | awk '{ print $4 }' | awk -F':' '{print $2}' | xargs | sed -e 's/ /,/g')
+        
     # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
 	if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
        secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
-       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "DeviceSecret" : "'$secret'"}'
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
     else 
-        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'"}'
+        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
     fi
  
     resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )

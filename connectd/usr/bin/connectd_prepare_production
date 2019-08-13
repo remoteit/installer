@@ -18,8 +18,6 @@ read answer
 
 if [ "$answer" != "${answer#[Yy]}" ] ;then
 
-    STATUS=0
-
 	# in case the user has multiple systems, take the time to flash LEDs to identify the physical device
 	# this is RPi specific
     echo "Please check blinking LED on the Pi to confirm identity. It will blink for about 30 seconds."
@@ -91,7 +89,7 @@ else
 fi
 
 # show final status
-if [[ $STATUS != 0 ]]; then
+if [ ! -z "$STATUS" ] ; then
     echo "Ready: The device is cloneable for production."
 else
     echo "Not Ready: The device is not safe to clone for production. Fix issue(s) listed and try again." 
