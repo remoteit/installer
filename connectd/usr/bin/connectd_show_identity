@@ -18,6 +18,7 @@ hw_mac=$(cat /sys/class/net/wlan0/address | sed 's/://g')
 hwid=$(cat /etc/connectd/hardware_id.txt)
 rk_mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
 rk=$(cat /etc/connectd/registration_key.txt)
+api=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
 
 echo "OS:$os"
 echo "CPU ID:$cpu"
@@ -27,3 +28,4 @@ echo "Hardware ID default:$hwid"
 echo "Registration Key default:$rk_mac"
 echo "Registration Key manufacturer:$rk"
 echo "remote.it Package:$r3"
+echo "remote.it API:$api"
