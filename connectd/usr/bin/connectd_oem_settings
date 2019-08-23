@@ -1,0 +1,85 @@
+#!/bin/sh 
+#
+#  remote.it OEM Settings manages remote.it settings to register OEM devices
+#
+#  not called directly.  functions are called by connectd_control
+#
+#  will store info in CONNECTD_DIR
+#
+#  remot3.it, Inc. : https://remote.it
+#
+# BASEDIR is the path relative to / where these files are installed
+# e.g. BASEDIR=/media/usb
+
+BASEDIR=
+
+# pick up global options, e.g. PLATFORM and API
+. "$BASEDIR"/usr/bin/connectd_options
+
+oemGetInterface()
+{
+
+# host we want to "reach"
+host=google.com
+
+# get the ip of that host (works with dns and /etc/hosts. In case we get  
+# multiple IP addresses, we just want one of them
+host_ip=$(getent ahosts "$host" | awk '{print $1; exit}')
+
+# only list the interface used to reach a specific host/IP. We only want the part
+# between dev and src (use grep for that)
+interface=$(ip route get "$host_ip" | grep -Po '(?<=(dev )).*(?= src| proto)')
+	
+echo $interface
+
+}
+
+oemGetSystemId()
+{
+
+# return the System ID
+cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo)
+echo $cpuid
+
+}
+
+oemGetOSLabel()
+{
+ 
+# return the OS label
+os=$(uname -a)
+echo $os
+
+}
+
+oemGetDefaultHardwareId()
+{
+
+# get the default interface
+interface=$(oemGetInterface)
+
+# get the adapter MAC
+hw_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
+
+echo $hw_mac
+ 
+}
+
+oemGetDefaultRegistrationKey()
+{
+ 
+ # get the WAN adapter MAC
+rk_mac=$(cat /sys/class/net/wlan0/address | sed 's/://g')
+
+echo $rk_mac
+ 
+}
+
+oemGetTCPServices()
+{
+ 
+ tcp=$(netstat -antp 2>/dev/null | grep 0.0.0.0: | awk '{ print $4 }' | awk -F':' '{print $2}' | xargs | sed -e 's/ /,/g')
+ 
+ echo $tcp
+ 
+}
