@@ -21,6 +21,9 @@ BASEDIR=
 # include shell script lib
 . "$BIN_DIR"/connectd_wlib
 
+# pick up OEM settings, e.g. ID, MAC, OS, etc
+. "$BASEDIR"/usr/bin/connectd_oem_settings
+
 # use set -x for debugging as needed
 #set -x
 
@@ -179,7 +182,7 @@ reset()
                     isDirEmpty "$PROVISION_DEFAULT/*"
                     if [ "$?" -eq 1 ]; then
 #  Hook for OEM to add a function to save configuration changes
-                        OEM_save_config
+                        oemSaveConfig
                         echo "OK: factory reset"
                         return 0
                     fi
@@ -189,20 +192,6 @@ reset()
     fi
     echo "FAIL: failed to reset files"
     return 1
-}
-
-#
-#  Hook for OEM to add a function to save configuration changes
-#  OEM must add the file in $BIN_DIR, called connectd_save_config
-#  it must be set to be executable (chmod +x)
-#
-
-OEM_save_config()
-{
-# hook for OEM to add platform specific call to save configuration changes
-    if [ -e "$BIN_DIR"/connectd_save_config ]; then
-        "$BIN_DIR"/connectd_save_config
-    fi
 }
 
 #
@@ -400,7 +389,7 @@ startit()
             fi
         fi    
         if [ ! -e "$DEVICES_RUNNING/$1.pid" ]; then
-            # start it up
+            # start it up            
             $BIN_DIR/$DAEMON.$PLATFORM -f "$DEVICES_ACTIVE/$1" -d "$DEVICES_RUNNING/$1.pid" > $LOG_DIR/$1.log
             ret=0
             echo "OK: $1 has started"
@@ -775,36 +764,37 @@ sendDeviceInfo()
     echo "starting device information"
 
     # fetch the device information attributes
-    # Default CPU ID on a RPi - might be different on other platforms
-    cpu=$(awk '/Serial/ {print $3}' /proc/cpuinfo)
+    # Default System ID - might be different on OEM platforms
+    cpu=$(oemGetSystemId)
 
-    # Default MAC based eth0 - other platforms may use different identifiers
-    mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
+    # Default MAC based - OEM platforms may use different identifiers
+    mac=$(oemGetDefaultHardwareId)
 
-    hw_mac=$(cat /sys/class/net/wlan0/address | sed 's/://g')
+    hw_mac=$(oemGetDefaultHardwareId)
     
     # hw id is either already saved by OEM or use default
     if [ -f "/etc/connectd/hardware_id.txt" ]; then
-            hwid=$(cat /etc/connectd/hardware_id.txt)
+       hwid=$(cat /etc/connectd/hardware_id.txt)
     else
-       hwid=$(cat /sys/class/net/wlan0/address | sed 's/://g')
+       hwid=$(oemGetDefaultRegistrationKey)
     fi
 
     # reg key mac is either already saved by OEM or use default
     if [ -f "/etc/connectd/registration_key.txt" ]; then
        rk_mac=$(cat /etc/connectd/registration_key.txt)
     else
-        rk_mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
+        rk_mac=$(oemGetDefaultRegistrationKey)
     fi
 
     # reg key could be overridden by OEM
     rk=$(cat /etc/connectd/registration_key.txt)
 
     # get OS from uname
-	os=$(uname -a)
-        r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
+	os=$(oemGetOSLabel)
+    
+    r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
         
-    tcp=$(netstat -antp 2>/dev/null | grep 0.0.0.0: | awk '{ print $4 }' | awk -F':' '{print $2}' | xargs | sed -e 's/ /,/g')
+    tcp=$(oemGetTCPServices)
         
     # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
 	if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
@@ -870,7 +860,7 @@ deviceReset()
 #
 dprovision()
 {
-# keep track of whether anything requires a call to OEM_save_config
+# keep track of whether anything requires a call to oemSaveConfig
     local update=0
     local ret=1
     local rc=1
@@ -967,7 +957,7 @@ dprovision()
             echo "dprovision for $bulk_id_code failed: $reason"
     fi
     if [ $update -eq 1 ]; then
-        OEM_save_config
+        oemSaveConfig
     fi
 }
 
@@ -1127,7 +1117,7 @@ bprovision()
         fi
     fi
     if [ $update -eq 1 ]; then
-        OEM_save_config
+        oemSaveConfig
     fi
 
     return $rc

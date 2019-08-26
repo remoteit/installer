@@ -8,13 +8,6 @@
 #
 #  remot3.it, Inc. : https://remote.it
 #
-# BASEDIR is the path relative to / where these files are installed
-# e.g. BASEDIR=/media/usb
-
-BASEDIR=
-
-# pick up global options, e.g. PLATFORM and API
-. "$BASEDIR"/usr/bin/connectd_options
 
 oemGetInterface()
 {
@@ -38,7 +31,7 @@ oemGetSystemId()
 {
 
 # return the System ID
-cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo)
+cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
 echo $cpuid
 
 }
@@ -82,4 +75,18 @@ oemGetTCPServices()
  
  echo $tcp
  
+}
+
+#
+#  Hook for OEM to add a function to save configuration changes
+#  OEM must add the file in $BIN_DIR, called connectd_save_config
+#  it must be set to be executable (chmod +x)
+#
+
+oemSaveConfig()
+{
+# hook for OEM to add platform specific call to save configuration changes
+    if [ -e "$BIN_DIR"/connectd_save_config ]; then
+        "$BIN_DIR"/connectd_save_config
+    fi
 }

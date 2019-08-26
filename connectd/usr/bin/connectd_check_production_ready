@@ -41,6 +41,13 @@ if [ -d "$DIRECTORY" ]; then
     STATUS=0
 fi
 
+if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+    bic=$(cat /etc/connectd/bulk_identification_code.txt)
+else
+   echo "Issue: Bulk Identification Code missing"
+   STATUS=0
+fi
+
 if [ -z "$STATUS" ] ; then
     echo "Ok:  device is cloneable for production"
 else

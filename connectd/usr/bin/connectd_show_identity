@@ -9,23 +9,35 @@
 #  only shows information - no changes are made with this script
 #
 #  remot3.it, Inc. : https://remote.it
+BASEDIR=
+# pick up global options, e.g. PLATFORM and API
+. "$BASEDIR"/usr/bin/connectd_oem_settings
 
-os=$(uname -a)
+id=$(oemGetSystemId)
+mac=$(oemGetDefaultHardwareId)
+rk_mac=$(oemGetDefaultRegistrationKey)
+os=$(oemGetOSLabel)
+tcp=$(oemGetTCPServices)
+
 r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
-cpu=$(awk '/Serial/ {print $3}' /proc/cpuinfo)
-mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
-hw_mac=$(cat /sys/class/net/wlan0/address | sed 's/://g')
-hwid=$(cat /etc/connectd/hardware_id.txt)
-rk_mac=$(cat /sys/class/net/eth0/address | sed 's/://g')
-rk=$(cat /etc/connectd/registration_key.txt)
+hwid=$(cat /etc/connectd/hardware_id.txt 2>/dev/null)
+rk=$(cat /etc/connectd/registration_key.txt 2>/dev/null)
 api=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
+apv=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiVersion=//g')
+
+if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+    bic=$(cat /etc/connectd/bulk_identification_code.txt)
+else
+    bic="No set"
+fi
 
 echo "OS:$os"
-echo "CPU ID:$cpu"
-echo "MAC:$mac"
-echo "Hardware ID manufacturer:$hw_mac"
+echo "CPU ID:$id"
+echo "Hardware ID manufacturer:$mac"
 echo "Hardware ID default:$hwid"
 echo "Registration Key default:$rk_mac"
 echo "Registration Key manufacturer:$rk"
+echo "TCP Services:$tcp"
 echo "remote.it Package:$r3"
-echo "remote.it API:$api"
+echo "remote.it API:$api$apv" | sed 's/"//g'
+echo "Bulk Identification Code:$bic"
