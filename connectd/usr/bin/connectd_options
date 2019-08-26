@@ -95,6 +95,9 @@ HWIDSEDSTRING="s/://g"
 DAEMON="connectd"
 #===================================
 
+# pick up OEM settings, e.g. ID, MAC, OS, etc
+. "$BASEDIR"/usr/bin/connectd_oem_settings
+
 
 #===================================
 # IMPORTANT CONFIG BELOW
@@ -145,19 +148,24 @@ REG_DEBUG=0
 # if desired, customize these expressions for your platform, 
 # e.g to pick up the IMEI rather than the network adapter MAC address.
 # network adapter name to use for the HWID, if desired
-REG_ID_ADAPTER="wlan0"
+
+# get the default interface - use OEM override
+REG_ID_ADAPTER=$(oemGetInterface)
+
 HW_ID_OVERRIDE_FILE="${CONNECTD_DIR}/hardware_id.txt"
 
 if [ -e "$HW_ID_OVERRIDE_FILE" ]; then
     hardware_id="$(cat $HW_ID_OVERRIDE_FILE)"
 else
-    id_address=/sys/class/net/"$REG_ID_ADAPTER"/address
 
-    if [ -e "$id_address" ]; then
+    id_address=$(oemGetDefaultHardwareId)
+
+    if [ ! -z "$id_address" ]; then
         if [ "$HWIDSEDSTRING" != "" ]; then
-            hardware_id="$HWIDPREFIX$(cat $id_address | sed $HWIDSEDSTRING)"
+            hardware_id=$(echo $id_address | sed -e "s/://g")
+            hardware_id="$HWIDPREFIX$hardware_id"
         else
-            hardware_id="$HWIDPREFIX$(cat $id_address)"
+            hardware_id="$HWIDPREFIX$$id_address"
         fi
     else
         echo "Error! Check expression for hardware_id in connectd_options."
@@ -166,17 +174,17 @@ else
     fi
 fi
 
+
 # network adapter name to use for the Registration Key, if desired
-REG_KEY_ADAPTER="eth0"
 REG_KEY_OVERRIDE_FILE="${CONNECTD_DIR}/registration_key.txt"
 
 if [ -e "$REG_KEY_OVERRIDE_FILE" ]; then
     registration_key="$(cat $REG_KEY_OVERRIDE_FILE)"
 else
-	rk_address=/sys/class/net/"$REG_KEY_ADAPTER"/address
+	rk_address=$(oemGetDefaultRegistrationKey)
 
-	if [ -e "$rk_address" ]; then
-   		registration_key="$(cat $rk_address | sed s/://g)"
+   if [ ! -z "$rk_address" ]; then
+   		registration_key=$(echo $id_address | sed -e "s/://g")
 	else
    		echo "Error! Check expression for registration_key in connectd_options."
    		echo "Exiting..."
