@@ -23,7 +23,7 @@ r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
 hwid=$(cat /etc/connectd/hardware_id.txt 2>/dev/null)
 rk=$(cat /etc/connectd/registration_key.txt 2>/dev/null)
 api=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
-apv=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiVersion=//g')
+apv=$(grep apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
 
 if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
     bic=$(cat /etc/connectd/bulk_identification_code.txt)
