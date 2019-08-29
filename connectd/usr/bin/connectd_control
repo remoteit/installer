@@ -769,14 +769,13 @@ sendDeviceInfo()
 
     # Default MAC based - OEM platforms may use different identifiers
     mac=$(oemGetDefaultHardwareId)
-
     hw_mac=$(oemGetDefaultHardwareId)
     
     # hw id is either already saved by OEM or use default
     if [ -f "/etc/connectd/hardware_id.txt" ]; then
        hwid=$(cat /etc/connectd/hardware_id.txt)
     else
-       hwid=$(oemGetDefaultRegistrationKey)
+       hwid=$(oemGetDefaultHardwareId)
     fi
 
     # reg key mac is either already saved by OEM or use default
@@ -988,7 +987,7 @@ bprovisionit()
 		while : 
 		do
         	# make curl call
-                # Removed test queue, see Github and Jira comments (CTD-113)
+            # Removed test queue, see Github and Jira comments (CTD-113)
         	data='{"project_id":"'$project_id'","hardware_id" : "'$hardware_id'", "registration_key" : "'$registration_key'"}'
 
         	resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $BulkRegisterURL )
