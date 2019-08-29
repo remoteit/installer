@@ -184,7 +184,7 @@ else
 	rk_address=$(oemGetDefaultRegistrationKey)
 
    if [ ! -z "$rk_address" ]; then
-   		registration_key=$(echo $id_address | sed -e "s/://g")
+   		registration_key=$(echo $rk_address | sed -e "s/://g")
 	else
    		echo "Error! Check expression for registration_key in connectd_options."
    		echo "Exiting..."
