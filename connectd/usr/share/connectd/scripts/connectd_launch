@@ -10,7 +10,7 @@ VERSION="v1.91"
 AUTHOR="Gary Worsham"
 MODIFIED="April 13, 2019"
 # BASEDIR is used to allow the package to be installed relative to any folder location
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 
 CONNECTD_PORT=
