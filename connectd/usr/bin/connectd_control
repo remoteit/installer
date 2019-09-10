@@ -92,6 +92,7 @@ GEN_RETRY_COUNT=3
 # API URL's
 #
 DeviceInformationURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/device/information/"
+DeviceReadyURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/device/ready/"
 #
 BulkRegisterURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/register"
 ComponentVersionURL="${apiMethod}${apiServer}${apiVersion}/device/component/version"
@@ -805,6 +806,33 @@ sendDeviceInfo()
  
     resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )
 	status=$(jsonval "$resp" "status")
+	echo "server says $resp"
+}
+
+# send device ready to the service
+sendDeviceReady()
+{
+    echo "starting device ready"
+    
+    # hw id is either already saved by OEM or use default
+    if [ -f "/etc/connectd/hardware_id.txt" ]; then
+       hwid=$(cat /etc/connectd/hardware_id.txt)
+    else
+       hwid=$(oemGetDefaultHardwareId)
+    fi
+        
+    # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
+	  if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+       secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'"}'
+
+       resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceReadyURL )
+	   status=$(jsonval "$resp" "status")
+	   echo "server says $resp"
+	else 
+       echo "FAIL: device ready requires bulk service and secret" 
+    fi
+ 
 }
 
 deviceReset()
@@ -1114,7 +1142,12 @@ bprovision()
                 ret=1
             fi 
         fi
+        
+        # send device ready
+        sendDeviceReady    
+        
     fi
+    
     if [ $update -eq 1 ]; then
         oemSaveConfig
     fi
