@@ -18,7 +18,7 @@ apikey="remote.it.developertoolsHW9iHnd"
 # ----------------------------------------
 # Set BASEDIR here.  (installation folder)
 #
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 filename=$(basename "$0")
 

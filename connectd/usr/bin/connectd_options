@@ -21,8 +21,8 @@ DEBUG="0"
 # set EXITONAPIERROR to 0 for debugging as needed.
 EXITONAPIERROR="1"
 #===================================
-# BASEDIR is root on many systems. If so, leave it blank.
-BASEDIR=    
+# BASEDIR is root on many systems. If so, leave it blank, else set the enviorment variable $CONNECTD_BASEDIR
+#BASEDIR=$CONNECTD_BASEDIR
 #===================================
 # BIN_DIR is default path for executables.  We install connectd scripts and binaries here.
 BIN_DIR="$BASEDIR"/usr/bin

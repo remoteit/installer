@@ -12,15 +12,17 @@ LOGFILE=remote.itBinaryTestLog.txt
 
 downloadAndTestDaemon()
 {
-    testArch=$1
-    testDaemon=connectd."$testArch"
+    local testArch=$1
+    local testDaemon=connectd."$testArch"
+    local retval=1
+
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO https://github.com/remoteit/misc_bins_and_scripts/raw/master/connectd/"$testDaemon" > /dev/null
+        curl -sLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
-	    exit 1
+            exit 1
         fi
     else
         printf "%s\n" "$testDaemon already in current directory, testing now..." | tee -a $LOGFILE   
@@ -31,11 +33,12 @@ downloadAndTestDaemon()
     if [ "$?" = "0" ]; then
         printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
         mv $testDaemon /usr/bin/"$testDaemon"
-	retval=0
+        ln -s /usr/bin/"$testDaemon" "/usr/bin/connectd"
+        retval=0
     else
         echo "."
         # printf "%s\n" "$testDaemon is not compatible!" | tee -a $LOGFILE       
-	rm "$testDaemon"
+        rm "$testDaemon"
         retval=1
     fi
     return $retval
@@ -43,12 +46,14 @@ downloadAndTestDaemon()
 
 downloadSchannel()
 {
-    testArch=$1
-    testDaemon=schannel."$testArch"
+    local testArch=$1
+    local testDaemon=schannel."$testArch"
+    local retval=0
+
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO https://github.com/remoteit/Server-Channel/raw/master/pre-built/"$testDaemon" > /dev/null
+        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
 	    exit 1
@@ -57,16 +62,64 @@ downloadSchannel()
     sleep 2
     chmod +x "$testDaemon"
     mv $testDaemon /usr/bin/connectd_"$testDaemon"
+    ln -s /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
     echo $retval
 }
+
+
+
+downMultiport()
+{
+    local testArch=$1
+    local muxer="muxer"
+    local demuxer="demuxer"
+    local muxerDaemon="${muxer}.${testArch}"
+    local demuxerDaemon="${demuxer}.${testArch}"
+    local retval=0
+
+    printf "\n"
+    printf "%s\n" "Downloading and testing $muxerDaemon..." | tee -a $LOGFILE
+    if [ ! -e "$muxerDaemon" ]; then
+        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
+        if [ "$?" != "0" ]; then
+            printf "%s\n" "$muxerDaemon download failed!" | tee -a $LOGFILE
+            exit 1
+        fi
+    fi
+    #
+    # link it and chmod it
+    chmod +x "$muxerDaemon"
+    mv $muxerDaemon "/usr/bin/connectd_${muxerDaemon}"
+    ln -s "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
+
+    printf "\n"
+    printf "%s\n" "Downloading and testing $demuxerDaemon..." | tee -a $LOGFILE
+    if [ ! -e "$demuxerDaemon" ]; then
+        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
+        if [ "$?" != "0" ]; then
+            printf "%s\n" "$demuxerDaemon download failed!" | tee -a $LOGFILE
+            exit 1
+        fi
+    fi    
+    sleep 2
+    chmod +x "$demuxerDaemon"
+    mv $demuxerDaemon /usr/bin/connectd_"$demuxerDaemon"
+    ln -s "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
+    echo $retval
+}
+
 
 # when using Debian package we have to check for compatibility with older versions
 # and use the older daemon if the newer one doesn't work.  If the older daemon gets used,
 # we add "-etch" to the Debian package name.
-
+#
+# Note this function might set daemon=
+#
 check_x86_64()
 {
+
     daemon=x86_64-ubuntu16.04
+    
     downloadAndTestDaemon $daemon
     if [ "$?" != 0 ]; then
         daemon=x86_64-etch
@@ -103,6 +156,13 @@ checkForUtilities()
 # clear log file each time
 if [ -e $LOGFILE ]; then
     rm $LOGFILE
+fi
+#
+# Get command line if "f" then force non deb
+#
+forceTar=0;
+if [ "$1" = "f" ]; then
+    forceTar=1;
 fi
 
 # Add a timestamp and divider line as headers to the log file and console
@@ -143,14 +203,20 @@ echo "Detected architecture is $BASEPLATFORM"
 
 # see if Debian "dpkg" utility is installed.
 useTar=1
-which dpkg
 
-if [ $? -eq 0 ]; then
-    dpkg --help > /dev/null
-    if [ $? = 0 ]; then
-        useTar=0
+# check for dpkg only of forceTar is off
+if [ $forceTar -eq 0 ]; then
+
+    which dpkg
+
+    if [ $? -eq 0 ]; then
+        dpkg --help > /dev/null
+        if [ $? = 0 ]; then
+            useTar=0
+        fi
     fi
 fi
+
 if [ $useTar -eq 1 ]; then
     echo "using tar file installer..."
     if [ "$BASEPLATFORM" = "mips" ]; then
@@ -255,6 +321,7 @@ if [ $useTar -eq 1 ]; then
             exit 1
         fi
     elif [ "$BASEPLATFORM" = "x86_64" ]; then
+        # daemon= is set here
         check_x86_64
     elif [ "$BASEPLATFORM" = "i686" ]; then
         daemon=x86-ubuntu16.04
@@ -286,8 +353,11 @@ if [ $useTar -eq 1 ]; then
     fi
 
     downloadSchannel "$daemon"
+    downMultiport "$daemon"
+    
     currentFolder=$(pwd)
     filename=connectd_"$VERSION"_"$daemon"".tar"
+
     echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
     echo "filepath $filepath"
@@ -318,3 +388,5 @@ else
     fi
 fi
 exit 0
+
+

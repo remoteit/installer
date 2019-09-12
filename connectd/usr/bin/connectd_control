@@ -13,7 +13,7 @@
 # BASEDIR is the path relative to / where these files are installed
 # e.g. BASEDIR=/media/usb
 BULK_REG=1
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 
 # pick up global options, e.g. PLATFORM and API
 . "$BASEDIR"/usr/bin/connectd_options
