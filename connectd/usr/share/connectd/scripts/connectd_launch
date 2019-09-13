@@ -16,6 +16,7 @@ BASEDIR=$CONNECTD_BASEDIR
 CONNECTD_PORT=
 DAEMON=connectd."$PLATFORM"
 PIDPATH="$PID_DIR"/"$CONNECTD_PORT".pid
+PIDPATHMULTI="$PID_DIR"/"${CONNECTD_PORT}-multi".pid
 LOG_DIR=/tmp
 
 ##### Version #####
@@ -45,20 +46,47 @@ isRunningCmd()
     fi
 }
 
+isRunningMulti()
+{
+    isRunningMulti=0
+    # get the PID from the file that is created by this script
+    if [ -f "$PIDPATHMULTI" ]; then
+        runningPIDMULTI="$(cat $PIDPATHMULTI)"
+        # see if there is a corresponding entry in /proc
+        if [ -d /proc/$runningPIDMULTI ]; then
+            isRunningMulti=1
+        fi
+    fi
+}
+
 stopConnectd()
 {
-    isRunningCmd
+   	isRunningCmd
     if [ $isRunning != 0 ]; then
-       echo "Stopping $CONNECTD_PORT..."
-       kill $runningPID 2> /dev/null
-       rm $PIDPATH 2> /dev/null
+    	echo "Stopping $CONNECTD_PORT..."
+       	kill $runningPID 2> /dev/null
+       	rm $PIDPATH 2> /dev/null
     else
-       echo "$CONNECTD_PORT is not currently active. Nothing to stop."
+       	echo "$CONNECTD_PORT is not currently active. Nothing to stop."
+    fi
+
+	# kill mutiport if running
+    isRunningMulti
+    if [ $isRunningMulti != 0 ]; then
+        echo "Stopping $CONNECTD_PORT-multi..."
+        kill $runningPIDMULTI 2> /dev/null
+        rm $PIDPATHMULTI 2> /dev/null
+    else
+        echo "$CONNECTD_PORT-multi is not currently active or set on."
     fi
 }
 
 startConnectd()
 {
+	local multiport
+	local multiport_target 
+	local multiport_bind_port 
+
 	isRunningCmd
 	if [ $isRunning = 0 ]; then
 		echo "Starting $CONNECTD_PORT..."
@@ -67,6 +95,32 @@ startConnectd()
 	else
 		echo "$CONNECTD_PORT is already started"
 	fi
+
+    # check if multiport is set on
+    multiport=$(extract_key_value "$CONNECTD_CONF_DIR/$CONNECTD_PORT.conf" "multiport")
+    if [ $multiport = 1 ]; then
+        isRunningMulti
+        if [ $isRunningMulti = 0 ]; then
+            echo "Starting $CONNECTD_PORT-multi..."
+            multiport_target=$(extract_key_value "$CONNECTD_CONF_DIR/$CONNECTD_PORT.conf" "multiport_target")
+            #if not set set to 127..
+            if [ -z "$multiport_target" ]; then
+                multiport_target="127.0.0.1"
+            fi
+            #
+            # we want to bind to the proxy_dest_port of the multport enabled service
+            multiport_bind_port=$(extract_key_value "$CONNECTD_CONF_DIR/$CONNECTD_PORT.conf" "proxy_dest_port")
+            if [ -z "$multiport_bind_port" ]; then
+                multiport_bind_port="65535"
+            fi
+
+            $BIN_DIR/$MULTIPORT_DAEMON "-b 127.0.0.1:$multiport_bind_port" -t $multiport_target -u root -d -p $PID_DIR/$CONNECTD_PORT.pid"  > $LOG_DIR/$CONNECTD_PORT-multi.log
+            tail $LOG_DIR/$CONNECTD_PORT.log
+        else
+            echo "$CONNECTD_PORT-multi is already started"
+        fi
+    fi
+
 }
 
 restartConnectd()
