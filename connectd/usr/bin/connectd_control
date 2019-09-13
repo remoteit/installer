@@ -821,7 +821,7 @@ sendDeviceReady()
        hwid=$(oemGetDefaultHardwareId)
     fi
         
-    # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
+    # check for Bulk Service already being registered so we can update - authentication with secret	
 	  if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
        secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'"}'
