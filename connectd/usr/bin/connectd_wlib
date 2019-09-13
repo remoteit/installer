@@ -12,8 +12,48 @@
 #${var%SubStr*}  # will drop part of string from last occur of `SubStr` to the end
 #${var%%SubStr*} # will drop part of string from first occur of `SubStr` to the end
 
-
+TTTTEST=
 GREPFLAGS=
+
+#
+# extract a key value from a file ($1=file $2=key, $3=optional character delimiter (default space))
+#
+# key must start on first character of line.
+#
+# Return 0 for found value, return 1 for no value found
+#
+# call with:  value=$(extract_key_value "filename" "key")
+#
+extract_key_value()
+{
+    local value
+    local delimiter=' '
+    local ret=1
+
+    # set the delimiter 
+    if [ -z "$3" ]; then
+        delimiter=' ' 
+    else
+        delimiter=$3
+    fi
+
+    # search for the last key in the file and extract the value
+    #value=$(grep "^$2$delimiter" "$1" | tail -n 1 | awk '{print $2}')
+    value=$(grep "^${2}${delimiter}" "$1" | tail -n 1 )
+    value=${value##*"${2}${delimiter}"}
+
+    # set the delimiter 
+    if [ -z "$value" ]; then
+        ret=0
+    else
+        ret=1 
+    fi
+    
+    echo -n $value
+    
+    return $ret
+}
+
 
 #produces a unix timestamp to the output                                                                                           
 utime()                                                                                                                            
