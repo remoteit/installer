@@ -284,6 +284,21 @@ getHardwareID()
 ##### Check for existing services #####
 checkForServices()
 {
+    local services
+    local firstFile
+    local instanceNumber
+    local i
+    local legacyInstances
+    local WARNING
+    local confFiles
+    local DeviceName
+    local uid
+    local port
+    local yooareell
+    local unknownDevice
+    local serviceName
+    local protocol
+
     services="$CONNECTD_CONF_DIR/Connectd*.conf"
     firstFile=$(echo $services | awk '{print $1}')
     echo "" > "$TMP_DIR"/.uidlist.txt
@@ -318,39 +333,38 @@ checkForServices()
     for file in $confFiles; do
 #	debug $file
         uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	echo "$uid" >> "$TMP_DIR"/.uidlist.txt
+	    echo "$uid" >> "$TMP_DIR"/.uidlist.txt
 
         if [ "$uid" != "" ]; then
             port="$(grep '^port' "$file" | awk '{print $2}')"
-	    debug "$port"
+	        debug "$port"
             yooareell="$deviceURL/$uid"
             debug "$yooareell"
 
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
+	        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$yooareell")
 
-	    # this next test checks to see if device is registered.  
-	    # If not, it was probably deleted at the web portal.
-
-	    unknownDevice=$(echo "$resp" | grep "unknown device")
-            if [ "$unknownDevice" = "" ]; then
-
-	        serviceName=$(jsonval "$resp" "name")
-
-		debug "serviceName: $serviceName"
+	        # this next test checks to see if device is registered.  
+	        # If not, it was probably deleted at the web portal.
+	        unknownDevice=$(echo "$resp" | grep "unknown device")
             
-	        protocol=$(jsonval "$resp" "title")
+            if [ "$unknownDevice" = "" ]; then
+	            serviceName=$(jsonval "$resp" "name")
 
-		debug "protocol: $protocol"
+		        debug "serviceName: $serviceName"
+            
+	            protocol=$(jsonval "$resp" "title")
+
+		        debug "protocol: $protocol"
 
 	        # rename "Bulk Service" and "Basic Web" to shorten them
 
                 if [ "$protocol" = "Bulk Service" ]; then
-		    protocol="rmt3"
-		    port=65535
+		            protocol="rmt3"
+		            port=65535
                 elif [ "$protocol" = "SSH" ]; then
                     port=22
                 elif [ "$protocol" = "Basic Web" ]; then
-		    protocol="WebPxy"
+		            protocol="WebPxy"
                     port=80
                 elif [ "$protocol" = "HTTPS" ]; then
                     port=443
@@ -377,37 +391,38 @@ checkForServices()
                 if [ "$proxyAddress" = "" ]; then
                     service=$(netstat -lpn 2> /dev/null | grep ${GREPFLAGS} tcp | grep ${GREPFLAGS} "0.0.0.0:$port" | awk -F"/" '{print $2}')
 
-	            # if no service, show warning
+	                # if no service, show warning
                     if [ "$service" = "" ]; then
-		        if [ "$protocol" != "rmt3" ]; then
+                        if [ "$protocol" != "rmt3" ]; then
                             # double check using connectd -nc mode, as some apps do not report on netstat ipv4 but
                             # work nevertheless
                             "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "127.0.0.1":"$port" > "$TMP_DIR"/.ncerror
-		            grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
+		                    grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
 
                             result=$?
                             if [ $result = 1 ]; then
                                 service="OK"
                             else
                                 service="not detected"
-		                WARNING="1"
+                                WARNING="1"
                             fi
-		        fi
+		                fi
                     else
-			service="OK: $service"
+			            service="OK: $service"
                     fi
                 else
-                   "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "$proxyAddress":"$port" > "$TMP_DIR"/.ncerror
-		   grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
+                    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "$proxyAddress":"$port" > "$TMP_DIR"/.ncerror
+                    grep -i "fail" "$TMP_DIR"/.ncerror > /dev/null
 
-                   result=$?
-                   if [ $result = 1 ]; then
+                    result=$?
+                    if [ $result = 1 ]; then
                         service="OK"
-                   else
+                    else
                         service="not detected"
-                   fi
+                    fi
                 fi
-		# don't show rmt3 service in Service List - it's the "Device Name"
+
+		        # don't show rmt3 service in Service List - it's the "Device Name"
                 if [ "$protocol" != "rmt3" ]; then
                     if [ "$proxyAddress" = "" ]; then
                         lanAddress="localhost"
@@ -1460,6 +1475,14 @@ installProvisioning()
     if [ "$proxyAddress" != "" ]; then 
         echo "proxy_dest_ip $proxyAddress" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
     fi
+#
+# +++ if bulk lets add override, bulk alway is multport target 
+#
+    if [ "$PROTOCOL" = "rmt3" ]; then
+        echo "application_type_overload 40" >> "$TMP_DIR"/"$CONNECTD_PORT".conf
+    fi
+
+
 }
 ######### End installProvisioning #########
 
