@@ -11,6 +11,16 @@
 #
 #  remot3.it, Inc. : https://remote.it
 
+BASEDIR=
+CONNECTD_DIR="$BASEDIR"/etc/connectd
+# pick up global options, e.g. PLATFORM and API
+. "$CONNECTD_DIR"/oem_settings
+
+# test for unique identifiers - status will emit on errors
+echo "CPU ID:"$(oemGetSystemId)
+echo "Hardware ID:"$(oemGetDefaultHardwareId)
+echo "Registration Key:"$(oemGetDefaultRegistrationKey)
+
 DIRECTORY=/etc/connectd/services
 if [ -d "$DIRECTORY" ]; then
     echo "Issue: remote.it services folder exists"
@@ -51,5 +61,7 @@ fi
 if [ -z "$STATUS" ] ; then
     echo "Ok:  device is cloneable for production"
 else
-    echo "Error: No device is not safe to clone for production. Fix issue(s) listed and try again" 
+    echo "Issue: No device is not safe to clone for production." 
+    echo "ACTION: Use the sudo connectd_prepare_production command to ready this system" 
 fi
+
