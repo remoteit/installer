@@ -10,8 +10,9 @@
 #
 #  remot3.it, Inc. : https://remote.it
 BASEDIR=
+CONNECTD_DIR="$BASEDIR"/etc/connectd
 # pick up global options, e.g. PLATFORM and API
-. "$BASEDIR"/usr/bin/connectd_oem_settings
+. "$CONNECTD_DIR"/oem_settings
 
 id=$(oemGetSystemId)
 mac=$(oemGetDefaultHardwareId)

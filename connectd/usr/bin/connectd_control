@@ -22,7 +22,7 @@ BASEDIR=
 . "$BIN_DIR"/connectd_wlib
 
 # pick up OEM settings, e.g. ID, MAC, OS, etc
-. "$BASEDIR"/usr/bin/connectd_oem_settings
+. "$CONNECTD_DIR"/oem_settings
 
 # use set -x for debugging as needed
 #set -x
@@ -1128,7 +1128,7 @@ bprovision()
                 fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: nothing to provision"
+                echo "STATUS: nothing to provision"
                 ret=1
             fi
         else
@@ -1181,7 +1181,7 @@ enable()
                 fi
             done 
             if [ $ret -ne 0 ]; then
-                echo "FAIL: notihing to enable"
+                echo "STATUS: nothing to enable"
             fi
         else
             if [ -e "$DEVICES_AVAILABLE/$1" ]; then
@@ -1230,7 +1230,7 @@ disable()
                 echo "OK: disable $1"
                 rm "$DEVICES_ACTIVE/$1"
             else
-                echo "FAIL: $1 not active"
+                echo "STATUS: $1 not active"
             fi
             return 1
         fi
@@ -1256,7 +1256,7 @@ start()
                 fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: No active devices to start"
+                echo "STATUS: No active devices to start"
             fi
         else
             #start the device if not running and is available
@@ -1296,7 +1296,7 @@ stop()
 		fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: No active devices to stop"
+                echo "STATUS: No active devices to stop"
             fi
         else
             #stop one device

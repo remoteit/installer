@@ -12,6 +12,8 @@ MODIFIED="April 15, 2019"
 BUILDDATE=
 #===================================
 VERSION=
+# DELETE THIS BEFORE PRODUCTION
+VERSION=
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -38,6 +40,11 @@ LOG_DIR=/var/log
 apiMethod="https://"
 apiVersion="/api"
 apiServer="device.remot3.it"
+#
+## DELETE THESE BEFORE PRODUCTION
+apiMethod="http://"
+apiVersion="/apv/latest"
+apiServer="api.remot3.it"
 
 #===================================
 # Configuration Folder Variables
@@ -96,7 +103,7 @@ DAEMON="connectd"
 #===================================
 
 # pick up OEM settings, e.g. ID, MAC, OS, etc
-. "$BASEDIR"/usr/bin/connectd_oem_settings
+. "$CONNECTD_DIR"/oem_settings
 
 
 #===================================
