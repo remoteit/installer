@@ -1181,7 +1181,7 @@ enable()
                 fi
             done 
             if [ $ret -ne 0 ]; then
-                echo "STATUS: notihing to enable"
+                echo "STATUS: nothing to enable"
             fi
         else
             if [ -e "$DEVICES_AVAILABLE/$1" ]; then
