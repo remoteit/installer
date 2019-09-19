@@ -786,11 +786,8 @@ sendDeviceInfo()
         rk_mac=$(oemGetDefaultRegistrationKey)
     fi
 
-    # reg key could be overridden by OEM
-    rk=$(cat /etc/connectd/registration_key.txt)
-
     # get OS from uname
-	  os=$(oemGetOSLabel)
+	os=$(oemGetOSLabel)
     
     r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
         
