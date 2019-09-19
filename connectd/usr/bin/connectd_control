@@ -806,13 +806,12 @@ sendDeviceInfo()
  
     resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )
 	status=$(jsonval "$resp" "status")
-	echo "server says $resp"
 }
 
 # send device ready to the service
 sendDeviceReady()
 {
-    echo "starting device ready"
+    if [ $VERBOSE -gt 0 ]; then printf "Starting Device Ready\n" ; fi
     
     # hw id is either already saved by OEM or use default
     if [ -f "/etc/connectd/hardware_id.txt" ]; then
@@ -822,13 +821,18 @@ sendDeviceReady()
     fi
         
     # check for Bulk Service already being registered so we can update - authentication with secret	
-	  if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+	if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+	
+	   # set a claim code and pass it along
+	   cc=$(sudo connectd_claimcode set)
+	   
        secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
-       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'"}'
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'", "ClaimCode" : "'$cc'"}'
 
        resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceReadyURL )
 	   status=$(jsonval "$resp" "status")
-	   echo "server says $resp"
+       if [ $VERBOSE -gt 0 ]; then printf "Device Ready: %s\n" $resp ; fi
+
 	else 
        echo "FAIL: device ready requires bulk service and secret" 
     fi

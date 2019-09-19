@@ -121,6 +121,15 @@ interface=$(ip route get "$host_ip" | grep -Po '(?<=(dev )).*(?= src| proto)' | 
 echo $interface
 
 }
+
+oemGetWebPath()
+{
+ 
+# return the default web path. Override if different
+echo /var/www/html
+
+}
+
 #
 #  Hook for OEM to add a function to save configuration changes
 #  OEM must add the file in $BIN_DIR, called connectd_save_config
