@@ -273,13 +273,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-# commenting out auto-registration tests
-# for 2.3 release (auto-reg is not a supported feature yet)
-# sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
-# if [ $? -ne 0 ]; then
-#     echo "Auto Registration failure!"
-#     exit 1
-# fi
+# auto-registration tests
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+if [ $? -ne 0 ]; then
+    echo "Auto Registration failure!"
+    exit 1
+fi
 
 sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
 if [ $? -ne 0 ]; then
