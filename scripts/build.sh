@@ -20,7 +20,7 @@ runtests=1
 
 #---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
-# for use by the intereactive installer tests
+# for use by the interactive installer tests
 add_creds()
 {
 # get account login credentials from environment variables (set in Circle CI)
@@ -267,16 +267,16 @@ fi
 # add the test account credentials.
 add_creds
 
-"$TEST_DIR"/Interactive/full-interactive-test.sh
-if [ $? -ne 0 ]; then
-    echo "Interactive Registration failure!"
-    exit 1
-fi
-
 # auto-registration tests
 sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
+    exit 1
+fi
+
+"$TEST_DIR"/Interactive/full-interactive-test.sh
+if [ $? -ne 0 ]; then
+    echo "Interactive Registration failure!"
     exit 1
 fi
 
