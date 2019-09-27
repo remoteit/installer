@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.11
-MODIFIED="April 12, 2019"
+ver=2.1.12
+MODIFIED="September 28, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -264,6 +264,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+if [ $? -ne 0 ]; then
+    echo "Auto Registration failure!"
+    exit 1
+fi
+
 # add the test account credentials.
 add_creds
 
@@ -272,14 +278,6 @@ if [ $? -ne 0 ]; then
     echo "Interactive Registration failure!"
     exit 1
 fi
-
-# commenting out auto-registration tests
-# for 2.3 release (auto-reg is not a supported feature yet)
-# sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
-# if [ $? -ne 0 ]; then
-#     echo "Auto Registration failure!"
-#     exit 1
-# fi
 
 sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
 if [ $? -ne 0 ]; then
