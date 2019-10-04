@@ -7,13 +7,11 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="April 15, 2019"
+MODIFIED="October 04, 2019"
 #===================================
 BUILDDATE=
 #===================================
-VERSION=
-# DELETE THIS BEFORE PRODUCTION
-VERSION=
+VERSION=3.0.6    
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -67,7 +65,7 @@ PID_DIR=/var/run
 #===================================
 # PLATFORM is the extension for the binaries, depends on CPU architecture
 # and shared libraries
-PLATFORM=
+PLATFORM=x86_64-ubuntu16.04    
 #===================================
 # startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
 startupScripts=3
