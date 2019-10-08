@@ -1,0 +1,105 @@
+#!/bin/sh 
+#
+#  remote.it Production Preparation Script allows cleaning and preparing the
+#    system to be a master SD card for proper cloning
+#
+#  NOTE: This is a development script and not used in a production device
+#
+#  connectd_prepare_production 
+#
+#  will remove current connectd services and store info in CONNECTD_DIR
+#
+#  remot3.it, Inc. : https://remote.it
+
+# check for for configuration 
+echo "You should correct all ACTION and FAIL conditions before continuing"
+sudo connectd_check_production_ready
+
+# ask the user to confirmn they want to reset this system before continuing
+echo -n "Do you want to setup this system for cloning (y/n)? "
+read answer
+
+if [ "$answer" != "${answer#[Yy]}" ] ;then
+
+	# in case the user has multiple systems, take the time to flash LEDs to identify the physical device
+	# this is RPi specific
+
+    if [ -f "/sys/class/leds/led0/brightness" ]; then
+ 
+       echo "Please check blinking LED on the Pi to confirm identity. It will blink for about 30 seconds."
+ 
+       for i in 1 2 3 4 5 6 7 8 9 10
+       do
+          echo -n "."
+          echo 1 >/sys/class/leds/led0/brightness
+          sleep 3
+       done
+       echo ""
+    fi   
+
+    echo -n "Are you sure? This is permenant! (y/n)? "
+    read answer
+
+    if [ "$answer" != "${answer#[Yy]}" ] ;then
+
+       # do all the reset steps
+       sudo /usr/bin/connectd_stop_all
+       sudo connectd_control stop all 
+
+       sudo connectd_control reset
+
+       if [ -f "/etc/connectd/hardware_id.txt" ]; then
+            sudo mv /etc/connectd/hardware_id.txt /etc/connectd/hardware_id.txt.prev
+       fi
+
+       if [ -f "/etc/connectd/registration_key.txt" ]; then
+            sudo mv /etc/connectd/registration_key.txt /etc/connectd/registration_key.txt.prev
+       fi
+
+       if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+            sudo mv /etc/connectd/bulk_identification_code.txt /etc/connectd/bulk_identification_code.txt.prev
+       fi 
+
+       if [ -d "/etc/connectd/services" ]; then
+            sudo mv /etc/connectd/services /etc/connectd/services.prev
+       fi   
+
+       if [ -d "/etc/connectd/pfiles" ]; then
+            sudo mv /etc/connectd/pfiles /etc/connectd/pfiles.prev
+       fi
+
+       if [ -d "/etc/connectd/dfiles" ]; then
+            sudo mv /etc/connectd/dfiles /etc/connectd/dfiles.prev
+       fi
+
+       if [ -d "/etc/connectd/active" ]; then
+            sudo mv /etc/connectd/active /etc/connectd/active.prev
+       fi
+
+       if [ -d "/etc/connectd/available" ]; then
+            sudo mv /etc/connectd/available /etc/connectd/available.prev
+       fi
+
+       echo -n "Enter the Bulk Identification Code: "
+       read answer
+
+       echo $answer > /tmp/bic.txt
+       sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
+
+       sudo systemctl enable connectd
+       sudo systemctl enable connectd_schannel
+
+       STATUS=1
+    else 
+        echo Bye
+    fi
+else
+    echo Bye
+fi
+
+# show final status
+if [ ! -z "$STATUS" ] ; then
+    echo "Ready: The device is cloneable for production."
+else
+    echo "Not Ready: The device is not safe to clone for production. Fix issue(s) listed and try again." 
+fi

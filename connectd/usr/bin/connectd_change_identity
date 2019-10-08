@@ -1,0 +1,27 @@
+#!/bin/sh 
+#
+#  remote.it Change Identity Script allows overriding hardware ID and registration key
+#  identity settings.
+#
+#  NOTE: This is a development script and not used in a production device
+#
+#  connectd_change_identity  
+#
+#  will store info in CONNECTD_DIR
+#
+#  remot3.it, Inc. : https://remote.it
+
+# show the current configuration
+echo "Current configuration is ... "
+sudo connectd_control show
+
+# ask for new settings and save them in well know files
+echo -n "Enter Hardware ID: "
+read answer
+echo $answer > /tmp/hwid.txt
+sudo mv /tmp/hwid.txt /etc/connectd/hardware_id.txt
+
+echo -n "Enter  Registration Key: "
+read answer
+echo $answer > /tmp/regkey.txt
+sudo mv /tmp/regkey.txt /etc/connectd/registration_key.txt
