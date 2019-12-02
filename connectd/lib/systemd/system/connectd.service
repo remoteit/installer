@@ -5,8 +5,8 @@ After=network.target rc-local.service
 
 [Service]
 RemainAfterExit=yes
-ExecStart=/usr/bin/connectd_start
-ExecStop=/usr/bin/connectd_stop
+ExecStart=/usr/bin/connectd_start_all
+ExecStop=/usr/bin/connectd_stop_all
 Restart=always
 RestartSec=10s
 TimeoutStartSec=0
