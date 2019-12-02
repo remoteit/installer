@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.0.0
-MODIFIED="September 28, 2019"
+VERSION=0.99
+MODIFIED="March 16, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
@@ -15,9 +15,7 @@ result=0
 # This one is from the faultline1989 account.
 
 #---------------------------------------------
-# this should be set by a Circle CI environment variable
-# but for now it's hardwired to a specific account
-BULKIDCODE="D5798A73-0E6E-1C01-20BE-D76921CC74C6"
+BULKIDCODE="1233F068-A3F9-9C3F-006F-FBFA9D018813"
 
 # include the package library to access some utility functions
 
@@ -27,13 +25,12 @@ BULKIDCODE="D5798A73-0E6E-1C01-20BE-D76921CC74C6"
 # script execution starts here
 echo "Test $0 starting..."
 echo
-
-# the next lines can be used as needed to override a specific API version
-# comment these lines out to return to default API
-# echo "API:"
-# sed -i -e 's/\/api/\/apv\/v27.5/' /usr/bin/connectd_options
-# grep ^api /usr/bin/connectd_options
-# echo
+echo "API:"
+# the next line can be used as needed to override a specific API version
+# comment this line out to return to default API
+sed -i -e 's/\/api/\/apv\/v27.5/' /usr/bin/connectd_options
+grep ^api /usr/bin/connectd_options
+echo
 
 #---------------------------------------------
 # make sure user is running with root access (sudo is OK)
@@ -49,14 +46,6 @@ uuid > /etc/connectd/hardware_id.txt
 uuid > /etc/connectd/registration_key.txt
 
 echo "$BULKIDCODE" > /etc/connectd/bulk_identification_code.txt
-
-# run connectd_check_production_ready
-connectd_check_production_ready > production_ready.txt
-if [ $? -ne 0 ]; then
-    echo "Error in connectd_check_production_ready"
-    cat production_ready.txt
-    exit 1
-fi
 
 # display bulk registration configuration
 

@@ -19,9 +19,6 @@ jobs:
           keys:
             - cache-{{ .Branch }}-{{ checksum "package-lock.json" }}
       - run:
-          name: apt update
-          command: sudo apt-get update
-      - run:
           name: Install lintian
           command: sudo apt-get install lintian
       - run:
