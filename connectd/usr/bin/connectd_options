@@ -7,7 +7,7 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="April 15, 2019"
+MODIFIED="December 02, 2019"
 #===================================
 BUILDDATE=
 #===================================
@@ -61,9 +61,6 @@ PID_DIR=/var/run
 # PLATFORM is the extension for the binaries, depends on CPU architecture
 # and shared libraries
 PLATFORM=
-#===================================
-# startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
-startupScripts=3
 #===================================
 # mac is the expression used to get the MAC for autonaming
 mac=$(ip addr | grep ether | tail -n 1 | awk '{ print $2 }') 

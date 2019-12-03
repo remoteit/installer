@@ -929,7 +929,7 @@ deleteAllConnections()
 	    rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
    	fi
-# also should clear out crontab at this point
+# also should disable daemon startup at this point
 	disableStartup
 # stop schannel
 	connectd_schannel stop
@@ -1463,43 +1463,17 @@ installProvisioning()
 }
 ######### End installProvisioning #########
 
-######### Add line to cron ######
-cronAddLine()
-{
-    crontab -l 2> /dev/null 1> "$TMP_DIR"/.crontab_old
-    echo "$1" >> "$TMP_DIR"/.crontab_old
-    logger "cronAddline $1"
-    crontab "$TMP_DIR"/.crontab_old
-}
-######### End add line to cron ######
-
-######### Disable Connectd services to start at reboot time ######
-cronRemoveLine()
-{
-    crontab -l | grep -v "$1" | cat > "$TMP_DIR"/.crontmp
-    crontab "$TMP_DIR"/.crontmp
-}
-
 ######### Enable remote.it services to start at reboot time ######
 enableStartup()
 {
-    if [ $startupScripts = 3 ]; then
-        cronAddLine "@reboot $BIN_DIR/$STARTEMUP"
-        logger "$0: Adding cron reboot start links."
-    elif [ $startupScripts = 1 ]; then
-        echo "You will need to add reboot start/stop links to $BIN_DIR/$STARTEMUP"
-    fi
+    systemctl enable connectd
 }
 ######### End Enable remote.it services to start at reboot time ######
 
 ######### Disable remote.it services to start at reboot time ######
 disableStartup()
 {
-    if [ $startupScripts = 3 ]; then
-        cronRemoveLine "@reboot $BIN_DIR/$STARTEMUP"
-    elif [ $startupScripts = 1 ]; then
-        echo "You will need to remove reboot start/stop links to $BIN_DIR/$STARTEMUP"
-    fi
+    systemctl disable connectd
 }
 
 #----------  setBASEDIR --------------
@@ -1530,16 +1504,9 @@ installStartStop()
         cp "$CONNECTD_LIB_DIR"/scripts/$STARTEMUP "$BIN_DIR"
 #     printf "$STARTEMUP copied to %s\n" "$BIN_DIR"
     fi
-    # 3: crontab approach
-    if [ $startupScripts = 3 ]; then
-	checkCron=$(crontab -l 2> /dev/null | grep -c "$STARTEMUP" )
-	debug "CheckCron: $checkCron\n"
-	if [ "$checkCron" = 0 ]; then
-	    enableStartup
-	fi
- #   elif [ $startupScripts = 1 ]; then
- #       ln -s /usr/bin/connectd_start /etc/init.d/connectd
-    fi
+
+    enableStartup
+
     # see if there is an entry to start the chosen service daemon already
     checkStartConnectd=$(grep -c "$CONNECTD_PORT" "$BIN_DIR"/"$STARTEMUP" )
     # if not, add it
