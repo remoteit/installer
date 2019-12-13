@@ -1187,7 +1187,8 @@ signInAPI()
         debug "Login token: $token"
     else
     	noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
-    	loginFailed=$(echo "$resp" | grep "The username or password are invalid" | sed 's/"//g')
+        # look for [0102] api return for invalid login
+    	loginFailed=$(echo "$resp" | grep "\[0102\]" | sed 's/"//g')
     	slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
 # 404 is triggered when you enter some special character in e-mail.  this specific search may fail if API
 # "$apiServer" is moved
