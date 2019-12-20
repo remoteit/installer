@@ -1231,7 +1231,9 @@ testLogin()
         printf "Please correct the system date if needed and run the installer again.\n"
         printf "Run the command 'man date' for help resetting the date.\n\n"
         printf "If you are receiving this message and your system date is correct,\n"
-        printf "please contact remote.it support at support@remote.it.\n"
+        printf "make sure that the ca-certificates package is correctly installed\n"
+        printf "on your operating system."
+        printf "For more information, please contact support at support@remote.it.\n"
         exit
     fi
 }
