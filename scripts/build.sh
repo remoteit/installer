@@ -96,11 +96,11 @@ buildDebianFile()
     ret=0
     sudo chown -R root:root "$1"
     if [ "$buildDeb" -eq 1 ]; then
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         # only run lintian if we are really making a Debian package
         ret=$(runLintian "$1".deb)
     else
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         ret=$?
     fi
     sudo chown -R $user:$user "$1"
