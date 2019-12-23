@@ -231,7 +231,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=mipsel-bcm5354
+            daemon=mipsel-bmc5354
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -251,7 +251,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=mipsel-bcm5354-static
+            daemon=mipsel-bmc5354-static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
