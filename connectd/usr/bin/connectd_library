@@ -211,8 +211,8 @@ askResetDevice()
             if [ -e "$BIN_DIR/connectd_start_all" ]; then
                 rm $BIN_DIR/connectd_start_all
             fi
-             # stop the server channel daemon 
-            connectd_schannel stop > /dev/null
+            # stop the server channel daemon 
+            $BIN_DIR/connectd_schannel stop > /dev/null
             echo
             checkForDeviceName
         fi
@@ -938,9 +938,8 @@ deleteAllConnections()
    	fi
 # also should disable daemon startup at this point
 	disableStartup
-# stop schannel
+# stopping the schannel daemon is handled by connectd_stop_all
         systemctl stop connectd
-        systemctl stop connectd_schannel
         exit
     fi
 }
