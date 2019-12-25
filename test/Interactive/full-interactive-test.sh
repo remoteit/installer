@@ -82,6 +82,8 @@ check_service_counts 10 1 configure-02-test.key
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
+# have to add sleep here because systemd shutdown returns before it completes
+sleep 5
 check_service_counts 0 0 remove-all.key
 
 echo "Interactive installer test suite - all passed"
