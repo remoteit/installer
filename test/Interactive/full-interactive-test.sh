@@ -15,6 +15,7 @@ set -x
 count_services()
 {
     ps ax | grep "connectd\." | grep -v grep > ~/nservices
+    cat ~/nservices
     services="$(wc -l ~/nservices  | awk '{ print $1 }')"
     return $services
 }
@@ -37,7 +38,7 @@ check_service_counts()
 echo "Starting interactive install test with keystroke file $3..."
 sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
 # have to add sleep here because systemd shutdown returns before it completes
-sleep 5
+sleep 15
 
 count_services
 nservices=$?
