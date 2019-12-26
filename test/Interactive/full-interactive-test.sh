@@ -22,7 +22,7 @@ count_services()
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel" | grep -v grep > ~/nschannel
+    ps ax | grep "connectd_schannel\." | grep -v grep > ~/nschannel
     schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
