@@ -10,6 +10,7 @@ SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
 user=$(whoami)
 
+set -x
 #-----------------------------------------------------------------------
 count_services()
 {
