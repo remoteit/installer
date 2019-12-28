@@ -37,8 +37,8 @@ check_service_counts()
 {
 echo "Starting interactive install test with keystroke file $3..."
 sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
-# have to add sleep here because systemd shutdown returns before it completes
-sleep 15
+# not entirely sure if sleep is needed here
+sleep 1
 
 count_services
 nservices=$?
