@@ -1,10 +1,10 @@
 Package: connectd
-Version: 2.4.21
+Version: 2.4.22
 Section: non-free/net
 Priority: optional
 Homepage: https://remote.it
 Architecture: amd64
-Depends: libc6 (>= 2.1), mawk (>= 1.0), grep (>= 2.1.6), curl (>= 7.21.0)
+Depends: libc6 (>= 2.1), mawk (>= 1.0), grep (>= 2.1.6), curl (>= 7.21.0), ca-certificates (>= 20161130+nmu1+deb9u1)
 Maintainer: Gary Worsham <gary@remote.it>
 Description: remote.it is a cloud service that provides secure connections to 
  your networked devices across the public internet, even those located behind 
