@@ -22,4 +22,3 @@ if [ -d "$BASEDIR/usr/bin" ]; then
     done
 fi
 
-"$BASEDIR"/usr/bin/connectd_schannel stop
