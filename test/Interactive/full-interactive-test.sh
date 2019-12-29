@@ -10,10 +10,12 @@ SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
 user=$(whoami)
 
+set -x
 #-----------------------------------------------------------------------
 count_services()
 {
     ps ax | grep "connectd\." | grep -v grep > ~/nservices
+    cat ~/nservices
     services="$(wc -l ~/nservices  | awk '{ print $1 }')"
     return $services
 }
@@ -21,7 +23,8 @@ count_services()
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel" | grep -v grep > ~/nschannel
+    ps ax | grep "connectd_schannel\." | grep -v grep > ~/nschannel
+    cat ~/nschannel
     schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
@@ -34,6 +37,7 @@ check_service_counts()
 {
 echo "Starting interactive install test with keystroke file $3..."
 sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
+# not entirely sure if sleep is needed here
 sleep 1
 
 count_services

@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.18
+LIBVERSION=lib_v2.1.19
 AUTHOR="Gary Worsham"
-LIBMODIFIED="December 20, 2019"
+LIBMODIFIED="December 24, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -211,8 +211,8 @@ askResetDevice()
             if [ -e "$BIN_DIR/connectd_start_all" ]; then
                 rm $BIN_DIR/connectd_start_all
             fi
-             # stop the server channel daemon 
-            connectd_schannel stop > /dev/null
+            # stop the server channel daemon 
+            $BIN_DIR/connectd_schannel stop > /dev/null
             echo
             checkForDeviceName
         fi
@@ -909,12 +909,6 @@ deleteAllConnections()
     	for file in "$CONNECTD_CONF_DIR"/*.conf; do
 	# get service name from UID
             uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
-            serviceName="$(jsonval "$resp" name)"
-
-	    printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
-	    result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
-            checkAPIResult "$deleteURL" "$result"
 
 	    fn=$(basename "$file")
 	    fileNameRoot="${fn%.conf}"
@@ -926,9 +920,17 @@ deleteAllConnections()
  		    rm "$BIN_DIR"/"$fileNameRoot"
 		fi
 	    fi
+            # remove the provisioning file
 	    if [ -f "$file" ]; then
 		rm "$file"
 	    fi
+            # now unregister the UID from your account
+	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
+            serviceName="$(jsonval "$resp" name)"
+
+	    printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
+	    result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
+            checkAPIResult "$deleteURL" "$result"
        done
         if [ -f "$BIN_DIR"/"$STARTEMUP" ]; then
 	    rm "$BIN_DIR"/"$STARTEMUP"
@@ -936,8 +938,8 @@ deleteAllConnections()
    	fi
 # also should disable daemon startup at this point
 	disableStartup
-# stop schannel
-	connectd_schannel stop
+# stopping the schannel daemon is handled by connectd_stop_all
+        systemctl stop connectd
         exit
     fi
 }
@@ -1472,9 +1474,12 @@ installProvisioning()
 ######### End installProvisioning #########
 
 ######### Enable remote.it services to start at reboot time ######
+# also have to "restart" connectd, otherwise shutdown will not trigger
+# systemctl stop until after next reboot
 enableStartup()
 {
     systemctl enable connectd
+    systemctl restart connectd
 }
 ######### End Enable remote.it services to start at reboot time ######
 
@@ -1513,7 +1518,12 @@ installStartStop()
 #     printf "$STARTEMUP copied to %s\n" "$BIN_DIR"
     fi
 
-    enableStartup
+    # call the systemctl enable and restart, but only for the Bulk Service
+    # to avoid connection hangup if using remote.it SSH or VNC connection
+    # to add more services.
+    if [ "$CONNECTD_PORT" = "Connectdrmt365535" ]; then
+        enableStartup
+    fi
 
     # see if there is an entry to start the chosen service daemon already
     checkStartConnectd=$(grep -c "$CONNECTD_PORT" "$BIN_DIR"/"$STARTEMUP" )
