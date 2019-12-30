@@ -89,17 +89,17 @@ check_service_counts 10 1 configure-02-test.key
 # Now use systemd to turn off and then on the connectd and connectd_schannel
 # daemons and confirm operation.
 
-systemctl stop connectd
+sudo systemctl stop connectd
 sleep 10
 check_service_counts 0 1
-systemctl stop connectd_schannel
+sudo systemctl stop connectd_schannel
 sleep 5
 check_service_counts 0 0
 
-systemctl start connectd
+sudo systemctl start connectd
 sleep 10
 check_service_counts 10 0
-systemctl start connectd_schannel
+sudo systemctl start connectd_schannel
 sleep 5
 check_service_counts 10 1
 #-------------------------------------------------------------------
