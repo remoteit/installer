@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.19
+LIBVERSION=lib_v2.1.20
 AUTHOR="Gary Worsham"
-LIBMODIFIED="December 24, 2019"
+LIBMODIFIED="December 29, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -208,8 +208,8 @@ askResetDevice()
                 printf "."
             done
             # delete the "start all script"
-            if [ -e "$BIN_DIR/connectd_start_all" ]; then
-                rm $BIN_DIR/connectd_start_all
+            if [ -e "$BIN_DIR/$STARTEMUP" ]; then
+                rm $BIN_DIR/$STARTEMUP
             fi
             # stop the server channel daemon 
             $BIN_DIR/connectd_schannel stop > /dev/null
@@ -938,8 +938,11 @@ deleteAllConnections()
    	fi
 # also should disable daemon startup at this point
 	disableStartup
-# stopping the schannel daemon is handled by connectd_stop_all
+# stop the connectd and schannel daemons using systemd
+# we already stopped the connectd daemons but doing this
+# keeps systemd in sync
         systemctl stop connectd
+        systemctl stop connectd_schannel
         exit
     fi
 }
@@ -1479,7 +1482,9 @@ installProvisioning()
 enableStartup()
 {
     systemctl enable connectd
+    systemctl enable connectd_schannel
     systemctl restart connectd
+    systemctl restart connectd_schannel
 }
 ######### End Enable remote.it services to start at reboot time ######
 
@@ -1487,6 +1492,7 @@ enableStartup()
 disableStartup()
 {
     systemctl disable connectd
+    systemctl disable connectd_schannel
 }
 
 #----------  setBASEDIR --------------
@@ -1532,12 +1538,6 @@ installStartStop()
 	sed s/REPLACE_TEXT/"$CONNECTD_PORT"/ < "$CONNECTD_LIB_DIR"/scripts/connectd_start.add > "$TMP_DIR"/connectd_start.add
 	sh -c "cat $TMP_DIR/connectd_start.add >> $BIN_DIR/$STARTEMUP"
         rm "$TMP_DIR"/connectd_start.add
-    fi
-    # see if there is an entry to start the listener service daemon connectd_schannel.x already
-    checkStartSchannel=$(grep -c "connectd_schannel" "$BIN_DIR"/"$STARTEMUP" )
-    # if not, add it
-    if [ "$checkStartSchannel" = 0 ]; then
-        sh -c "echo '"$BIN_DIR/connectd_schannel" start' >> $BIN_DIR/$STARTEMUP"
     fi
     setBASEDIR "$BIN_DIR"/"$STARTEMUP"
     chmod +x "$BIN_DIR"/"$STARTEMUP"
@@ -1805,9 +1805,9 @@ configureConnection()
     if [ "$error" != "DuplicateName:" ]; then
     	overridePort
     	startService
-	# there should only be one UDP listener startup regardless of the number of services
-	# the startup script will only start one instance
-	"$BIN_DIR"/connectd_schannel start > /dev/null
+	# there should only be one UDP listener (schannel) 
+	# startup regardless of the number of services
+	systemctl start connectd_schannel > /dev/null
     else
         if [ "$1" = "skipIfDuplicateName" ]; then
             echo "Duplicate Name!"

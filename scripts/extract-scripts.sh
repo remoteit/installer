@@ -14,7 +14,7 @@ fi
 BINPATH=
 
 ar x $1
-rm control.tar.gz
+rm control.tar.xz
 tar xf data.tar.xz
 rm data.tar.xz
 if [ "$BINPATH" != "" ]; then
