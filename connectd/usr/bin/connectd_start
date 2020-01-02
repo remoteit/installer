@@ -71,11 +71,9 @@ do
     if [ "$?" -eq 1 ]; then
         # internet is available, if startup script from
         # interactive install exists, try launching it.
-        # commented out by default so that either 
-        # bulk or interactive startup will be enabled. 
         if [ -e "$BIN_DIR"/connectd_start_all ]; then
             sleep 2
-            # "$BIN_DIR"/connectd_start_all
+            "$BIN_DIR"/connectd_start_all
         fi
         # internet is available, try provision
         sleep 5
