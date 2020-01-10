@@ -169,6 +169,11 @@ build() {
     # create symlink so that /usr/bin/connectd points to the installed daemon
     # use -f to force overwrite if it's already there
     ln -sf "/usr/bin/connectd.$PLATFORM" "$pkgFolder/usr/bin/connectd"
+    # create symlink so that /usr/bin/connectd_schannel_link points to the 
+    # installed daemon
+    # there is already a "connectd_schannel" which is the start/stop script
+    # use -f to force overwrite if it's already there
+    ln -sf "/usr/bin/connectd_schannel.$PLATFORM" "$pkgFolder/usr/bin/connectd_schannel_link"
 
     # get Version string from DEBIAN/control file and write it to connectd_options
     # for tar files, since there is no concept of package "version" there
