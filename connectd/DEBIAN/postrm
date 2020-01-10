@@ -71,11 +71,11 @@ case "$1" in
 # remove crontab entry
     clearCrontab
     echo
-    echo "If you purged connectd without deleting all remote.it Services first,"
-    echo "there may be orphaned remote.it Services in your remote.it account Device "
-    echo "List.  On the 'View Devices' page in the web portal, select the Device's"
-    echo "checkbox, then use 'Actions'->'Delete' to delete the selected Device and"
-    echo "its remote.it Services."
+    echo "If you ran ‘sudo dpkg --purge connectd’ on your device without first"
+    echo "deleting your remote.it services on that device using connectd_installer,"
+    echo "your remote.it account may still believe your device is present but just"
+    echo "not responding. If this happens, you can remove the device from your"
+    echo "remote.it account using the remote.it website."
   ;;
 
   remove|failed-upgrade|abort-install|abort-upgrade|disappear)
