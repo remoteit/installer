@@ -358,14 +358,24 @@ if [ $useTar -eq 1 ]; then
     currentFolder=$(pwd)
     filename=connectd_"$VERSION"_"$daemon"".tar"
 
-    echo "filename $filename"
+    # echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
-    echo "filepath $filepath"
+    # echo "filepath $filepath"
     curl -sLkO "$filepath" > /dev/null
+    echo
     ls -l "$filename"
-    mv "$filename" /
-    cd /
-    tar xvf "$filename"  > "$currentFolder"/connectd_"$VERSION"_files.txt
+    echo
+    echo "We downloaded the file $filename to the current folder."
+    echo "As root, or using sudo, move this file to the / folder."
+    echo "e.g."
+    echo "mv $filename /"
+    echo
+    echo "Now switch folders to the / folder, e.g."
+    echo "cd /"
+    echo
+    echo "Then extract the files to your system with the following command:"
+    echo "tar xvhf $filename"
+    echo
 else
     echo "Debian OS detected."
     arch=$(dpkg --print-architecture)
