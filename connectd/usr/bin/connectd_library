@@ -775,6 +775,9 @@ protocolSelection()
 	alreadyThere=$(grep $GREPFLAGS "$CONNECTD_PORT" "$TMP_DIR/.legacy_instances")
         if [ "$alreadyThere"  != "" ]; then
             printf "A remote.it Service is already attached to this Application.\n" 
+            echo "WARNING: you should exercise care that you do not reinstall a remote.it"
+            echo "connection that you are currently using, for example SSH or VNC."
+            echo
             if ask "Do you wish to overwrite your previous settings?"; then
                 testLogin
                 deleteDevice
@@ -863,6 +866,9 @@ deleteConnection()
             deviceFound=1
 	    # get the protocol name
 	    deviceType=$(jsonval "$resp" "title")
+            echo "WARNING: you should exercise care that you do not remove a remote.it"
+            echo "connection that you are currently using, for example SSH or VNC."
+            echo
 	    if ask "Are you sure you want to remove the remote.it $deviceType Service $serviceName?"; then
 		printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
 
@@ -901,6 +907,9 @@ deleteConnection()
 ##### Delete All Connections
 deleteAllConnections()
 {
+    echo "WARNING: you should exercise care that you do not remove a remote.it"
+    echo "connection that you are currently using, for example SSH or VNC."
+    echo
     if ask "Are you sure you want to remove ALL remote.it Services?"; then
 
     # now iterate through all provisioning files to find it
@@ -935,9 +944,9 @@ deleteAllConnections()
         if [ -f "$BIN_DIR"/"$STARTEMUP" ]; then
 	    rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
-   	fi
+       fi
 # also should disable daemon startup at this point
-	disableStartup
+       disableStartup
 # stop the connectd and schannel daemons using systemd
 # we already stopped the connectd daemons but doing this
 # keeps systemd in sync
