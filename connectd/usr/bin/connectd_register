@@ -52,7 +52,7 @@ main()
 #
     if [ "$APIKEY" = "" ]; then
         echo "APIKEY is blank.  Please contact support@remote.it for an API key."
-	exit
+	      exit 1
     fi
 #-----------------------------------------------------------------------
 
