@@ -945,14 +945,17 @@ deleteAllConnections()
 	    rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
        fi
-# also should disable daemon startup at this point
-       disableStartup
-# stop the connectd and schannel daemons using systemd
-# we already stopped the connectd daemons but doing this
-# keeps systemd in sync
+      availableDir="/etc/connectd/available"
+      if ! ([ -d $availableDir ] && [ "$(ls -A $availableDir)" ]); then
+        # also should disable daemon startup at this point
+        disableStartup
+        # stop the connectd and schannel daemons using systemd
+        # we already stopped the connectd daemons but doing this
+        # keeps systemd in sync
         systemctl stop connectd
         systemctl stop connectd_schannel
         exit
+      fi
     fi
 }
 
