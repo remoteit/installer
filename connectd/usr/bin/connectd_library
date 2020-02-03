@@ -145,7 +145,7 @@ connectdCompatibility()
             printf "Unknown error occurred while checking network.\n"
             printf "Please contact support@remote.it.\n\n"
         fi
-        exit
+        exit 1
     fi
 }
 ##### End Compatibility checker #####
@@ -437,7 +437,7 @@ checkForServices()
        printf "This is unexpected.  You may wish to exit and review your\n"
        printf "configuration. \n"
        if ask "Do you want to exit?"; then
-           exit
+           exit 0
        fi
     fi
     echo "-------------------------------------------------------------------------------"
@@ -536,7 +536,7 @@ menuLoop()
             deleteAllConnections
         elif [ "$get_num" = 5 ]; then
             if ask "Are you sure you want to exit?"; then
-                exit
+                exit 0
             fi
         fi
     done
@@ -830,7 +830,7 @@ checkAPIResult()
         read anykey
         if [ "$EXITONAPIERROR" = "1" ]; then
             echo "The $0 program will now exit."
-            exit
+            exit 1
         fi
     fi
 }
@@ -954,7 +954,7 @@ deleteAllConnections()
         # keeps systemd in sync
         systemctl stop connectd
         systemctl stop connectd_schannel
-        exit
+        exit 0
       fi
     fi
 }
@@ -970,7 +970,7 @@ bashCheck()
 	printf "Please execute \"chmod +x %s \" and then \n" "$filename"
 	printf "execute \"./%s\".  \n\n" "$filename"
 	printf "Thank you! \n"
-	exit
+	exit 1
     else
 	echo "Now launching the remote.it connectd daemon installer..." > /dev/null
     fi
@@ -1013,7 +1013,7 @@ askRegisterLogin()
 #		value="true"
         elif [ "$get_num" = 4 ]; then
 	    if ask "Are you sure?"; then
-		exit
+		exit 0
 	    fi
 	fi
 	done
@@ -1257,7 +1257,7 @@ testLogin()
         printf "make sure that the ca-certificates package is correctly installed\n"
         printf "on your operating system."
         printf "For more information, please contact support at support@remote.it.\n"
-        exit
+        exit 1
     fi
 }
 ######### End Test Login #########
@@ -1388,7 +1388,7 @@ installProvisioning()
     else
        echo "Not currently supported: $PLATFORM"
        echo "Please contact support@remote.it."
-       exit
+       exit 1
     fi
 
 #    echo "platformType: $platformType"
@@ -1452,7 +1452,7 @@ installProvisioning()
         else
             echo "Not currently supported: $PROTOCOL $PORT"
             echo "Please contact support@remote.it."
-            exit
+            exit 1
         fi	
 
         result=$(curl ${CURL_OPTS} 'POST' $projectCreateURL -d "{\"projectname\":\"$projectName\", \"projecttype\":\"device\", \"platformversion\":\"1.0\",\"platformtype\":\"$platformType\",\"contenttype\":\"$contentType\",\"contentport\":\"$PORT\" }" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
@@ -1610,7 +1610,7 @@ retryFetchUID()
     if [ "$checkForUID" != 2 ]; then
 	printf "We have unsuccessfully retried to obtain a UID.\n"
         printf "Please contact remote.it Support at support@remote.it for help.\n\n"
-        exit
+        exit 1
     fi
 }
 ######### Retry Fetch UID ##########
@@ -1640,7 +1640,7 @@ preregisterUID()
     elif [ "$test3" = 1 ]; then
 	printf "Sorry, the pre-registration of UID: %s is failing."
 	printf "Please send an e-mail to support@remote.it."
-	exit
+	exit 1
     fi
 }
 ######### End Pre-register Device #########

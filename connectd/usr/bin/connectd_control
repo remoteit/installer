@@ -158,35 +158,48 @@ isDirEmpty()
 #
 reset()
 {
-    # delete files
-    null=$(rm -f $CONNECTD_DIR/*.ver 2>&1)
-    null=$(rm -f $DEVICES_AVAILABLE/* 2>&1)
-    null=$(rm -f $DEVICES_ACTIVE/* 2>&1)
-    null=$(rm -f $PROVISION_DOWNLOAD/* 2>&1)
-    null=$(rm -f $PROVISION_DEFAULT/* 2>&1)
+    printf "\n\n"
+    printf "************************** Factory Reset **************************\n"
+    printf "                                                                   \n"
+    printf " A device can only be bulk registered once for each published CSV. \n"
+    printf " If you perform a factory reset, you will need to delete and then  \n"
+    printf " re-load the CSV which referenced this device if you wish to       \n"
+    printf " reregister this device. Performing a factory reset is not advised.\n"
+    printf "                                                                   \n"
+    printf "*******************************************************************\n\n"
+    if ask "Are you sure you want to factory reset this device?"; then
+      # delete files
+      null=$(rm -f $CONNECTD_DIR/*.ver 2>&1)
+      null=$(rm -f $DEVICES_AVAILABLE/* 2>&1)
+      null=$(rm -f $DEVICES_ACTIVE/* 2>&1)
+      null=$(rm -f $PROVISION_DOWNLOAD/* 2>&1)
+      null=$(rm -f $PROVISION_DEFAULT/* 2>&1)
 
-    # check for success
-    isDirEmpty "$CONNECTD_DIR/*ver"
-    if [ "$?" -eq 1 ]; then
-        isDirEmpty "$DEVICES_AVAILABLE/*"
-        if [ "$?" -eq 1 ]; then
-            isDirEmpty "$DEVICES_ACTIVE/*"
-            if [ "$?" -eq 1 ]; then
-                isDirEmpty "$PROVISION_DOWNLOAD/*"
-                if [ "$?" -eq 1 ]; then
-                    isDirEmpty "$PROVISION_DEFAULT/*"
-                    if [ "$?" -eq 1 ]; then
-#  Hook for OEM to add a function to save configuration changes
-                        OEM_save_config
-                        echo "OK: factory reset"
-                        return 0
-                    fi
-                fi
-            fi
-        fi
+      # check for success
+      isDirEmpty "$CONNECTD_DIR/*ver"
+      if [ "$?" -eq 1 ]; then
+          isDirEmpty "$DEVICES_AVAILABLE/*"
+          if [ "$?" -eq 1 ]; then
+              isDirEmpty "$DEVICES_ACTIVE/*"
+              if [ "$?" -eq 1 ]; then
+                  isDirEmpty "$PROVISION_DOWNLOAD/*"
+                  if [ "$?" -eq 1 ]; then
+                      isDirEmpty "$PROVISION_DEFAULT/*"
+                      if [ "$?" -eq 1 ]; then
+  #  Hook for OEM to add a function to save configuration changes
+                          OEM_save_config
+                          echo "OK: factory reset"
+                          return 0
+                      fi
+                  fi
+              fi
+          fi
+      fi
+      echo "FAIL: failed to reset files"
+      return 1
+    else
+      return 0
     fi
-    echo "FAIL: failed to reset files"
-    return 1
 }
 
 #
