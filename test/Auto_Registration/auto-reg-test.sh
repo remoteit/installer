@@ -7,7 +7,7 @@
 
 VERSION=0.99
 MODIFIED="March 16, 2019"
-SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
+TEST_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
 #---------------------------------------------
@@ -15,7 +15,7 @@ result=0
 # This one is from the faultline1989 account.
 
 #---------------------------------------------
-BULKIDCODE="1233F068-A3F9-9C3F-006F-FBFA9D018813"
+BULKIDCODE="E4116C31-54F7-CAB3-8265-33E30B6570CE"
 
 # include the package library to access some utility functions
 
@@ -56,7 +56,7 @@ connectd_control show
 # and then factory reset (clears all provisioning files)
 
 connectd_control -v stop all
-connectd_control reset
+connectd_control reset "$TEST_DIR"/reset.key
 
 # run the provisioning step, capture both stdio and stderr outputs
 
