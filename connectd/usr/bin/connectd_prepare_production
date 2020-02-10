@@ -37,7 +37,7 @@ if [ "$answer" != "${answer#[Yy]}" ] ;then
        echo ""
     fi   
 
-    echo -n "Are you sure? This is permenant! (y/n)? "
+    echo -n "Are you sure? This is permanent! (y/n)? "
     read answer
 
     if [ "$answer" != "${answer#[Yy]}" ] ;then
