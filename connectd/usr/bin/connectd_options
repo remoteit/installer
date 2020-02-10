@@ -9,9 +9,9 @@
 #===================================
 MODIFIED="October 04, 2019"
 #===================================
-BUILDDATE=
+BUILDDATE="Sat Feb  8 23:15:54 UTC 2020"    
 #===================================
-VERSION=
+VERSION=2.5.28    
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -40,9 +40,9 @@ apiVersion="/api"
 apiServer="device.remot3.it"
 #
 ## DELETE THESE BEFORE PRODUCTION
-apiMethod="http://"
-apiVersion="/apv/latest"
-apiServer="api.remot3.it"
+# apiMethod="http://"
+# apiVersion="/apv/latest"
+# apiServer="api.remot3.it"
 
 #===================================
 # Configuration Folder Variables
