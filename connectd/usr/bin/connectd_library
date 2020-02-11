@@ -954,8 +954,8 @@ deleteAllConnections()
         # keeps systemd in sync
         systemctl stop connectd
         systemctl stop connectd_schannel
-        exit 0
       fi
+      exit 0
     fi
 }
 
