@@ -945,7 +945,7 @@ deleteAllConnections()
 	    rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
        fi
-      availableDir="/etc/connectd/available"
+      availableDir="${CONNECTD_DIR}/available"
       if ! ([ -d $availableDir ] && [ "$(ls -A $availableDir)" ]); then
         # also should disable daemon startup at this point
         disableStartup
