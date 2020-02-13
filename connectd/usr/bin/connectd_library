@@ -954,8 +954,8 @@ deleteAllConnections()
         # keeps systemd in sync
         systemctl stop connectd
         systemctl stop connectd_schannel
-        exit 0
       fi
+      exit 0
     fi
 }
 
@@ -1488,6 +1488,14 @@ installProvisioning()
 }
 ######### End installProvisioning #########
 
+
+######### Disable Connectd services to start at reboot time ######
+cronRemoveLine()
+{
+    crontab -l | grep -v "$1" | cat > "$TMP_DIR"/.crontmp
+    crontab "$TMP_DIR"/.crontmp
+}
+
 ######### Enable remote.it services to start at reboot time ######
 # also have to "restart" connectd, otherwise shutdown will not trigger
 # systemctl stop until after next reboot
@@ -1505,6 +1513,7 @@ disableStartup()
 {
     systemctl disable connectd
     systemctl disable connectd_schannel
+    cronRemoveLine "@reboot $BIN_DIR/$STARTEMUP"
 }
 
 #----------  setBASEDIR --------------
