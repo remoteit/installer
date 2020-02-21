@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.3.17
+VERSION=2.4.26
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -32,8 +32,6 @@ downloadAndTestDaemon()
     ./"$testDaemon" -n > /dev/null
     if [ "$?" = "0" ]; then
         printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
-        mv $testDaemon /usr/bin/"$testDaemon"
-        ln -s /usr/bin/"$testDaemon" "/usr/bin/connectd"
         retval=0
     else
         echo "."
@@ -352,7 +350,6 @@ if [ $useTar -eq 1 ]; then
         fi
     fi
 
-    downloadSchannel "$daemon"
     downMultiport "$daemon"
     
     currentFolder=$(pwd)
