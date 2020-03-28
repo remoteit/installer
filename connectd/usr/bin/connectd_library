@@ -823,7 +823,8 @@ checkAPIResult()
     else
         printf "\nAPI call to $1 failed!\n"
         reason=$(jsonval "$2" 'reason')
-        echo "Reason for failure: $reason"
+        errorcode=$(jsonval "$2" 'code')
+        echo "Reason for failure: $reason, Error code: $errorcode."
         echo "Contact support@remote.it with this information."
         echo "Please press the ENTER key."
         echo
