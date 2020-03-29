@@ -10,6 +10,33 @@ VERSION=2.4.26
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
+# to install curl tool
+installCurl() {
+    printf "\nInstalling curl..........\n"
+    apt-get install -y curl
+    if [ "$?" -ne 0 ]; then
+        apt-get update && apt-get install -y curl
+    fi
+}
+
+# check whether curl tool is installed, if not then install it
+checkCurl() {
+    curlSupported=$(curl --version)
+    if [ "$curlSupported" = "" ]; then
+        installCurl
+        curlSupported=$(curl --version)
+        if [ "$curlSupported" = "" ]; then
+            printf 'error : install curl'
+            exit 1
+        else
+            return 1
+        fi
+    else
+        printf "\n curl found \n"
+        return 1
+    fi
+}
+
 downloadAndTestDaemon()
 {
     local testArch=$1
@@ -155,6 +182,13 @@ checkForUtilities()
 if [ -e $LOGFILE ]; then
     rm $LOGFILE
 fi
+
+# check whether is it Debian, if yes then check for curl is installed
+dpkg --help > /dev/null
+if [ $? = 0 ]; then
+    checkCurl
+fi
+
 #
 # Get command line if "f" then force non deb
 #
