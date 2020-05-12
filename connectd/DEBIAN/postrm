@@ -11,6 +11,19 @@ clearCrontab()
     crontab $TMP_DIR/.crontmp
 }
 
+# clearServices stops and disables the connectd & connectd_schannel services
+clearServices()
+{
+   if [ "$(systemctl is-active connectd.service)" = "active" ]; then
+      systemctl stop connectd.service
+      systemctl disable connectd.service
+   fi
+   if [ "$(systemctl is-active connectd_schannel.service)" = "active" ]; then
+      systemctl stop connectd_schannel.service
+      systemctl disable connectd_schannel.service
+   fi
+}
+
 set -e
 logger "connectd installer postrm state $1"
 case "$1" in
@@ -70,6 +83,8 @@ case "$1" in
     fi
 # remove crontab entry
     clearCrontab
+# remove services
+    clearServices
     echo
     echo "If you ran ‘sudo dpkg --purge connectd’ on your device without first"
     echo "deleting your remote.it services on that device using connectd_installer,"
