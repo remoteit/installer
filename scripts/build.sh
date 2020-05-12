@@ -302,17 +302,17 @@ build x86-ubuntu16.04 1 i386
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04_static 0
+build aarch64-ubuntu16.04_static 0
 
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04 0
+build aarch64-ubuntu16.04 0
 
 # arm64 package - Debian package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04 1 arm64
+build aarch64-ubuntu16.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-android 0
