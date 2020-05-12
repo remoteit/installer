@@ -17,11 +17,11 @@ downloadAndTestDaemon()
     local retval=1
 
     printf "\n"
-    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
+    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE
     if [ ! -e "$testDaemon" ]; then
         curl -sLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
+            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE
             exit 1
         fi
     else
@@ -29,7 +29,7 @@ downloadAndTestDaemon()
     fi
     sleep 2
     chmod +x "$testDaemon"
-    ./"$testDaemon" -n > /dev/null
+    ./"$testDaemon" -n > /dev/null 2>&1
     if [ "$?" = "0" ]; then
         printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
         retval=0
