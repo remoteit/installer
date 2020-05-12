@@ -22,7 +22,7 @@ DEBUG="0"
 EXITONAPIERROR="1"
 #===================================
 # BASEDIR is root on many systems. If so, leave it blank, else set the enviorment variable $CONNECTD_BASEDIR
-#BASEDIR=$CONNECTD_BASEDIR
+#BASEDIR=$CONNECTD_BASEDIR | sed 's/\/*$//g'
 #===================================
 # BIN_DIR is default path for executables.  We install connectd scripts and binaries here.
 BIN_DIR="$BASEDIR"/usr/bin
