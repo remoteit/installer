@@ -687,13 +687,13 @@ update_afile()
     if [ $VERBOSE -gt 0 ]; then printf "update available file for %s\n" "$1" ; fi
     # disabled, check if we need to disable it from startup
     if [ -f "$DEVICES_AVAILABLE/$1" ]; then
-		if [ -f "$PROVISION_DEFAULT/$i" ]; then
-			# get user config
-			dynamic=$(cat "$DEVICES_AVAILABLE/$1" | sed -e "1,/"#####-#####"/d")
-			cp "$PROVISION_DEFAULT/$1" "$DEVICES_AVAILABLE/$1"
-			echo $dynamic >> "$DEVICES_AVAILABLE/$1"
-		fi	
-	fi
+        if [ -f "$PROVISION_DEFAULT/$i" ]; then
+            # get user config
+            dynamic=$(cat "$DEVICES_AVAILABLE/$1" | sed -e "1,/"#####-#####"/d")
+            cp "$PROVISION_DEFAULT/$1" "$DEVICES_AVAILABLE/$1"
+            echo "$dynamic" >> "$DEVICES_AVAILABLE/$1"
+        fi	
+    fi
 }
 
 #
