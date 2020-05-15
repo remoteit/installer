@@ -324,7 +324,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=arm-v5tle
+            daemon=arm-v5t_le
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -340,7 +340,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=arm-v5tle_static
+            daemon=arm-v5t_le_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
