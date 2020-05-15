@@ -46,7 +46,7 @@ downloadAndTestDaemon()
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
+        curl -sfLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -77,7 +77,7 @@ downloadSchannel()
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
 	    exit 1
@@ -104,7 +104,7 @@ downMultiport()
     printf "\n"
     printf "%s\n" "Downloading and testing $muxerDaemon..." | tee -a $LOGFILE
     if [ ! -e "$muxerDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
         if [ "$?" != "0" ]; then
             printf "%s\n" "$muxerDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -119,7 +119,7 @@ downMultiport()
     printf "\n"
     printf "%s\n" "Downloading and testing $demuxerDaemon..." | tee -a $LOGFILE
     if [ ! -e "$demuxerDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
         if [ "$?" != "0" ]; then
             printf "%s\n" "$demuxerDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -391,7 +391,11 @@ if [ $useTar -eq 1 ]; then
     # echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
     # echo "filepath $filepath"
-    curl -sLkO "$filepath" > /dev/null
+    curl -sfLkO "$filepath" > /dev/null
+    if [ "$?" != "0" ]; then
+        echo "Download of $filepath failed!" | tee -a $LOGFILE
+        exit 1
+    fi
     echo
     ls -l "$filename"
     echo
@@ -420,7 +424,11 @@ else
     echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
     echo "filepath $filepath"
-    curl -sLkO "$filepath" > /dev/null
+    curl -sfLkO "$filepath" > /dev/null
+    if [ "$?" != "0" ]; then
+        echo "Download of $filepath failed!" | tee -a $LOGFILE
+        exit 1
+    fi
     sudo dpkg -i "$filename"
     if [ $? -ne 0 ]; then
         echo "dpkg error!"
