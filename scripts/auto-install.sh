@@ -56,8 +56,7 @@ downloadAndTestDaemon()
     fi
     sleep 2
     chmod +x "$testDaemon"
-    ./"$testDaemon" -n > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
+    if ./"$testDaemon" -n 2>&1 | grep 'Looks compatible.'; then
         printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
         retval=0
     else
