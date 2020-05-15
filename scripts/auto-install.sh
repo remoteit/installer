@@ -86,7 +86,7 @@ downloadSchannel()
     sleep 2
     chmod +x "$testDaemon"
     mv $testDaemon /usr/bin/connectd_"$testDaemon"
-    ln -s /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
+    ln -sf /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
     echo $retval
 }
 
@@ -114,7 +114,7 @@ downMultiport()
     # link it and chmod it
     chmod +x "$muxerDaemon"
     mv $muxerDaemon "/usr/bin/connectd_${muxerDaemon}"
-    ln -s "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
+    ln -sf "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
 
     printf "\n"
     printf "%s\n" "Downloading and testing $demuxerDaemon..." | tee -a $LOGFILE
@@ -128,7 +128,7 @@ downMultiport()
     sleep 2
     chmod +x "$demuxerDaemon"
     mv $demuxerDaemon /usr/bin/connectd_"$demuxerDaemon"
-    ln -s "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
+    ln -sf "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
     echo $retval
 }
 
