@@ -5,7 +5,7 @@
 # text files
 pkg=connectd
 ver=2.1.12
-MODIFIED="September 28, 2019"
+MODIFIED="December 20, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -96,11 +96,11 @@ buildDebianFile()
     ret=0
     sudo chown -R root:root "$1"
     if [ "$buildDeb" -eq 1 ]; then
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         # only run lintian if we are really making a Debian package
         ret=$(runLintian "$1".deb)
     else
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         ret=$?
     fi
     sudo chown -R $user:$user "$1"
@@ -169,6 +169,11 @@ build() {
     # create symlink so that /usr/bin/connectd points to the installed daemon
     # use -f to force overwrite if it's already there
     ln -sf "/usr/bin/connectd.$PLATFORM" "$pkgFolder/usr/bin/connectd"
+    # create symlink so that /usr/bin/connectd_schannel_link points to the 
+    # installed daemon
+    # there is already a "connectd_schannel" which is the start/stop script
+    # use -f to force overwrite if it's already there
+    ln -sf "/usr/bin/connectd_schannel.$PLATFORM" "$pkgFolder/usr/bin/connectd_schannel_link"
 
     # get Version string from DEBIAN/control file and write it to connectd_options
     # for tar files, since there is no concept of package "version" there
@@ -232,7 +237,7 @@ build() {
         fi
 
         echo "Extracting contents to tar file"
-        ./scripts/extract-scripts.sh "$pkgFolder".deb
+        sudo ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
         sudo mv "$pkgFolder".deb.tar "$cwd/$filename"
 
@@ -295,17 +300,17 @@ build x86-ubuntu16.04 1 i386
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04_static 0
+build aarch64-ubuntu16.04_static 0
 
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04 0
+build aarch64-ubuntu16.04 0
 
 # arm64 package - Debian package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarm64-ubuntu16.04 1 arm64
+build aarch64-ubuntu16.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-android 0

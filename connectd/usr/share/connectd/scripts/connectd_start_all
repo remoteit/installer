@@ -1,3 +1,54 @@
 #!/bin/sh
+BASEDIR=
+. $BASEDIR/usr/bin/connectd_options
+LOGNAME=$0.log
+
+# run "connectd_start_all -v" to get visual feedback as to whether
+# the internet connection is active.
+ 
+if [ "$1" = "-v" ]; then
+    VERBOSE=1
+else
+    VERBOSE=0
+fi
+
+#========================================
+# internet_available() runs the "connectd -n" test and checks to see whether the "UDP blocked" message is returned.
+internet_available()
+{
+    ret=0
+    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -n | grep "UDP connections to the internet are not working." >/dev/null 2>&1
+    udpOk=$?
+    # if grep returns 0, it means that we matched the "UDP connections" string output from connectd -n.
+    if [ $udpOk -ne 0 ]; then
+        if [ $VERBOSE -gt 0 ]; then
+            echo "Internet Available"
+        fi
+        ret=1
+    else
+        if [ $VERBOSE -gt 0 ]; then
+            echo "Internet Not Available"
+        fi
+    fi
+    return $ret
+}
+
+
+###################################################
+# Main Loop, wait for internet access             #  
+###################################################
+
+logger "[$LOG_NAME] Startup"
+
+while [ 1 ]
+do
+    internet_available
+    if [ "$?" -eq 1 ]; then
+        logger "$0 started: $info" 
+        break
+    fi 
+    sleep 15
+    logger "[$LOG_NAME] Loop"
+done
 
 # Add remote.it connectd service starts for reboot

@@ -21,5 +21,8 @@ case "$1" in
 esac
 echo
 echo "================================================================================"
+echo "Run \"sudo connectd_installer\" to interactively install remote.it Services on this device."
+echo
+echo "See https://docs.remote.it for more information."
 echo
 echo "================================================================================"

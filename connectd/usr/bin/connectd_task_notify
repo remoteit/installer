@@ -20,8 +20,8 @@
 #
 
 #### Settings #####
-VERSION=1.0
-MODIFIED="January 02, 2019"
+VERSION=1.1
+MODIFIED="January 07, 2020"
 #
 # Log to system log if set to 1
 LOGGING=1
@@ -33,7 +33,7 @@ VERBOSE=0
 # path to connectd_options has to be hardwired here and edited if needed
 # e.g. INSTALLPATH=/media/usb
 # ----------------------------------------
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 
 
@@ -255,7 +255,7 @@ case $cmd in
         #
         # Task Failed 
         #
-        URL="$apiMethod$api_base$API_TASK_DONE"
+        URL="$apiMethod$api_base$API_TASK_FAILED"
         data="{\"taskid\":\"${task_id}\",\"description\":\"${status}\"}"
 
         resp=$($CURL $CURL_OPTS 'POST' -w "%{http_code}\\n" -o "$OUTPUT" $URL -d "$data")
