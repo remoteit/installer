@@ -269,7 +269,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh < "$TEST_DIR"/Auto_Registration/reset.key
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1

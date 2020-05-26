@@ -7,7 +7,7 @@
 
 VERSION=1.0.0
 MODIFIED="September 28, 2019"
-SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
+TEST_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
 #---------------------------------------------
@@ -17,7 +17,7 @@ result=0
 #---------------------------------------------
 # this should be set by a Circle CI environment variable
 # but for now it's hardwired to a specific account
-BULKIDCODE="D5798A73-0E6E-1C01-20BE-D76921CC74C6"
+BULKIDCODE="E4116C31-54F7-CAB3-8265-33E30B6570CE"
 
 # include the package library to access some utility functions
 
