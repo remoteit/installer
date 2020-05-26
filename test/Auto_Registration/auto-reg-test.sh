@@ -15,9 +15,7 @@ result=0
 # This one is from the faultline1989 account.
 
 #---------------------------------------------
-# this should be set by a Circle CI environment variable
-# but for now it's hardwired to a specific account
-BULKIDCODE="E4116C31-54F7-CAB3-8265-33E30B6570CE"
+# BULKIDCODE should be set by a Circle CI environment variable
 
 # include the package library to access some utility functions
 
