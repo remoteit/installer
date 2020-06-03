@@ -1,0 +1,376 @@
+#!/bin/sh
+#  remot3.it, Inc. : https://remote.it
+BASEDIR=/home/gary/Github/installer/connectd
+CONNECTD_DIR="$BASEDIR"/etc/connectd
+# pick up global options, e.g. PLATFORM and API
+. "$CONNECTD_DIR"/oem_settings
+
+##### checkForRoot #####
+checkForRoot()
+{
+    # check for su user at this point
+    if ! [ "$(id -u)" = 0 ]; then
+        echo "Running this program requires root access." 1>&2
+        echo "Please run sudo $0 instead of $0." 1>&2
+	exit 1
+    fi
+}
+##### End Version #####
+
+######## get a number within a given range
+# $3 is the prompt, $1 is the minimum value, $2 is the maximum value
+### e.g. getNumRange 2 5 will ask you for a number between 2 and 5
+# validated input is returned in global variable getNumRangeValue
+
+getNumRange()
+{
+     validInput="n"
+        while [ "$validInput" = "n" ]; do
+            echo "$3 ($1 - $2):"
+            read num
+            if [ "$num" != "" ]; then
+                echo
+                if [ $(validateInput "$num" "0123456789") -ne 0 ]; then
+	            printf "\nSorry, enter numbers only.\n"
+	        else
+#		    echo "You entered: $num"
+                    if [ "${num}" -ge "$1" ]; then
+                        if [ "${num}" -le "$2" ]; then
+                            validInput="y"
+                        else
+                            echo "Sorry, input was not in the range $1 to $2"
+                        fi
+                    else
+                        echo "Sorry, input was not in the range $1 to $2"
+                    fi
+                fi
+            fi
+        done
+        getNumRangeValue="$num"
+}
+
+######### Ask Function #########
+ask()
+{
+    echo
+    while true; do
+	if [ "${2:-}" = "Y" ]; then
+	    prompt="Y/n"
+	    default=Y
+	elif [ "${2:-}" = "N" ]; then
+	    prompt="y/N"
+	    default=N
+	else
+	    prompt="y/n"
+	    default=
+	fi
+	# Ask the question
+        echo "$1 [$prompt] "
+	read REPLY
+	# Default?
+	if [ -z "$REPLY" ]; then
+	    REPLY=$default
+	fi
+	# Check if the reply is valid
+	case "$REPLY" in
+	    Y*|y*) return 0 ;;
+	    N*|n*) return 1 ;;
+	esac
+    done
+}
+######### End Ask Function #########
+
+#############################
+debug()
+{
+    if [ "$DEBUG" = "1" ]; then
+	echo "$1"
+    fi
+}
+
+############# validate input - check $1 against tr control string $2
+
+validateInput()
+{
+# Comb out invalid characters from input and assign to new variable
+export VAR_CLEAN="$(echo "$1" | tr -cd "$2" | sed 's/\[//' | sed 's/\]//' )"
+# if the before and after are the same, then there were no bad characters
+if [ "${VAR_CLEAN}" = "$1" ]; then
+   echo 0
+else
+   echo 1
+fi
+}
+
+checkProductionReady()
+{
+# test for unique identifiers - status will emit on errors
+echo "CPU ID:"$(oemGetSystemId)
+echo "Hardware ID:"$(oemGetDefaultHardwareId)
+echo "Registration Key:"$(oemGetDefaultRegistrationKey)
+
+DIRECTORY=/etc/connectd/services
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it services folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/pfiles
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it provisioning folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/dfiles
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it configuration folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/active
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it active service folder exists"
+    STATUS=0
+fi
+
+DIRECTORY=/etc/connectd/available
+if [ -d "$DIRECTORY" ]; then
+    echo "Issue: remote.it available service folder exist"
+    STATUS=0
+fi
+
+if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+    bic=$(cat /etc/connectd/bulk_identification_code.txt)
+else
+   echo "Issue: Bulk Identification Code missing"
+   STATUS=0
+fi
+
+if [ -z "$STATUS" ] ; then
+    echo "Ok:  device is cloneable for production"
+else
+    echo "Issue: No device is not safe to clone for production." 
+    echo "ACTION: Use the sudo connectd_prepare_production command to ready this system" 
+fi
+}
+
+############# end of validate input
+
+showIdentity()
+{
+#  showIdentity 
+#
+#  only shows information - no changes are made with this script
+#
+
+id=$(oemGetSystemId)
+mac=$(oemGetDefaultHardwareId)
+rk_mac=$(oemGetDefaultRegistrationKey)
+os=$(oemGetOSLabel)
+tcp=$(oemGetTCPServices)
+
+r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
+hwid=$(cat /etc/connectd/hardware_id.txt 2>/dev/null)
+rk=$(cat /etc/connectd/registration_key.txt 2>/dev/null)
+api=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
+apv=$(grep apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
+
+if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+    bic=$(cat /etc/connectd/bulk_identification_code.txt)
+else
+    bic="No set"
+fi
+
+echo "======================================================================"
+echo "OS:$os"
+echo "CPU ID:$id"
+echo "Hardware ID manufacturer:$mac"
+echo "Hardware ID default:$hwid"
+echo "Registration Key default:$rk_mac"
+echo "Registration Key manufacturer:$rk"
+echo "TCP Services:$tcp"
+echo "remote.it Package:$r3"
+echo "remote.it API:$api$apv" | sed 's/"//g'
+echo "Bulk Identification Code:$bic"
+echo "======================================================================"
+}
+
+prepareForProduction()
+{
+	echo "We are now going to:"
+	echo "a) Stop any running daemons"
+	echo "b) Clear any provisioning files"
+	echo "c) Back up the hardware ID, registration key, and bulk identification code"
+	echo "d) Enable automatic startup of the connectd daemons" 
+
+    if [ ask "Are you sure? This is permanent!"  ] ;then
+
+       # do all the reset steps
+       sudo /usr/bin/connectd_stop_all
+       sudo connectd_control stop all 
+
+       sudo connectd_control reset
+
+       if [ -f "/etc/connectd/hardware_id.txt" ]; then
+            sudo mv /etc/connectd/hardware_id.txt /etc/connectd/hardware_id.txt.prev
+       fi
+
+       if [ -f "/etc/connectd/registration_key.txt" ]; then
+            sudo mv /etc/connectd/registration_key.txt /etc/connectd/registration_key.txt.prev
+       fi
+
+       if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+            sudo mv /etc/connectd/bulk_identification_code.txt /etc/connectd/bulk_identification_code.txt.prev
+       fi 
+
+       if [ -d "/etc/connectd/services" ]; then
+            sudo mv /etc/connectd/services /etc/connectd/services.prev
+       fi   
+
+       if [ -d "/etc/connectd/pfiles" ]; then
+            sudo mv /etc/connectd/pfiles /etc/connectd/pfiles.prev
+       fi
+
+       if [ -d "/etc/connectd/dfiles" ]; then
+            sudo mv /etc/connectd/dfiles /etc/connectd/dfiles.prev
+       fi
+
+       if [ -d "/etc/connectd/active" ]; then
+            sudo mv /etc/connectd/active /etc/connectd/active.prev
+       fi
+
+       if [ -d "/etc/connectd/available" ]; then
+            sudo mv /etc/connectd/available /etc/connectd/available.prev
+       fi
+
+       sudo systemctl enable connectd
+       sudo systemctl enable connectd_schannel
+
+       STATUS=1
+    else 
+        echo Bye
+    fi
+}
+
+changeIdentity()
+{
+# show the current configuration
+echo "Current configuration is ... "
+connectd_control show
+
+if ask "Do you wish to update the hardware ID and registration_key?"; then
+
+    # ask for new settings and save them in well know files
+    echo -n "Enter Hardware ID: "
+    read answer
+	if [ "$answer" != "" ]; then
+		echo $answer > /tmp/hwid.txt
+		mv /tmp/hwid.txt /etc/connectd/hardware_id.txt
+	fi
+
+	echo -n "Enter  Registration Key: "
+	read answer
+	if [ "$answer" != "" ]; then
+		echo $answer > /tmp/regkey.txt
+		mv /tmp/regkey.txt /etc/connectd/registration_key.txt
+	fi
+fi
+# show the current configuration
+echo "Current configuration is ... "
+connectd_control show
+}
+
+removeFolder()
+{
+	if [ -d $1 ]; then
+		rm -rf $1
+	fi
+}
+
+deleteAllProvisioningFiles()
+{
+if ask "Are you sure you want to remove all provisioning files?"; then
+	removeFolder $BASEDIR/etc/connectd/services
+	removeFolder $BASEDIR/etc/connectd/services
+	removeFolder $BASEDIR/etc/connectd/services
+	removeFolder $BASEDIR/etc/connectd/services
+	removeFolder $BASEDIR/etc/connectd/services
+fi
+}	
+
+setBulkIDCode()
+{
+    echo -n "Enter the Bulk Identification Code: "
+	read answer
+	if [ "$answer" != "" ]; then
+		echo $answer > /tmp/bic.txt
+		sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
+	fi
+}
+
+blinkPiLED()
+{
+    if [ -f "/sys/class/leds/led0/brightness" ]; then
+ 
+       echo "Please check blinking LED on the Pi to confirm identity. It will blink for about 30 seconds."
+ 
+       for i in 1 2 3 4 5 6 7 8 9 10
+       do
+          echo -n "."
+          echo 1 >/sys/class/leds/led0/brightness
+          sleep 3
+       done
+       echo ""
+	else
+		echo
+		echo "LED not found."
+		echo
+    fi   
+}
+
+########## Begin menuLoop #################
+menuLoop()
+{
+    while [ true ]; do
+   #     clear
+        showIdentity
+	alias=""	# reset alias,so you will be asked
+        printf "============================ Main Menu ============================\n"
+        printf "  \n"
+        printf "    1) Check for production ready\n"
+        printf "    2) Set Bulk Identification Code\n"
+        printf "    3) Set Hardware ID and Registration Key\n"
+        printf "    4) Remove all provisioning files and folders\n"
+        printf "    5) Blink Identification LED (Raspberry PI only)\n"
+
+        printf "    6) Exit\n"
+        printf "  \n"
+        printf "===================================================================\n"
+ 
+        getNumRange 1 6 "Choose a menu selection"
+        get_num="$getNumRangeValue"
+        debug "get_num: $get_num"
+
+        if [ "$get_num" = 1 ]; then
+            checkProductionReady
+			ask "Hit enter to continue"
+        elif [ "$get_num" = 2 ]; then
+            setBulkIDCode
+			connectd_control show
+        elif [ "$get_num" = 3 ]; then
+            changeIdentity
+        elif [ "$get_num" = 4 ]; then
+            deleteAllProvisioningFiles
+        elif [ "$get_num" = 5 ]; then
+            blinkPiLED
+		elif [ "$get_num" = 6 ]; then
+            if ask "Are you sure you want to exit?"; then
+                exit
+            fi
+        fi
+    done
+}
+
+############# End menuLoop #######################
+checkForRoot
+menuLoop
