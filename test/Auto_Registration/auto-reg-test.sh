@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.0.0
-MODIFIED="September 28, 2019"
+VERSION=1.1.0
+MODIFIED="June 04, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
@@ -17,11 +17,13 @@ result=0
 #---------------------------------------------
 # this should be set by a Circle CI environment variable
 # but for now it's hardwired to a specific account
-BULKIDCODE="D5798A73-0E6E-1C01-20BE-D76921CC74C6"
+BULKIDCODE="434ABC4D-BEAC-B77C-C58A-C91127CAB4E3"
 
 # include the package library to access some utility functions
 
 . /usr/bin/connectd_library
+
+/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 
 #---------------------------------------------
 # script execution starts here
@@ -50,8 +52,6 @@ uuid > /etc/connectd/registration_key.txt
 
 echo "$BULKIDCODE" > /etc/connectd/bulk_identification_code.txt
 
-# run connectd_check_production_ready
-connectd_check_production_ready > production_ready.txt
 if [ $? -ne 0 ]; then
     echo "Error in connectd_check_production_ready"
     cat production_ready.txt
@@ -59,56 +59,42 @@ if [ $? -ne 0 ]; then
 fi
 
 # display bulk registration configuration
-
+echo
+echo "connectd_control show"
 connectd_control show
 
 # make sure any previously configured services are stopped 
 # (there shouldn't be any when running CI, but just to be sure.)
 # and then factory reset (clears all provisioning files)
 
+echo
+echo "connectd_control -v stop all"
 connectd_control -v stop all
+echo
+echo "connectd_control reset"
 connectd_control reset
 
 # run the provisioning step, capture both stdio and stderr outputs
-
-sh -x /usr/bin/connectd_control -v dprovision > /tmp/dprov.txt 2> debug.txt
-
-result=$?
-if [ $result -eq 1 ]; then
-    cat /tmp/dprov.txt
-    exit 1
-fi
+echo
+echo "connectd_control -v dprovision"
+sh -x /usr/bin/connectd_control -v dprovision | tee /tmp/dprov.txt 2> debug.txt
 
 # run the registration (bprovision) step, capture both stdio and stderr outputs
-
-sh -x /usr/bin/connectd_control bprovision all 2>> debug.txt | grep -v "RETRY" > /tmp/bprov.txt
-
-result=$?
-if [ $result -eq 1 ]; then
-    cat /tmp/bprov.txt
-    exit 1
-fi
+echo
+echo "connectd_control bprovision all"
+sh -x /usr/bin/connectd_control bprovision all | tee -a /tmp/bprov.txt 2>> debug.txt
 
 # get status of all services
-
-connectd_control -v status all > /tmp/status.txt
-
-result=$?
-if [ $result -eq 1 ]; then
-    cat /tmp/status.txt
-    exit 1
-fi
+echo
+echo "connectd_control status all"
+connectd_control -v status all | tee  /tmp/status.txt
 
 # get status of all services
+echo
+echo "connectd_control stop all"
+connectd_control -v stop all | tee /tmp/stop.txt
 
-connectd_control -v stop all > /tmp/stop.txt
-
-result=$?
-if [ $result -eq 1 ]; then
-    cat /tmp/stop.txt
-    exit 1
-fi
-
+echo
 echo "Basic Auto Registration test $0 passed."
 exit 0
 

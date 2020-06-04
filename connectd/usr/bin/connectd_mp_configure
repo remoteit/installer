@@ -184,14 +184,18 @@ fi
 echo "======================================================================"
 echo "OS:$os"
 echo "CPU ID:$id"
-echo "Hardware ID manufacturer:$mac"
-echo "Hardware ID default:$hwid"
-echo "Registration Key default:$rk_mac"
-echo "Registration Key manufacturer:$rk"
-echo "TCP Services:$tcp"
-echo "remote.it Package:$r3"
+echo "======================================================================"
+echo "remote.it connectd package version:$r3
 echo "remote.it API:$api$apv" | sed 's/"//g'
+echo "======================================"
+echo "== Current device identity - bulk/auto registration settings =="
+echo "Hardware ID from $BASEDIR/etc/connectd/oem_settings.txt:$mac"
+echo "Hardware ID from $BASEDIR/etc/connectd/hardware_id.txt:$hwid"
+echo "Registration Key from $BASEDIR/etc/connectd/oem_settings.txt:$rk"
+echo "Registration Key from $BASEDIR/etc/connectd/registration_key.txt:$rk_mac"
 echo "Bulk Identification Code:$bic"
+echo "======================================================================"
+echo "Active TCP services detected:$tcp"
 echo "======================================================================"
 }
 
@@ -250,6 +254,13 @@ prepareForProduction()
     else 
         echo Bye
     fi
+	# show final status
+if [ ! -z "$STATUS" ] ; then
+    echo "Ready: The device is cloneable for production."
+else
+    echo "Not Ready: The device is not safe to clone for production. Fix issue(s) listed and try again." 
+fi
+
 }
 
 changeIdentity()
@@ -291,10 +302,10 @@ deleteAllProvisioningFiles()
 {
 if ask "Are you sure you want to remove all provisioning files?"; then
 	removeFolder $BASEDIR/etc/connectd/services
-	removeFolder $BASEDIR/etc/connectd/services
-	removeFolder $BASEDIR/etc/connectd/services
-	removeFolder $BASEDIR/etc/connectd/services
-	removeFolder $BASEDIR/etc/connectd/services
+	removeFolder $BASEDIR/etc/connectd/pfiles
+	removeFolder $BASEDIR/etc/connectd/dfiles
+	removeFolder $BASEDIR/etc/connectd/available
+	removeFolder $BASEDIR/etc/connectd/active
 fi
 }	
 
@@ -323,7 +334,8 @@ blinkPiLED()
        echo ""
 	else
 		echo
-		echo "LED not found."
+		echo "LED not found. Press Enter to continue."
+		read anykey
 		echo
     fi   
 }
@@ -342,7 +354,6 @@ menuLoop()
         printf "    3) Set Hardware ID and Registration Key\n"
         printf "    4) Remove all provisioning files and folders\n"
         printf "    5) Blink Identification LED (Raspberry PI only)\n"
-
         printf "    6) Exit\n"
         printf "  \n"
         printf "===================================================================\n"
@@ -373,4 +384,9 @@ menuLoop()
 
 ############# End menuLoop #######################
 checkForRoot
-menuLoop
+
+if [ "$1" = "-n" ]; then
+    showIdentity
+else
+    menuLoop
+fi
