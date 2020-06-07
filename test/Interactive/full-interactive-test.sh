@@ -1,16 +1,17 @@
 #!/bin/sh
 # full-interactive.sh - 
 # runs the interactive insatller (connectd_installer) through 3 scenarios
-# a) First rime, add device name and a few services
+# a) First time, add device name and a few services
 # b) second time, add a few more services
 # c) remove all services
 # Author - Gary Worsham gary@remote.it
 # set -e
+
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
 user=$(whoami)
 
-set -x
+# set -x
 #-----------------------------------------------------------------------
 count_services()
 {
