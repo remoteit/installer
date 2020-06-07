@@ -6,7 +6,7 @@
 # use the amd64 Debian package.
 
 VERSION=1.1.0
-MODIFIED="June 04, 2020"
+MODIFIED="June 07, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
@@ -33,7 +33,7 @@ echo
 # the next lines can be used as needed to override a specific API version
 # comment these lines out to return to default API
 # echo "API:"
-# sed -i -e 's/\/api/\/apv\/v27.5/' /usr/bin/connectd_options
+# sed -i -e 's/\/api/\/apv\/xxxx/' /usr/bin/connectd_options
 # grep ^api /usr/bin/connectd_options
 # echo
 
@@ -51,12 +51,6 @@ uuid > /etc/connectd/hardware_id.txt
 uuid > /etc/connectd/registration_key.txt
 
 echo "$BULKIDCODE" > /etc/connectd/bulk_identification_code.txt
-
-if [ $? -ne 0 ]; then
-    echo "Error in connectd_check_production_ready"
-    cat production_ready.txt
-    exit 1
-fi
 
 # display bulk registration configuration
 echo

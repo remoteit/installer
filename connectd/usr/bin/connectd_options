@@ -7,11 +7,11 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="December 02, 2019"
+MODIFIED="June 07, 20209"
 #===================================
-BUILDDATE="Sat Feb  8 23:15:54 UTC 2020"    
+BUILDDATE=
 #===================================
-VERSION=2.5.28    
+VERSION=
 #===================================
 # set DEBUG to 1 to enable debugging messages
 DEBUG="0"
@@ -39,10 +39,6 @@ apiMethod="https://"
 apiVersion="/api"
 apiServer="device.remot3.it"
 #
-## DELETE THESE BEFORE PRODUCTION
-# apiMethod="http://"
-# apiVersion="/apv/latest"
-# apiServer="api.remot3.it"
 
 #===================================
 # Configuration Folder Variables
@@ -164,7 +160,7 @@ else
 
     if [ ! -z "$id_address" ]; then
         if [ "$HWIDSEDSTRING" != "" ]; then
-            hardware_id=$(echo $id_address | sed -e "s/://g")
+            hardware_id=$(echo $id_address | sed -e "$HWIDSEDSTRING")
             hardware_id="$HWIDPREFIX$hardware_id"
         else
             hardware_id="$HWIDPREFIX$$id_address"
