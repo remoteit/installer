@@ -1,6 +1,11 @@
 #!/bin/sh
+# connecctd_mp_configure
+# script to assist with preparation of a master image for
+# auto or bulk registration.
 #  remot3.it, Inc. : https://remote.it
-BASEDIR=/home/gary/Github/installer/connectd
+#
+
+BASEDIR=
 CONNECTD_DIR="$BASEDIR"/etc/connectd
 # pick up global options, e.g. PLATFORM and API
 . "$CONNECTD_DIR"/oem_settings
@@ -88,8 +93,20 @@ debug()
     fi
 }
 
-############# validate input - check $1 against tr control string $2
+#############################
+# checkForFiles returns 0 if there are any files in the folder
+# passed in as $1, 1 otherwise.
+checkForFiles()
+{
+    count=$(ls $1/* | wc -l)
+    if [ $count -eq 1 ]; then
+        return 0
+    else
+        return 1
+    fi
+}
 
+############# validate input - check $1 against tr control string $2
 validateInput()
 {
 # Comb out invalid characters from input and assign to new variable
@@ -101,61 +118,76 @@ else
    echo 1
 fi
 }
+############# end of validate input
 
+############### checkProductionReady   ####################################
+# checkProductionReady displays all parameters involved in Auto/Bulk Registration
+# any issues are displayed.
+ 
 checkProductionReady()
 {
-# test for unique identifiers - status will emit on errors
-echo "CPU ID:"$(oemGetSystemId)
-echo "Hardware ID:"$(oemGetDefaultHardwareId)
-echo "Registration Key:"$(oemGetDefaultRegistrationKey)
-
+STATUS=1
 DIRECTORY=/etc/connectd/services
-if [ -d "$DIRECTORY" ]; then
-    echo "Issue: remote.it services folder exists"
+
+checkForFiles $DIRECTORY 
+if [ $? -eq 0 ]; then
+    echo "Issue: provisioning files found in $DIRECTORY"
     STATUS=0
 fi
 
 DIRECTORY=/etc/connectd/pfiles
-if [ -d "$DIRECTORY" ]; then
-    echo "Issue: remote.it provisioning folder exists"
+checkForFiles $DIRECTORY 
+if [ $? -eq 0 ]; then
+    echo "Issue: provisioning files found in $DIRECTORY"
     STATUS=0
 fi
 
 DIRECTORY=/etc/connectd/dfiles
-if [ -d "$DIRECTORY" ]; then
-    echo "Issue: remote.it configuration folder exists"
+checkForFiles $DIRECTORY 
+if [ $? -eq 0 ]; then
+    echo "Issue: provisioning files found in $DIRECTORY"
     STATUS=0
 fi
 
 DIRECTORY=/etc/connectd/active
-if [ -d "$DIRECTORY" ]; then
-    echo "Issue: remote.it active service folder exists"
+checkForFiles $DIRECTORY 
+if [ $? -eq 0 ]; then
+    echo "Issue: provisioning files found in $DIRECTORY"
     STATUS=0
 fi
 
 DIRECTORY=/etc/connectd/available
-if [ -d "$DIRECTORY" ]; then
-    echo "Issue: remote.it available service folder exist"
+checkForFiles $DIRECTORY 
+if [ $? -eq 0 ]; then
+    echo "Issue: provisioning files found in $DIRECTORY"
     STATUS=0
 fi
 
 if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
     bic=$(cat /etc/connectd/bulk_identification_code.txt)
+    if [ "$bic" =  "missing. Add your code to bulk_identification_code.txt." ]; then
+        echo "Issue: Bulk Identification Code is not set correctly."
+        STATUS=0
+    fi
 else
    echo "Issue: Bulk Identification Code missing"
    STATUS=0
 fi
+    echo
 
-if [ -z "$STATUS" ] ; then
-    echo "Ok:  device is cloneable for production"
+if [ "$STATUS" = 1 ] ; then
+    echo "Ok: This device is READY to clone for production."
 else
-    echo "Issue: No device is not safe to clone for production." 
-    echo "ACTION: Use the sudo connectd_prepare_production command to ready this system" 
+    echo "Warning: This device is NOT READY to clone for production." 
+    echo
+    echo "ACTION: Use the menu options to resolve any 'Issues' shown above." 
+    echo "You may also need to edit /etc/connectd/oem_options if you have issues"
+    echo "with Hardware ID or Registration Key."
 fi
 }
+############### end of checkProductionReady   ####################################
 
-############# end of validate input
-
+############### showIdentity   ####################################
 showIdentity()
 {
 #  showIdentity 
@@ -164,151 +196,123 @@ showIdentity()
 #
 
 id=$(oemGetSystemId)
-mac=$(oemGetDefaultHardwareId)
-rk_mac=$(oemGetDefaultRegistrationKey)
 os=$(oemGetOSLabel)
 tcp=$(oemGetTCPServices)
 
 r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
-hwid=$(cat /etc/connectd/hardware_id.txt 2>/dev/null)
-rk=$(cat /etc/connectd/registration_key.txt 2>/dev/null)
-api=$(grep apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
-apv=$(grep apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
+api=$(grep ^apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
+apv=$(grep ^apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
 
 if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
     bic=$(cat /etc/connectd/bulk_identification_code.txt)
 else
-    bic="No set"
+    bic="File is missing."
 fi
 
 echo "======================================================================"
+echo "================ remote.it software and API version =================="
+echo "remote.it connectd package version:$r3"
+echo "remote.it API:$api$apv" | sed 's/"//g'
+echo "================ Bulk/Auto registration settings ====================="
+echo "Hardware ID: $(connectd_control show | grep -i hardware)
+echo "Registration Key: $(connectd_control show | grep -i registration)
+echo "Bulk Identification Code:$bic"
+echo "================  Startup Configuration =============================="
+echo "connectd service startup: $(systemctl is-enabled connectd)"
+echo "connectd_schannel service startup: $(systemctl is-enabled connectd_schannel)"
+echo "================  OS and CPU Information ============================="
 echo "OS:$os"
 echo "CPU ID:$id"
-echo "======================================================================"
-echo "remote.it connectd package version:$r3
-echo "remote.it API:$api$apv" | sed 's/"//g'
-echo "======================================"
-echo "== Current device identity - bulk/auto registration settings =="
-echo "Hardware ID from $BASEDIR/etc/connectd/oem_settings.txt:$mac"
-echo "Hardware ID from $BASEDIR/etc/connectd/hardware_id.txt:$hwid"
-echo "Registration Key from $BASEDIR/etc/connectd/oem_settings.txt:$rk"
-echo "Registration Key from $BASEDIR/etc/connectd/registration_key.txt:$rk_mac"
-echo "Bulk Identification Code:$bic"
-echo "======================================================================"
-echo "Active TCP services detected:$tcp"
-echo "======================================================================"
+echo "================ Cloning Readiness Summary ==========================="
 }
+############### end of showIdentity   ####################################
 
-prepareForProduction()
-{
-	echo "We are now going to:"
-	echo "a) Stop any running daemons"
-	echo "b) Clear any provisioning files"
-	echo "c) Back up the hardware ID, registration key, and bulk identification code"
-	echo "d) Enable automatic startup of the connectd daemons" 
-
-    if [ ask "Are you sure? This is permanent!"  ] ;then
-
-       # do all the reset steps
-       sudo /usr/bin/connectd_stop_all
-       sudo connectd_control stop all 
-
-       sudo connectd_control reset
-
-       if [ -f "/etc/connectd/hardware_id.txt" ]; then
-            sudo mv /etc/connectd/hardware_id.txt /etc/connectd/hardware_id.txt.prev
-       fi
-
-       if [ -f "/etc/connectd/registration_key.txt" ]; then
-            sudo mv /etc/connectd/registration_key.txt /etc/connectd/registration_key.txt.prev
-       fi
-
-       if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
-            sudo mv /etc/connectd/bulk_identification_code.txt /etc/connectd/bulk_identification_code.txt.prev
-       fi 
-
-       if [ -d "/etc/connectd/services" ]; then
-            sudo mv /etc/connectd/services /etc/connectd/services.prev
-       fi   
-
-       if [ -d "/etc/connectd/pfiles" ]; then
-            sudo mv /etc/connectd/pfiles /etc/connectd/pfiles.prev
-       fi
-
-       if [ -d "/etc/connectd/dfiles" ]; then
-            sudo mv /etc/connectd/dfiles /etc/connectd/dfiles.prev
-       fi
-
-       if [ -d "/etc/connectd/active" ]; then
-            sudo mv /etc/connectd/active /etc/connectd/active.prev
-       fi
-
-       if [ -d "/etc/connectd/available" ]; then
-            sudo mv /etc/connectd/available /etc/connectd/available.prev
-       fi
-
-       sudo systemctl enable connectd
-       sudo systemctl enable connectd_schannel
-
-       STATUS=1
-    else 
-        echo Bye
-    fi
-	# show final status
-if [ ! -z "$STATUS" ] ; then
-    echo "Ready: The device is cloneable for production."
-else
-    echo "Not Ready: The device is not safe to clone for production. Fix issue(s) listed and try again." 
-fi
-
-}
-
-changeIdentity()
-{
-# show the current configuration
-echo "Current configuration is ... "
-connectd_control show
-
-if ask "Do you wish to update the hardware ID and registration_key?"; then
-
-    # ask for new settings and save them in well know files
-    echo -n "Enter Hardware ID: "
-    read answer
-	if [ "$answer" != "" ]; then
-		echo $answer > /tmp/hwid.txt
-		mv /tmp/hwid.txt /etc/connectd/hardware_id.txt
-	fi
-
-	echo -n "Enter  Registration Key: "
-	read answer
-	if [ "$answer" != "" ]; then
-		echo $answer > /tmp/regkey.txt
-		mv /tmp/regkey.txt /etc/connectd/registration_key.txt
-	fi
-fi
-# show the current configuration
-echo "Current configuration is ... "
-connectd_control show
-}
-
+############### removeFolder   ####################################
 removeFolder()
 {
-	if [ -d $1 ]; then
-		rm -rf $1
-	fi
+    if [ -d $1 ]; then
+	rm $1/* 2> /dev/null
+	rm $1/*.* 2> /dev/null
+    fi
 }
+############### end of removeFolder   ####################################
 
+############### deleteAllProvisioningFiles   ####################################
 deleteAllProvisioningFiles()
 {
-if ask "Are you sure you want to remove all provisioning files?"; then
-	removeFolder $BASEDIR/etc/connectd/services
-	removeFolder $BASEDIR/etc/connectd/pfiles
-	removeFolder $BASEDIR/etc/connectd/dfiles
-	removeFolder $BASEDIR/etc/connectd/available
-	removeFolder $BASEDIR/etc/connectd/active
-fi
+    echo
+    echo "If any provisioning files are present, it means that this device was previously configured."
+    echo "If you delete existing provisioning files, you will need to delete the device from your account."
+    echo "This can be done at the https://remote.it web portal."
+    echo
+    if ask "Are you sure you want to remove all provisioning files?"; then
+		removeFolder $BASEDIR/etc/connectd/services
+		removeFolder $BASEDIR/etc/connectd/pfiles
+		removeFolder $BASEDIR/etc/connectd/dfiles
+		removeFolder $BASEDIR/etc/connectd/available
+		removeFolder $BASEDIR/etc/connectd/active
+    fi
 }	
+############### end of deleteAllProvisioningFiles   ####################################
 
+############### setHardwareIDRegKey   ####################################
+# $1 = parameter name, $2 = file name in /etc/connectd, $3 = current value from oem_settings
+setHardwareIDRegKey()
+{
+    while [ true ]; do
+        printf "===================================================================\n"
+        printf "===================================================================\n"
+        if [ -e /etc/connectd/$2 ]; then
+            echo "$1 is set in /etc/connectd/$2"
+        else
+            echo "$1 is determined by /etc/connectd/oem_settings"
+            echo "If any issue is shown, you must edit /etc/connectd/oem_settings."
+        fi
+        echo "$(connectd_control show | grep -i $(echo $1 | awk '{ print $1 }'))"
+        echo
+        printf "===================================================================\n"
+        echo "You can set the $1 using an expression in /etc/connectd/oem_settings."
+        echo "To use the expression in /etc/connectd/oem_settings, choose option 1."
+        echo "This option deletes the /etc/connectd/$2 file."
+        echo
+        echo "This can be overridden by writing the $1 to /etc/connectd/$2."
+        echo "To use the value in /etc/connectd/$2, choose option 2."
+        echo "You will be asked to enter a value for /etc/connectd/$2."
+        echo
+        printf "============================ Main Menu ============================\n"
+        printf "  \n"
+        printf "    1) Set $1 using /etc/connectd/oem_settings\n"
+        printf "    2) Set $1 using /etc/connectd/$2\n"
+        printf "    3) Return to previous menu\n"
+        printf "  \n"
+        printf "===================================================================\n"
+ 
+        getNumRange 1 3 "Choose a menu selection"
+        get_num="$getNumRangeValue"
+        debug "get_num: $get_num"
+
+        if [ "$get_num" = 1 ]; then
+            rm /etc/connectd/$2
+        elif [ "$get_num" = 2 ]; then
+            echo "Enter $1."
+            if [ -e $2 ]; then
+                echo  "Press Enter on a blank line to leave the existing value unchanged."
+	        read param
+                if [ "$param" != "" ]; then
+                    echo "$param" > /etc/connectd/$2
+                fi
+            else
+	        read param
+                echo "$param" > /etc/connectd/$2
+            fi
+        elif [ "$get_num" = 3 ]; then
+            break
+        fi
+    done
+}
+############### end of setHardwareIDRegKey   ####################################
+
+############### setBulkIDCode   ####################################
 setBulkIDCode()
 {
     echo -n "Enter the Bulk Identification Code: "
@@ -318,7 +322,17 @@ setBulkIDCode()
 		sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
 	fi
 }
+############### end of setBulkIDCode   ####################################
 
+############### showTCPListeners   ####################################
+showTCPListeners()
+{
+echo "================ TCP Listeners Detected =============================="
+echo "Active TCP ports detected: $tcp"
+}
+############### end of showTCPListeners   ####################################
+
+############### blinkPiLED   ####################################
 blinkPiLED()
 {
     if [ -f "/sys/class/leds/led0/brightness" ]; then
@@ -339,6 +353,28 @@ blinkPiLED()
 		echo
     fi   
 }
+############### blinkPiLED   ####################################
+
+############### toggleStartup   ####################################
+toggleStartup()
+{
+connectd_state=$(systemctl is-enabled connectd)
+
+if [ "$connectd_state" = "disabled" ]; then
+    systemctl enable connectd
+else
+    systemctl disable connectd
+fi
+
+schannel_state=$(systemctl is-enabled connectd_schannel)
+
+if [ "$schannel_state" = "disabled" ]; then
+    systemctl enable connectd_schannel
+else
+    systemctl disable connectd_schannel
+fi
+}
+############### end of toggleStartup   ####################################
 
 ########## Begin menuLoop #################
 menuLoop()
@@ -346,47 +382,52 @@ menuLoop()
     while [ true ]; do
    #     clear
         showIdentity
-	alias=""	# reset alias,so you will be asked
+        checkProductionReady
         printf "============================ Main Menu ============================\n"
         printf "  \n"
-        printf "    1) Check for production ready\n"
-        printf "    2) Set Bulk Identification Code\n"
-        printf "    3) Set Hardware ID and Registration Key\n"
-        printf "    4) Remove all provisioning files and folders\n"
-        printf "    5) Blink Identification LED (Raspberry PI only)\n"
-        printf "    6) Exit\n"
+        printf "    1) Set Hardware ID\n"
+        printf "    2) Set Registration Key\n"
+        printf "    3) Set Bulk Identification Code\n"
+        printf "    4) Remove all provisioning files\n"
+        printf "    5) Blink Identification LED (Raspberry Pi only)\n"
+        printf "    6) Toggle systemd startup state for connectd and connectd_schannel\n"
+        printf "    7) Show detected TCP Listeners\n"
+        printf "    8) Exit\n"
         printf "  \n"
         printf "===================================================================\n"
  
-        getNumRange 1 6 "Choose a menu selection"
+        getNumRange 1 8 "Choose a menu selection"
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
         if [ "$get_num" = 1 ]; then
-            checkProductionReady
-			ask "Hit enter to continue"
+            setHardwareIDRegKey "Hardware ID" "hardware_id.txt" "$(oemGetDefaultHardwareID)"
         elif [ "$get_num" = 2 ]; then
-            setBulkIDCode
-			connectd_control show
+            setHardwareIDRegKey "Registration Key" "registration_key.txt" "$(oemGetDefaultRegistrationKey)"
         elif [ "$get_num" = 3 ]; then
-            changeIdentity
+            setBulkIDCode
         elif [ "$get_num" = 4 ]; then
             deleteAllProvisioningFiles
         elif [ "$get_num" = 5 ]; then
             blinkPiLED
-		elif [ "$get_num" = 6 ]; then
+        elif [ "$get_num" = 6 ]; then
+            toggleStartup
+        elif [ "$get_num" = 7 ]; then
+            showTCPListeners
+	elif [ "$get_num" = 8 ]; then
             if ask "Are you sure you want to exit?"; then
                 exit
             fi
         fi
     done
 }
+############# End of menuLoop #######################
 
-############# End menuLoop #######################
+### program starts here
 checkForRoot
-
 if [ "$1" = "-n" ]; then
     showIdentity
+    checkProductionReady
 else
     menuLoop
 fi
