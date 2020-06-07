@@ -94,6 +94,17 @@ echo
 echo "connectd_control stop all"
 connectd_control -v stop all | tee /tmp/stop.txt
 
+# get status of all services
+echo
+echo "connectd_control status all"
+connectd_control -v status all | tee -a /tmp/status.txt
+
+# factory reset
+echo
+echo "connectd_control reset"
+connectd_control -v reset | tee  /tmp/reset.txt
+
+
 echo
 echo "Basic Auto Registration test $0 passed."
 exit 0
