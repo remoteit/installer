@@ -10,7 +10,7 @@
 # The MIT License
 
 # Original Work Copyright (C) 2011 Dominic Tarr
-# Modified Work Copyright (C) 2018 remot3.it, Inc.
+# Modified Work Copyright (C) 2018-2020 remot3.it, Inc.
 
 # Permission is hereby granted, free of charge,
 # to any person obtaining a copy of this software and
@@ -90,7 +90,7 @@ parse_options() {
 
 awk_egrep () {
   local pattern_string=$1
-  gawk '{
+  awk '{
     while ($0) {
       start=match($0, pattern);
       token=substr($0, start, RLENGTH);

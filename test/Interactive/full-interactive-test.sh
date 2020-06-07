@@ -10,10 +10,12 @@ SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 . /usr/bin/connectd_library
 user=$(whoami)
 
+set -x
 #-----------------------------------------------------------------------
 count_services()
 {
     ps ax | grep "connectd\." | grep -v grep > ~/nservices
+    cat ~/nservices
     services="$(wc -l ~/nservices  | awk '{ print $1 }')"
     return $services
 }
@@ -21,7 +23,8 @@ count_services()
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel" | grep -v grep > ~/nschannel
+    ps ax | grep "connectd_schannel\." | grep -v grep > ~/nschannel
+    cat ~/nschannel
     schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
@@ -32,9 +35,12 @@ count_schannel()
 
 check_service_counts()
 {
-echo "Starting interactive install test with keystroke file $3..."
-sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
-sleep 1
+if [ "$3" != "" ]; then
+    echo "Starting interactive install test with keystroke file $3..."
+    sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
+    # not entirely sure if sleep is needed here
+    sleep 1
+fi
 
 count_services
 nservices=$?
@@ -48,8 +54,9 @@ if [ $nschannel -ne $2 ]; then
    echo "$3 test failed with schannel: $nschannel"
    exit 1
 fi
-echo "Interactive installer $3 test passed."
+echo "Interactive installer service test $3 $1 $2 test passed."
 }
+
 
 # main program starts here
 echo "------------------------------------------------"
@@ -79,6 +86,22 @@ check_service_counts 4 1 configure-01-test.key
 # expected result is that 9 connectd services and 1 schannel service will be running
 check_service_counts 10 1 configure-02-test.key
 
+# Now use systemd to turn off and then on the connectd and connectd_schannel
+# daemons and confirm operation.
+
+sudo systemctl stop connectd
+sleep 10
+check_service_counts 0 1
+sudo systemctl stop connectd_schannel
+sleep 5
+check_service_counts 0 0
+
+sudo systemctl start connectd
+sleep 10
+check_service_counts 10 0
+sudo systemctl start connectd_schannel
+sleep 5
+check_service_counts 10 1
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running

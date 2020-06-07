@@ -5,14 +5,14 @@
 #  remot3.it, Inc : https://remote.it
 #
 #
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 # include shell script lib, must be in path or specify path here
 . "$BIN_DIR"/connectd_wlib
 
 #### Settings #####
-VERSION=1.0.12
-MODIFIED="January 12, 2019"
+VERSION=1.0.13
+MODIFIED="December 18, 2019"
 #
 # Config 
 #mac
@@ -37,12 +37,15 @@ do_provision()
 }
 
 
+#========================================
+# internet_available() runs the "connectd -n" test and checks to see whether the "UDP blocked" message is returned.
 internet_available()
 {
     ret=0
-    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -nc "$apiServer" 80  >/dev/null 2>&1
-    online=$?
-    if [ $online -eq 0 ]; then
+    "$BIN_DIR"/"$DAEMON"."$PLATFORM" -n | grep "UDP connections to the internet are not working." >/dev/null 2>&1
+    udpOk=$?
+    # if grep returns 0, it means that we matched the "UDP connections" string output from connectd -n.
+    if [ $udpOk -ne 0 ]; then
         if [ $VERBOSE -gt 0 ]; then
             echo "Internet Available"
         fi
@@ -68,11 +71,9 @@ do
     if [ "$?" -eq 1 ]; then
         # internet is available, if startup script from
         # interactive install exists, try launching it.
-        # commented out by default as we are using cron
-        # for the Pi installer.
         if [ -e "$BIN_DIR"/connectd_start_all ]; then
             sleep 2
-            # "$BIN_DIR"/connectd_start_all
+            "$BIN_DIR"/connectd_start_all
         fi
         # internet is available, try provision
         sleep 5

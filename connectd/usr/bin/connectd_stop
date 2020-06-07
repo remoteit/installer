@@ -6,14 +6,14 @@
 #  remot3.it, Inc. : https://remote.it
 #
 #
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 # include shell script lib, must be in path or specify path here
 . "$BIN_DIR"/connectd_wlib
 
 #### Settings #####
-VERSION=1.0.9
-MODIFIED="January 12, 2019"
+VERSION=1.0.11
+MODIFIED="January 01, 2020"
 #
 # Config 
 #mac
@@ -26,6 +26,13 @@ VERBOSE=0
 
 logger "[$LOG_NAME] Stop"
 connectd_control stop all
+
+
+# stop interactively registered services
+if [ -x "$BIN_DIR/connectd_stop_all" ]; then
+    logger "[$LOG_NAME] connectd_stop_all"
+    $BIN_DIR/connectd_stop_all
+fi
 
 #stop device 2 device monitor if present and executable
 if [ -x "$BIN_DIR/connectd_d2d" ]; then

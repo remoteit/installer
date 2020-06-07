@@ -7,7 +7,7 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="October 04, 2019"
+MODIFIED="December 02, 2019"
 #===================================
 BUILDDATE="Sat Feb  8 23:15:54 UTC 2020"    
 #===================================
@@ -21,8 +21,8 @@ DEBUG="0"
 # set EXITONAPIERROR to 0 for debugging as needed.
 EXITONAPIERROR="1"
 #===================================
-# BASEDIR is root on many systems. If so, leave it blank.
-BASEDIR=    
+# BASEDIR is root on many systems. If so, leave it blank, else set the enviorment variable $CONNECTD_BASEDIR
+#BASEDIR=$CONNECTD_BASEDIR | sed 's/\/*$//g'
 #===================================
 # BIN_DIR is default path for executables.  We install connectd scripts and binaries here.
 BIN_DIR="$BASEDIR"/usr/bin
@@ -66,9 +66,6 @@ PID_DIR=/var/run
 # PLATFORM is the extension for the binaries, depends on CPU architecture
 # and shared libraries
 PLATFORM=
-#===================================
-# startupScripts = 0, ask; 1, init.d; 2, systemd; 3, crontab
-startupScripts=3
 #===================================
 # mac is the expression used to get the MAC for autonaming
 mac=$(ip addr | grep ether | tail -n 1 | awk '{ print $2 }') 

@@ -5,7 +5,7 @@
 # text files
 pkg=connectd
 ver=2.1.12
-MODIFIED="September 28, 2019"
+MODIFIED="December 20, 2019"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -96,11 +96,11 @@ buildDebianFile()
     ret=0
     sudo chown -R root:root "$1"
     if [ "$buildDeb" -eq 1 ]; then
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         # only run lintian if we are really making a Debian package
         ret=$(runLintian "$1".deb)
     else
-        dpkg-deb --build "$1"
+        sudo dpkg-deb --build "$1"
         ret=$?
     fi
     sudo chown -R $user:$user "$1"
@@ -169,6 +169,11 @@ build() {
     # create symlink so that /usr/bin/connectd points to the installed daemon
     # use -f to force overwrite if it's already there
     ln -sf "/usr/bin/connectd.$PLATFORM" "$pkgFolder/usr/bin/connectd"
+    # create symlink so that /usr/bin/connectd_schannel_link points to the 
+    # installed daemon
+    # there is already a "connectd_schannel" which is the start/stop script
+    # use -f to force overwrite if it's already there
+    ln -sf "/usr/bin/connectd_schannel.$PLATFORM" "$pkgFolder/usr/bin/connectd_schannel_link"
 
     # get Version string from DEBIAN/control file and write it to connectd_options
     # for tar files, since there is no concept of package "version" there
@@ -232,7 +237,7 @@ build() {
         fi
 
         echo "Extracting contents to tar file"
-        ./scripts/extract-scripts.sh "$pkgFolder".deb
+        sudo ./scripts/extract-scripts.sh "$pkgFolder".deb
         filename="${pkg}_${version}_$PLATFORM$tag".tar
         sudo mv "$pkgFolder".deb.tar "$cwd/$filename"
 
@@ -264,7 +269,7 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh < "$TEST_DIR"/Auto_Registration/reset.key
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
