@@ -72,17 +72,17 @@ echo "connectd_control -v stop all"
 connectd_control -v stop all
 echo
 echo "connectd_control reset"
-connectd_control reset
+connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 # run the provisioning step, capture both stdio and stderr outputs
 echo
 echo "connectd_control -v dprovision"
-sh -x /usr/bin/connectd_control -v dprovision | tee /tmp/dprov.txt 2> debug.txt
+sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
 
 # run the registration (bprovision) step, capture both stdio and stderr outputs
 echo
 echo "connectd_control bprovision all"
-sh -x /usr/bin/connectd_control bprovision all | tee -a /tmp/bprov.txt 2>> debug.txt
+sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
 
 # get status of all services
 echo
@@ -102,7 +102,7 @@ connectd_control -v status all | tee -a /tmp/status.txt
 # factory reset
 echo
 echo "connectd_control reset"
-connectd_control -v reset | tee  /tmp/reset.txt
+connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
 
 
 echo
