@@ -6,3 +6,5 @@ builds
 .DS_Store
 node_modules
 assets
+npm-debug.log
+

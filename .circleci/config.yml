@@ -1,8 +1,9 @@
 version: 2.1
 executors:
   ubuntu:
-    docker:
-      - image: circleci/node:11.8.0
+   machine:
+      image: ubuntu-1604:201903-01
+      docker_layer_caching: true    # default - false
 workflows:
   version: 2
   all:
@@ -21,6 +22,9 @@ jobs:
       - run:
           name: apt update
           command: sudo apt-get update
+      - run:
+          name: Install systemd
+          command: sudo apt-get install systemd
       - run:
           name: Install lintian
           command: sudo apt-get install lintian

@@ -2,7 +2,7 @@
 
 # connectd_stop, stops all running connectd services
 
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 
 for f in "$BIN_DIR"/Connectd*; do

@@ -9,16 +9,16 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.17
+LIBVERSION=lib_v2.1.20
 AUTHOR="Gary Worsham"
-LIBMODIFIED="April 17, 2019"
+LIBMODIFIED="December 29, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
 # ----------------------------------------
 # Set BASEDIR here.  (installation folder)
 #
-BASEDIR=
+BASEDIR=$CONNECTD_BASEDIR
 . "$BASEDIR"/usr/bin/connectd_options
 filename=$(basename "$0")
 
@@ -145,7 +145,7 @@ connectdCompatibility()
             printf "Unknown error occurred while checking network.\n"
             printf "Please contact support@remote.it.\n\n"
         fi
-        exit
+        exit 1
     fi
 }
 ##### End Compatibility checker #####
@@ -208,11 +208,11 @@ askResetDevice()
                 printf "."
             done
             # delete the "start all script"
-            if [ -e "$BIN_DIR/connectd_start_all" ]; then
-                rm $BIN_DIR/connectd_start_all
+            if [ -e "$BIN_DIR/$STARTEMUP" ]; then
+                rm $BIN_DIR/$STARTEMUP
             fi
-             # stop the server channel daemon 
-            connectd_schannel stop > /dev/null
+            # stop the server channel daemon 
+            $BIN_DIR/connectd_schannel stop > /dev/null
             echo
             checkForDeviceName
         fi
@@ -259,7 +259,7 @@ getHardwareID()
             exit 1
         fi
         debug "UID=$deviceaddress"
-        secret=$(grep ^password "$rmt3provFile" | awk '{ print $2 }')
+        secret=$(grep ^password "$rmt3provFile" | tail -n 1 | awk '{ print $2 }')
         if [ "$secret" = "" ]; then
             echo "Bulk Service provisioning file does not have a secret."
             echo "Please contact support@remote.it with this information."
@@ -271,6 +271,11 @@ getHardwareID()
         fi
         result=$(curl ${CURL_OPTS} 'POST' $getHWIDURL -d "{\"deviceaddress\":\"$deviceaddress\", \"secret\":\"$secret\" }" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
         HardwareID=$(jsonval "$result" "hardware_id")
+        if [ "$HardwareID" = "" ]; then
+            echo "Error getting Hardware ID from Bulk Service."
+            echo "Please contact support@remote.it with this information."
+            exit 1
+        fi
     else
 	setHardwareID
     fi
@@ -432,7 +437,7 @@ checkForServices()
        printf "This is unexpected.  You may wish to exit and review your\n"
        printf "configuration. \n"
        if ask "Do you want to exit?"; then
-           exit
+           exit 0
        fi
     fi
     echo "-------------------------------------------------------------------------------"
@@ -531,7 +536,7 @@ menuLoop()
             deleteAllConnections
         elif [ "$get_num" = 5 ]; then
             if ask "Are you sure you want to exit?"; then
-                exit
+                exit 0
             fi
         fi
     done
@@ -770,6 +775,9 @@ protocolSelection()
 	alreadyThere=$(grep $GREPFLAGS "$CONNECTD_PORT" "$TMP_DIR/.legacy_instances")
         if [ "$alreadyThere"  != "" ]; then
             printf "A remote.it Service is already attached to this Application.\n" 
+            echo "WARNING: you should exercise care that you do not reinstall a remote.it"
+            echo "connection that you are currently using, for example SSH or VNC."
+            echo
             if ask "Do you wish to overwrite your previous settings?"; then
                 testLogin
                 deleteDevice
@@ -815,14 +823,15 @@ checkAPIResult()
     else
         printf "\nAPI call to $1 failed!\n"
         reason=$(jsonval "$2" 'reason')
-        echo "Reason for failure: $reason"
+        errorcode=$(jsonval "$2" 'code')
+        echo "Reason for failure: $reason, Error code: $errorcode."
         echo "Contact support@remote.it with this information."
         echo "Please press the ENTER key."
         echo
         read anykey
         if [ "$EXITONAPIERROR" = "1" ]; then
             echo "The $0 program will now exit."
-            exit
+            exit 1
         fi
     fi
 }
@@ -858,6 +867,9 @@ deleteConnection()
             deviceFound=1
 	    # get the protocol name
 	    deviceType=$(jsonval "$resp" "title")
+            echo "WARNING: you should exercise care that you do not remove a remote.it"
+            echo "connection that you are currently using, for example SSH or VNC."
+            echo
 	    if ask "Are you sure you want to remove the remote.it $deviceType Service $serviceName?"; then
 		printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
 
@@ -896,6 +908,9 @@ deleteConnection()
 ##### Delete All Connections
 deleteAllConnections()
 {
+    echo "WARNING: you should exercise care that you do not remove a remote.it"
+    echo "connection that you are currently using, for example SSH or VNC."
+    echo
     if ask "Are you sure you want to remove ALL remote.it Services?"; then
 
     # now iterate through all provisioning files to find it
@@ -904,12 +919,6 @@ deleteAllConnections()
     	for file in "$CONNECTD_CONF_DIR"/*.conf; do
 	# get service name from UID
             uid="$(grep '^UID' "$file" | awk '{print $2}')"
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
-            serviceName="$(jsonval "$resp" name)"
-
-	    printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
-	    result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
-            checkAPIResult "$deleteURL" "$result"
 
 	    fn=$(basename "$file")
 	    fileNameRoot="${fn%.conf}"
@@ -921,19 +930,33 @@ deleteAllConnections()
  		    rm "$BIN_DIR"/"$fileNameRoot"
 		fi
 	    fi
+            # remove the provisioning file
 	    if [ -f "$file" ]; then
 		rm "$file"
 	    fi
+            # now unregister the UID from your account
+	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" -H "apikey:$apikey"  -H "token:$token" "$deviceURL/$uid")
+            serviceName="$(jsonval "$resp" name)"
+
+	    printf "Deleting %s... this may take up to 30 seconds.\n" "$serviceName"
+	    result=$(curl ${CURL_OPTS} 'POST' $deleteURL -d "{\"deviceaddress\":\"$uid\"}" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
+            checkAPIResult "$deleteURL" "$result"
        done
         if [ -f "$BIN_DIR"/"$STARTEMUP" ]; then
 	    rm "$BIN_DIR"/"$STARTEMUP"
 #            rm "$BIN_DIR"/Connectd*
-   	fi
-# also should clear out crontab at this point
-	disableStartup
-# stop schannel
-	connectd_schannel stop
-        exit
+       fi
+      availableDir="${CONNECTD_DIR}/available"
+      if ! ([ -d $availableDir ] && [ "$(ls -A $availableDir)" ]); then
+        # also should disable daemon startup at this point
+        disableStartup
+        # stop the connectd and schannel daemons using systemd
+        # we already stopped the connectd daemons but doing this
+        # keeps systemd in sync
+        systemctl stop connectd
+        systemctl stop connectd_schannel
+      fi
+      exit 0
     fi
 }
 
@@ -948,7 +971,7 @@ bashCheck()
 	printf "Please execute \"chmod +x %s \" and then \n" "$filename"
 	printf "execute \"./%s\".  \n\n" "$filename"
 	printf "Thank you! \n"
-	exit
+	exit 1
     else
 	echo "Now launching the remote.it connectd daemon installer..." > /dev/null
     fi
@@ -991,7 +1014,7 @@ askRegisterLogin()
 #		value="true"
         elif [ "$get_num" = 4 ]; then
 	    if ask "Are you sure?"; then
-		exit
+		exit 0
 	    fi
 	fi
 	done
@@ -1187,7 +1210,8 @@ signInAPI()
         debug "Login token: $token"
     else
     	noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
-    	loginFailed=$(echo "$resp" | grep "The username or password are invalid" | sed 's/"//g')
+        # look for [0102] api return for invalid login
+    	loginFailed=$(echo "$resp" | grep "\[0102\]" | sed 's/"//g')
     	slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
 # 404 is triggered when you enter some special character in e-mail.  this specific search may fail if API
 # "$apiServer" is moved
@@ -1231,8 +1255,10 @@ testLogin()
         printf "Please correct the system date if needed and run the installer again.\n"
         printf "Run the command 'man date' for help resetting the date.\n\n"
         printf "If you are receiving this message and your system date is correct,\n"
-        printf "please contact remote.it support at support@remote.it.\n"
-        exit
+        printf "make sure that the ca-certificates package is correctly installed\n"
+        printf "on your operating system."
+        printf "For more information, please contact support at support@remote.it.\n"
+        exit 1
     fi
 }
 ######### End Test Login #########
@@ -1363,7 +1389,7 @@ installProvisioning()
     else
        echo "Not currently supported: $PLATFORM"
        echo "Please contact support@remote.it."
-       exit
+       exit 1
     fi
 
 #    echo "platformType: $platformType"
@@ -1427,7 +1453,7 @@ installProvisioning()
         else
             echo "Not currently supported: $PROTOCOL $PORT"
             echo "Please contact support@remote.it."
-            exit
+            exit 1
         fi	
 
         result=$(curl ${CURL_OPTS} 'POST' $projectCreateURL -d "{\"projectname\":\"$projectName\", \"projecttype\":\"device\", \"platformversion\":\"1.0\",\"platformtype\":\"$platformType\",\"contenttype\":\"$contentType\",\"contentport\":\"$PORT\" }" -H "Content-Type:application/json" -H "apikey:$apikey" -H "token:$token")
@@ -1463,15 +1489,6 @@ installProvisioning()
 }
 ######### End installProvisioning #########
 
-######### Add line to cron ######
-cronAddLine()
-{
-    crontab -l 2> /dev/null 1> "$TMP_DIR"/.crontab_old
-    echo "$1" >> "$TMP_DIR"/.crontab_old
-    logger "cronAddline $1"
-    crontab "$TMP_DIR"/.crontab_old
-}
-######### End add line to cron ######
 
 ######### Disable Connectd services to start at reboot time ######
 cronRemoveLine()
@@ -1481,25 +1498,23 @@ cronRemoveLine()
 }
 
 ######### Enable remote.it services to start at reboot time ######
+# also have to "restart" connectd, otherwise shutdown will not trigger
+# systemctl stop until after next reboot
 enableStartup()
 {
-    if [ $startupScripts = 3 ]; then
-        cronAddLine "@reboot $BIN_DIR/$STARTEMUP"
-        logger "$0: Adding cron reboot start links."
-    elif [ $startupScripts = 1 ]; then
-        echo "You will need to add reboot start/stop links to $BIN_DIR/$STARTEMUP"
-    fi
+    systemctl enable connectd
+    systemctl enable connectd_schannel
+    systemctl restart connectd
+    systemctl restart connectd_schannel
 }
 ######### End Enable remote.it services to start at reboot time ######
 
 ######### Disable remote.it services to start at reboot time ######
 disableStartup()
 {
-    if [ $startupScripts = 3 ]; then
-        cronRemoveLine "@reboot $BIN_DIR/$STARTEMUP"
-    elif [ $startupScripts = 1 ]; then
-        echo "You will need to remove reboot start/stop links to $BIN_DIR/$STARTEMUP"
-    fi
+    systemctl disable connectd
+    systemctl disable connectd_schannel
+    cronRemoveLine "@reboot $BIN_DIR/$STARTEMUP"
 }
 
 #----------  setBASEDIR --------------
@@ -1530,16 +1545,14 @@ installStartStop()
         cp "$CONNECTD_LIB_DIR"/scripts/$STARTEMUP "$BIN_DIR"
 #     printf "$STARTEMUP copied to %s\n" "$BIN_DIR"
     fi
-    # 3: crontab approach
-    if [ $startupScripts = 3 ]; then
-	checkCron=$(crontab -l 2> /dev/null | grep -c "$STARTEMUP" )
-	debug "CheckCron: $checkCron\n"
-	if [ "$checkCron" = 0 ]; then
-	    enableStartup
-	fi
- #   elif [ $startupScripts = 1 ]; then
- #       ln -s /usr/bin/connectd_start /etc/init.d/connectd
+
+    # call the systemctl enable and restart, but only for the Bulk Service
+    # to avoid connection hangup if using remote.it SSH or VNC connection
+    # to add more services.
+    if [ "$CONNECTD_PORT" = "Connectdrmt365535" ]; then
+        enableStartup
     fi
+
     # see if there is an entry to start the chosen service daemon already
     checkStartConnectd=$(grep -c "$CONNECTD_PORT" "$BIN_DIR"/"$STARTEMUP" )
     # if not, add it
@@ -1547,12 +1560,6 @@ installStartStop()
 	sed s/REPLACE_TEXT/"$CONNECTD_PORT"/ < "$CONNECTD_LIB_DIR"/scripts/connectd_start.add > "$TMP_DIR"/connectd_start.add
 	sh -c "cat $TMP_DIR/connectd_start.add >> $BIN_DIR/$STARTEMUP"
         rm "$TMP_DIR"/connectd_start.add
-    fi
-    # see if there is an entry to start the listener service daemon connectd_schannel.x already
-    checkStartSchannel=$(grep -c "connectd_schannel" "$BIN_DIR"/"$STARTEMUP" )
-    # if not, add it
-    if [ "$checkStartSchannel" = 0 ]; then
-        sh -c "echo '"$BIN_DIR/connectd_schannel" start' >> $BIN_DIR/$STARTEMUP"
     fi
     setBASEDIR "$BIN_DIR"/"$STARTEMUP"
     chmod +x "$BIN_DIR"/"$STARTEMUP"
@@ -1613,7 +1620,7 @@ retryFetchUID()
     if [ "$checkForUID" != 2 ]; then
 	printf "We have unsuccessfully retried to obtain a UID.\n"
         printf "Please contact remote.it Support at support@remote.it for help.\n\n"
-        exit
+        exit 1
     fi
 }
 ######### Retry Fetch UID ##########
@@ -1643,7 +1650,7 @@ preregisterUID()
     elif [ "$test3" = 1 ]; then
 	printf "Sorry, the pre-registration of UID: %s is failing."
 	printf "Please send an e-mail to support@remote.it."
-	exit
+	exit 1
     fi
 }
 ######### End Pre-register Device #########
@@ -1820,9 +1827,9 @@ configureConnection()
     if [ "$error" != "DuplicateName:" ]; then
     	overridePort
     	startService
-	# there should only be one UDP listener startup regardless of the number of services
-	# the startup script will only start one instance
-	"$BIN_DIR"/connectd_schannel start > /dev/null
+	# there should only be one UDP listener (schannel) 
+	# startup regardless of the number of services
+	systemctl start connectd_schannel > /dev/null
     else
         if [ "$1" = "skipIfDuplicateName" ]; then
             echo "Duplicate Name!"
