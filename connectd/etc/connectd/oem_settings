@@ -8,6 +8,16 @@
 #
 #  remot3.it, Inc. : https://remote.it
 #
+#
+#=====================================================================================
+# Note: users of various platforms may need to edit the functions
+# - oemGetDefaultHardwareId()
+# - oemGetDefaultRegistrationKey()
+#
+# Typically these values are derived from the MAC address of an available network interface.
+# As network interface names are not universal, it may be necessary to edit this for your system.
+# It is also possible to use an OEM-defined expression or value for Hardware ID and Registration Key.
+#=====================================================================================
 
 oemGetSystemId()
 {
