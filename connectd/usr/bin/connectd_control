@@ -21,6 +21,9 @@ BASEDIR=$CONNECTD_BASEDIR
 # include shell script lib
 . "$BIN_DIR"/connectd_wlib
 
+# pick up OEM settings, e.g. ID, MAC, OS, etc
+. "$CONNECTD_DIR"/oem_settings
+
 # use set -x for debugging as needed
 #set -x
 
@@ -87,6 +90,9 @@ GEN_RETRY_TIME=5
 GEN_RETRY_COUNT=3
 #
 # API URL's
+#
+DeviceInformationURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/device/information/"
+DeviceReadyURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/device/ready/"
 #
 BulkRegisterURL="${apiMethod}${apiServer}${apiVersion}/bulk/registration/register"
 ComponentVersionURL="${apiMethod}${apiServer}${apiVersion}/device/component/version"
@@ -187,7 +193,7 @@ reset()
                       isDirEmpty "$PROVISION_DEFAULT/*"
                       if [ "$?" -eq 1 ]; then
   #  Hook for OEM to add a function to save configuration changes
-                          OEM_save_config
+                          oemSaveConfig
                           echo "OK: factory reset"
                           return 0
                       fi
@@ -199,20 +205,6 @@ reset()
       return 1
     else
       return 0
-    fi
-}
-
-#
-#  Hook for OEM to add a function to save configuration changes
-#  OEM must add the file in $BIN_DIR, called connectd_save_config
-#  it must be set to be executable (chmod +x)
-#
-
-OEM_save_config()
-{
-# hook for OEM to add platform specific call to save configuration changes
-    if [ -e "$BIN_DIR"/connectd_save_config ]; then
-        "$BIN_DIR"/connectd_save_config
     fi
 }
 
@@ -411,7 +403,7 @@ startit()
             fi
         fi    
         if [ ! -e "$DEVICES_RUNNING/$1.pid" ]; then
-            # start it up
+            # start it up            
             $BIN_DIR/$DAEMON.$PLATFORM -f "$DEVICES_ACTIVE/$1" -d "$DEVICES_RUNNING/$1.pid" > $LOG_DIR/$1.log
             ret=0
             echo "OK: $1 has started"
@@ -778,12 +770,138 @@ dconfig()
 }
 
 #
+# send device information to the server for identity
+#
+# send device information to the service
+sendDeviceInfo()
+{
+    echo "starting device information"
+
+    # fetch the device information attributes
+    # Default System ID - might be different on OEM platforms
+    cpu=$(oemGetSystemId)
+
+    # Default MAC based - OEM platforms may use different identifiers
+    mac=$(oemGetDefaultHardwareId)
+    hw_mac=$(oemGetDefaultHardwareId)
+    
+    # hw id is either already saved by OEM or use default
+    if [ -f "/etc/connectd/hardware_id.txt" ]; then
+       hwid=$(cat /etc/connectd/hardware_id.txt)
+    else
+       hwid=$(oemGetDefaultHardwareId)
+    fi
+
+    # reg key mac is either already saved by OEM or use default
+    if [ -f "/etc/connectd/registration_key.txt" ]; then
+       rk_mac=$(cat /etc/connectd/registration_key.txt)
+    else
+        rk_mac=$(oemGetDefaultRegistrationKey)
+    fi
+
+    # get OS from uname
+	os=$(oemGetOSLabel)
+    
+    r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
+        
+    tcp=$(oemGetTCPServices)
+        
+    # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
+	  if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+       secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
+    else 
+        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
+    fi
+ 
+    resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )
+	status=$(jsonval "$resp" "status")
+}
+
+# send device ready to the service
+sendDeviceReady()
+{
+    if [ $VERBOSE -gt 0 ]; then printf "Starting Device Ready\n" ; fi
+    
+    # hw id is either already saved by OEM or use default
+    if [ -f "/etc/connectd/hardware_id.txt" ]; then
+       hwid=$(cat /etc/connectd/hardware_id.txt)
+    else
+       hwid=$(oemGetDefaultHardwareId)
+    fi
+        
+    # check for Bulk Service already being registered so we can update - authentication with secret	
+	if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+	
+	   # set a claim code and pass it along
+	   cc=$(sudo connectd_claimcode set)
+	   
+       secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'", "ClaimCode" : "'$cc'"}'
+
+       resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceReadyURL )
+	   status=$(jsonval "$resp" "status")
+       if [ $VERBOSE -gt 0 ]; then printf "Device Ready: %s\n" $resp ; fi
+
+	else 
+       echo "FAIL: device ready requires bulk service and secret" 
+    fi
+ 
+}
+
+deviceReset()
+{
+    # save the currect bic to restore after reset
+    sudo mv /etc/connectd/bulk_identification_code.txt /tmp/bic.txt
+ 
+    # reset is a collection of standard tasks
+    sudo /usr/bin/connectd_stop_all
+    sudo connectd_control stop all
+    sudo connectd_control reset
+
+    # archive the current pre-reset settings - just in case
+	if [ -f "/etc/connectd/hardware_id.txt" ]; then
+       sudo mv /etc/connectd/hardware_id.txt /etc/connectd/hardware_id.txt.prev
+    fi
+    if [ -f "/etc/connectd/registration_key.txt" ]; then
+       sudo mv /etc/connectd/registration_key.txt /etc/connectd/registration_key.txt.prev
+    fi
+    if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+       sudo mv /etc/connectd/bulk_identification_code.txt /etc/connectd/bulk_identification_code.txt.prev
+    fi
+    if [ -d "/etc/connectd/services" ]; then
+       sudo mv /etc/connectd/services /etc/connectd/services.prev
+    fi
+    if [ -d "/etc/connectd/pfiles" ]; then
+       sudo mv /etc/connectd/pfiles /etc/connectd/pfiles.prev
+    fi
+    if [ -d "/etc/connectd/dfiles" ]; then
+       sudo mv /etc/connectd/dfiles /etc/connectd/dfiles.prev
+    fi
+    if [ -d "/etc/connectd/active" ]; then
+       sudo mv /etc/connectd/active /etc/connectd/active.prev
+    fi
+    if [ -d "/etc/connectd/available" ]; then
+       sudo mv /etc/connectd/available /etc/connectd/available.prev
+    fi
+    
+    # restore the bic and other values
+    sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
+    
+    # enable connectd
+    sudo systemctl enable connectd
+    sudo systemctl enable connectd_schannel
+    
+	create_config
+}
+
+#
 # download provisioning and configurating files
 # update configuration if exists and are changed
 #
 dprovision()
 {
-# keep track of whether anything requires a call to OEM_save_config
+# keep track of whether anything requires a call to oemSaveConfig
     local update=0
     local ret=1
     local rc=1
@@ -800,11 +918,39 @@ dprovision()
     #    echo "ERROR: dprovision requires two parameters, a project ID and a HardwareID."
     #else
 	#
+	
+	# send device information
+	sendDeviceInfo
+		
 	# get the list of project ID's for the product
 	resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
-        # parse response "status"
-        status=$(jsonval "$resp" "status")
-        if [ "$status" = "true" ]; then
+    # parse response "status"
+    status=$(jsonval "$resp" "status")
+    
+    # the API may determine this is a potential clone and tell the device to reset with a new hardware ID
+    if [ "$status" = "reset" ]; then
+    
+        # get the reset hardware ID 
+	    hardware_id=$(jsonval "$resp" "HardwareId")
+        echo "Service directs to reset for new ID: $hardware_id"  
+         
+        # reset the device
+        deviceReset
+        
+        # save the new hardware ID       
+        echo $hardware_id > /tmp/hwid.txt
+        sudo mv /tmp/hwid.txt /etc/connectd/hardware_id.txt
+	
+	    # start the process again by sending updated information
+		sendDeviceInfo
+		
+	    # get the list again - should be fine now
+	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
+	    status=$(jsonval "$resp" "status")
+    fi
+		  
+	# status now should ready to be used	             
+    if [ "$status" = "true" ]; then
             #
             # parse out
             projects=$(jsonvalxf "$resp" "projects")
@@ -847,15 +993,14 @@ dprovision()
                     fi
                 fi    
             done
-        else
+    else
             reason=$(jsonval "$resp" "reason")
             echo "dprovision for $bulk_id_code failed: $reason"
-        fi
+    fi
     if [ $update -eq 1 ]; then
-        OEM_save_config
+        oemSaveConfig
     fi
 }
-
 
 #bulk provision a specific pfile do not call directly call bprovision()
 bprovisionit()
@@ -884,7 +1029,7 @@ bprovisionit()
 		while : 
 		do
         	# make curl call
-                # Removed test queue, see Github and Jira comments (CTD-113)
+            # Removed test queue, see Github and Jira comments (CTD-113)
         	data='{"project_id":"'$project_id'","hardware_id" : "'$hardware_id'", "registration_key" : "'$registration_key'"}'
 
         	resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $BulkRegisterURL )
@@ -903,6 +1048,11 @@ bprovisionit()
             	echo "password $secret" >> "$DEVICES_AVAILABLE/$1"
             	#
             	echo "OK: $1 is provisioned"
+            	
+                # Save the hardware ID for future registration and clone detection
+                echo $hardware_id>/tmp/hwid
+                sudo mv /tmp/hwid /etc/connectd/hardware_id.txt
+            	
             	#
             	# Activate it
             	enable $1
@@ -992,7 +1142,7 @@ bprovision()
                 fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: nothing to provision"
+                echo "STATUS: nothing to provision"
                 ret=1
             fi
         else
@@ -1006,9 +1156,14 @@ bprovision()
                 ret=1
             fi 
         fi
+        
+        # send device ready
+        sendDeviceReady    
+        
     fi
+    
     if [ $update -eq 1 ]; then
-        OEM_save_config
+        oemSaveConfig
     fi
 
     return $rc
@@ -1040,7 +1195,7 @@ enable()
                 fi
             done 
             if [ $ret -ne 0 ]; then
-                echo "FAIL: notihing to enable"
+                echo "STATUS: nothing to enable"
             fi
         else
             if [ -e "$DEVICES_AVAILABLE/$1" ]; then
@@ -1089,7 +1244,7 @@ disable()
                 echo "OK: disable $1"
                 rm "$DEVICES_ACTIVE/$1"
             else
-                echo "FAIL: $1 not active"
+                echo "STATUS: $1 not active"
             fi
             return 1
         fi
@@ -1115,7 +1270,7 @@ start()
                 fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: No active devices to start"
+                echo "STATUS: No active devices to start"
             fi
         else
             #start the device if not running and is available
@@ -1155,7 +1310,7 @@ stop()
 		fi
             done
             if [ $ret -ne 0 ]; then
-                echo "FAIL: No active devices to stop"
+                echo "STATUS: No active devices to stop"
             fi
         else
             #stop one device
