@@ -7,7 +7,7 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="June 07, 20209"
+MODIFIED="June 07, 2020"
 #===================================
 BUILDDATE=
 #===================================
