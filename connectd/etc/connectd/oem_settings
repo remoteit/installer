@@ -71,7 +71,7 @@ oemGetDefaultRegistrationKey()
 #  This will only work on Raspberry Pi with both eth0 and wlan0 adapters.
 #  Edit these expressions to suit the specific platform you are using.
 
-    interface=$(oemGetDefaultInterface)
+    interface=$(oemGetInterface)
     if [ $interface = "wlan0" ]; then
          interface="eth0"
     elif [ "$interface" = "eth0" ]; then
