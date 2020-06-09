@@ -98,8 +98,7 @@ debug()
 # passed in as $1, 1 otherwise.
 checkForFiles()
 {
-    count=$(ls $1/* | wc -l)
-    if [ $count -eq 1 ]; then
+    if ls "$1"/* 1> /dev/null 2>&1; then
         return 0
     else
         return 1
@@ -127,6 +126,68 @@ fi
 checkProductionReady()
 {
 STATUS=1
+
+os=$(oemGetOSLabel)
+tcp=$(oemGetTCPServices)
+
+r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
+api=$(grep ^apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
+apv=$(grep ^apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
+
+echo "======================================================================"
+echo "================ remote.it software and API version =================="
+echo "remote.it connectd package version:$r3"
+echo "remote.it API:$api$apv" | sed 's/"//g'
+echo "================ Bulk/Auto registration settings ====================="
+if [ -e /etc/connectd/hardware_id.txt ]; then
+    hwid="$(cat /etc/connectd/hardware_id.txt)"
+else
+    hwid="$(oemGetDefaultHardwareId)"
+fi
+if [ "$(echo "$hwid" | grep "^Issue")" != "" ]; then
+    STATUS=0
+    echo "Hardware ID:"
+    echo "$hwid"
+else
+    echo "Hardware ID: $hwid"
+fi
+
+if [ -e /etc/connectd/registration_key.txt ]; then
+    reg_key="$(cat /etc/connectd/registration_key.txt)"
+else
+    reg_key="$(oemGetDefaultRegistrationKey)"
+fi
+if [ "$(echo "$reg_key" | grep "^Issue")" != "" ]; then
+    STATUS=0
+    echo "Registration Key:"
+    echo "$reg_key"
+else
+    echo "Registration Key: $reg_key"
+fi
+
+if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
+    bic=$(cat /etc/connectd/bulk_identification_code.txt)
+else
+    STATUS=0
+    bic="\nIssue: /etc/connectd/bulk_identification_code.txt is missing."
+fi
+echo "Bulk Identification Code:$bic"
+echo "================  Startup Configuration =============================="
+echo "connectd service startup: $(systemctl is-enabled connectd)"
+echo "connectd_schannel service startup: $(systemctl is-enabled connectd_schannel)"
+echo "================  OS and CPU Information ============================="
+echo "OS:$os"
+id=$(oemGetSystemId)
+if [ "$(echo "$id" | grep "^Issue")" != "" ]; then
+    STATUS=0
+    echo "System ID:"
+    echo "$id"
+else
+    echo "System ID:$id"
+fi
+
+echo "================ Cloning Readiness Summary ==========================="
+
 DIRECTORY=/etc/connectd/services
 
 checkForFiles $DIRECTORY 
@@ -186,46 +247,6 @@ else
 fi
 }
 ############### end of checkProductionReady   ####################################
-
-############### showIdentity   ####################################
-showIdentity()
-{
-#  showIdentity 
-#
-#  only shows information - no changes are made with this script
-#
-
-id=$(oemGetSystemId)
-os=$(oemGetOSLabel)
-tcp=$(oemGetTCPServices)
-
-r3=$(grep VERSION= /usr/bin/connectd_options | sed 's/VERSION=//g')
-api=$(grep ^apiServer= /usr/bin/connectd_options | sed 's/apiServer=//g')
-apv=$(grep ^apiVersion= /usr/bin/connectd_options | sed 's/apiVersion=//g')
-
-if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
-    bic=$(cat /etc/connectd/bulk_identification_code.txt)
-else
-    bic="File is missing."
-fi
-
-echo "======================================================================"
-echo "================ remote.it software and API version =================="
-echo "remote.it connectd package version:$r3"
-echo "remote.it API:$api$apv" | sed 's/"//g'
-echo "================ Bulk/Auto registration settings ====================="
-echo "Hardware ID: $(connectd_control show | grep -i hardware)
-echo "Registration Key: $(connectd_control show | grep -i registration)
-echo "Bulk Identification Code:$bic"
-echo "================  Startup Configuration =============================="
-echo "connectd service startup: $(systemctl is-enabled connectd)"
-echo "connectd_schannel service startup: $(systemctl is-enabled connectd_schannel)"
-echo "================  OS and CPU Information ============================="
-echo "OS:$os"
-echo "CPU ID:$id"
-echo "================ Cloning Readiness Summary ==========================="
-}
-############### end of showIdentity   ####################################
 
 ############### removeFolder   ####################################
 removeFolder()
@@ -316,19 +337,22 @@ setHardwareIDRegKey()
 setBulkIDCode()
 {
     echo -n "Enter the Bulk Identification Code: "
-	read answer
-	if [ "$answer" != "" ]; then
-		echo $answer > /tmp/bic.txt
-		sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
-	fi
+    read answer
+    if [ "$answer" != "" ]; then
+        echo $answer > /tmp/bic.txt
+	sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
+    fi
 }
 ############### end of setBulkIDCode   ####################################
 
 ############### showTCPListeners   ####################################
 showTCPListeners()
 {
-echo "================ TCP Listeners Detected =============================="
-echo "Active TCP ports detected: $tcp"
+    echo "================ TCP Listeners Detected =============================="
+    echo "Active TCP ports detected: $tcp"
+    echo
+    echo "Press the Enter key to continue."
+    read anykey
 }
 ############### end of showTCPListeners   ####################################
 
@@ -381,7 +405,6 @@ menuLoop()
 {
     while [ true ]; do
    #     clear
-        showIdentity
         checkProductionReady
         printf "============================ Main Menu ============================\n"
         printf "  \n"
@@ -401,7 +424,7 @@ menuLoop()
         debug "get_num: $get_num"
 
         if [ "$get_num" = 1 ]; then
-            setHardwareIDRegKey "Hardware ID" "hardware_id.txt" "$(oemGetDefaultHardwareID)"
+            setHardwareIDRegKey "Hardware ID" "hardware_id.txt" "$(oemGetDefaultHardwareId)"
         elif [ "$get_num" = 2 ]; then
             setHardwareIDRegKey "Registration Key" "registration_key.txt" "$(oemGetDefaultRegistrationKey)"
         elif [ "$get_num" = 3 ]; then
@@ -426,7 +449,6 @@ menuLoop()
 ### program starts here
 checkForRoot
 if [ "$1" = "-n" ]; then
-    showIdentity
     checkProductionReady
 else
     menuLoop

@@ -22,8 +22,7 @@ cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
 if [ ${#cpuid} -ge 1 ]; then
    continue
 else
-   echo ""
-   echo "ACTION: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings "   
+   echo "Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
 fi
 
 # return the System ID
@@ -52,7 +51,7 @@ interface=$(oemGetInterface)
 if [ -f "/sys/class/net/$interface/address" ]; then
     hw_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
 else 
-    echo "\nACTION: hardware ID is not set properly.\nFix oemGetDefaultHardwareId() in /etc/connectd/oem_settings."
+    hw_mac="Issue: hardware ID is not set properly.  Fix oemGetDefaultHardwareId() in /etc/connectd/oem_settings."
 fi
 
 echo $hw_mac
@@ -68,29 +67,20 @@ oemGetDefaultRegistrationKey()
 ## Ubuntu interfaces: enp3s0 wlp2s0
 
 ## interface must be set to something for your platform - default is for RPi, second option common for Ubuntu
-interface='wlan0'
+    interface='wlan0'
 # get the adapter MAC
-if [ -f "/sys/class/net/$interface" ]; then
-    rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
-else
-	interface='wlp2s0'
-	if [ -f "/sys/class/net/$interface" ]; then
-		rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
-	else
-		echo "\nACTION: registration key is not set properly.\nFix oemGetDefaultRegistrationKey() in /etc/connectd/oem_settings"
-	fi
-fi
+    if [ -f "/sys/class/net/$interface" ]; then
+        rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
+    else
+        interface='wlp2s0'
+        if [ -f "/sys/class/net/$interface" ]; then
+	    rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
+        else
+            rk_mac="Issue: registration key is not set properly.  Fix oemGetDefaultRegistrationKey() in /etc/connectd/oem_settings"
+        fi
+    fi
 
-
-# get the adapter MAC
-if [ -f "/sys/class/net/$interface/address" ]; then
-    rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
-else 
-    echo "ACTION: registration key is not set properly. Fix oemGetDefaultRegistrationKey() in /etc/connectd/oem_settings "
-fi
-
-echo $rk_mac
- 
+    echo $rk_mac
 }
 
 oemGetTCPServices()
