@@ -16,13 +16,12 @@ cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
 
 ##
 ## Override default system ID for this platform
-#cpuid=$(oemGetDefaultHardwareId)
 
 # check for legal value
 if [ ${#cpuid} -ge 1 ]; then
    continue
 else
-   echo "Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
+   cpuid="Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
 fi
 
 # return the System ID
@@ -69,11 +68,11 @@ oemGetDefaultRegistrationKey()
 ## interface must be set to something for your platform - default is for RPi, second option common for Ubuntu
     interface='wlan0'
 # get the adapter MAC
-    if [ -f "/sys/class/net/$interface" ]; then
+    if [ -f "/sys/class/net/$interface/address" ]; then
         rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
     else
         interface='wlp2s0'
-        if [ -f "/sys/class/net/$interface" ]; then
+        if [ -f "/sys/class/net/$interface/address" ]; then
 	    rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
         else
             rk_mac="Issue: registration key is not set properly.  Fix oemGetDefaultRegistrationKey() in /etc/connectd/oem_settings"
@@ -119,7 +118,7 @@ host_ip=$(getent ahosts "$host" | awk '{print $1; exit}')
 # between dev and src (use grep for that)
 interface=$(ip route get "$host_ip" | grep -Po '(?<=(dev )).*(?= src| proto)' | awk '{print $1; exit}')
 
-echo "Interface=$interface"
+echo "$interface"
 
 }
 
