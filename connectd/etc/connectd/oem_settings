@@ -35,8 +35,9 @@ oemGetDefaultHardwareId()
 #
 #  This method gets the hardware ID based on the default LAN MAC address
 #  You can overide the network interface below for a custom configuration for your platform
+# 
 
-# get the default interface
+# get the default interface - this is the one currently connected to the internet
 interface=$(oemGetInterface)
 
 ## 
@@ -66,7 +67,16 @@ oemGetDefaultRegistrationKey()
 ## Ubuntu interfaces: enp3s0 wlp2s0
 
 ## interface must be set to something for your platform - default is for RPi, second option common for Ubuntu
-    interface='wlan0'
+#  The logic below detects the default interface and chooses the other one to use for the Registration Key.
+#  This will only work on Raspberry Pi with both eth0 and wlan0 adapters.
+#  Edit these expressions to suit the specific platform you are using.
+
+    interface=$(oemGetDefaultInterface)
+    if [ $interface = "wlan0" ]; then
+         interface="eth0"
+    elif [ "$interface" = "eth0" ]; then
+         interface="wlan0"
+    fi
 # get the adapter MAC
     if [ -f "/sys/class/net/$interface/address" ]; then
         rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
