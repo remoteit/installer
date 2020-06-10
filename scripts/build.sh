@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.12
-MODIFIED="December 20, 2019"
+ver=2.1.13
+MODIFIED="June 10, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -269,18 +269,18 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh < "$TEST_DIR"/Auto_Registration/reset.key
-if [ $? -ne 0 ]; then
-    echo "Auto Registration failure!"
-    exit 1
-fi
-
 # add the test account credentials.
 add_creds
 
 "$TEST_DIR"/Interactive/full-interactive-test.sh
 if [ $? -ne 0 ]; then
     echo "Interactive Registration failure!"
+    exit 1
+fi
+
+sudo "$TEST_DIR"/Auto_Registration/auto-reg-test.sh < "$TEST_DIR"/Auto_Registration/reset.key
+if [ $? -ne 0 ]; then
+    echo "Auto Registration failure!"
     exit 1
 fi
 
