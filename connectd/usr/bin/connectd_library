@@ -491,6 +491,7 @@ getNumRange()
 ########## Begin menuLoop #################
 menuLoop()
 {
+set -x
     while [ true ]; do
    #     clear
         checkForServices
