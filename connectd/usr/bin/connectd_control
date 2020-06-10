@@ -28,8 +28,8 @@ BASEDIR=$CONNECTD_BASEDIR
 #set -x
 
 #### Settings #####
-VERSION=1.1.14
-MODIFIED="April 18, 2019"
+VERSION=1.1.15
+MODIFIED="June 09, 2020"
 
 #
 # Config Dir CONNECTD_DIR is read from connectd_options
@@ -158,22 +158,9 @@ isDirEmpty()
     return $ret
 }
 
-
-#
-# factory reset
-#
-reset()
+# delete provisioning files
+deleteProvisioningFiles()
 {
-    printf "\n\n"
-    printf "************************** Factory Reset **************************\n"
-    printf "                                                                   \n"
-    printf " A device can only be bulk registered once for each published CSV. \n"
-    printf " If you perform a factory reset, you will need to delete and then  \n"
-    printf " re-load the CSV which referenced this device if you wish to       \n"
-    printf " reregister this device. Performing a factory reset is not advised.\n"
-    printf "                                                                   \n"
-    printf "*******************************************************************\n\n"
-    if ask "Are you sure you want to factory reset this device?"; then
       # delete files
       null=$(rm -f $CONNECTD_DIR/*.ver 2>&1)
       null=$(rm -f $DEVICES_AVAILABLE/* 2>&1)
@@ -194,7 +181,6 @@ reset()
                       if [ "$?" -eq 1 ]; then
   #  Hook for OEM to add a function to save configuration changes
                           oemSaveConfig
-                          echo "OK: factory reset"
                           return 0
                       fi
                   fi
@@ -203,9 +189,47 @@ reset()
       fi
       echo "FAIL: failed to reset files"
       return 1
+}
+
+
+#
+# factory reset
+#
+reset()
+{
+if [ "$1" != "y" ]; then
+    printf "\n\n"
+    printf "************************** Factory Reset **************************\n"
+    printf "                                                                   \n"
+    printf " A device can only be bulk registered once for each published CSV. \n"
+    printf " If you perform a factory reset, you will need to delete and then  \n"
+    printf " re-load the CSV which referenced this device if you wish to       \n"
+    printf " reregister this device. Performing a factory reset is not advised.\n"
+    printf "                                                                   \n"
+    printf "*******************************************************************\n\n"
+    if ask "Are you sure you want to factory reset this device?"; then
+        deleteProvisioningFiles
+        if [ $? -eq 1 ]; then
+            echo "Reset Failed."
+            return 1
+        else
+            echo "Reset OK."
+            return 0
+        fi
     else
-      return 0
+        echo "Reset canceled."
+        return 1
     fi
+else
+    deleteProvisioningFiles
+    if [ $? -eq 1 ]; then
+        echo "Reset Failed."
+        return 1
+    else
+        echo "Reset OK."
+        return 0
+    fi
+fi
 }
 
 #
@@ -857,7 +881,7 @@ deviceReset()
     # reset is a collection of standard tasks
     sudo /usr/bin/connectd_stop_all
     sudo connectd_control stop all
-    sudo connectd_control reset
+    sudo connectd_control reset "y"
 
     # archive the current pre-reset settings - just in case
 	if [ -f "/etc/connectd/hardware_id.txt" ]; then
