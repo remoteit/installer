@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.20
+LIBVERSION=lib_v2.1.21
 AUTHOR="Gary Worsham"
-LIBMODIFIED="December 29, 2019"
+LIBMODIFIED="June 11, 2019"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -1360,7 +1360,6 @@ convertExistingUIDs()
 
 installProvisioning()
 {
-#set -x
 #echo "installProvisioning"
 
     printf "."

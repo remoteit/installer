@@ -16,13 +16,12 @@ cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
 
 ##
 ## Override default system ID for this platform
-#cpuid=$(oemGetDefaultHardwareId)
 
 # check for legal value
 if [ ${#cpuid} -ge 1 ]; then
    continue
 else
-   echo "Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
+   cpuid="Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
 fi
 
 # return the System ID
@@ -36,8 +35,9 @@ oemGetDefaultHardwareId()
 #
 #  This method gets the hardware ID based on the default LAN MAC address
 #  You can overide the network interface below for a custom configuration for your platform
+# 
 
-# get the default interface
+# get the default interface - this is the one currently connected to the internet
 interface=$(oemGetInterface)
 
 ## 
@@ -67,13 +67,22 @@ oemGetDefaultRegistrationKey()
 ## Ubuntu interfaces: enp3s0 wlp2s0
 
 ## interface must be set to something for your platform - default is for RPi, second option common for Ubuntu
-    interface='wlan0'
+#  The logic below detects the default interface and chooses the other one to use for the Registration Key.
+#  This will only work on Raspberry Pi with both eth0 and wlan0 adapters.
+#  Edit these expressions to suit the specific platform you are using.
+
+    interface=$(oemGetInterface)
+    if [ $interface = "wlan0" ]; then
+         interface="eth0"
+    elif [ "$interface" = "eth0" ]; then
+         interface="wlan0"
+    fi
 # get the adapter MAC
-    if [ -f "/sys/class/net/$interface" ]; then
+    if [ -f "/sys/class/net/$interface/address" ]; then
         rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
     else
         interface='wlp2s0'
-        if [ -f "/sys/class/net/$interface" ]; then
+        if [ -f "/sys/class/net/$interface/address" ]; then
 	    rk_mac=$(cat /sys/class/net/$interface/address | sed 's/://g')
         else
             rk_mac="Issue: registration key is not set properly.  Fix oemGetDefaultRegistrationKey() in /etc/connectd/oem_settings"
@@ -119,7 +128,7 @@ host_ip=$(getent ahosts "$host" | awk '{print $1; exit}')
 # between dev and src (use grep for that)
 interface=$(ip route get "$host_ip" | grep -Po '(?<=(dev )).*(?= src| proto)' | awk '{print $1; exit}')
 
-echo "Interface=$interface"
+echo "$interface"
 
 }
 
