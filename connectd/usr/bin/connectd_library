@@ -1523,10 +1523,12 @@ disableStartup()
 setBASEDIR()
 {
 # echo "setBASEDIR for $1"
-    # have to escape slashes / in path to send string to sed
-    BASEDIRSTRING=$(echo "$BASEDIR" | sed 's/\//\\\//g')
-    cat "$1" | sed "/BASEDIR=/c\BASEDIR=$BASEDIRSTRING/" > "$TMP_DIR"/setBASEDIR.tmp 
-    cp "$TMP_DIR"/setBASEDIR.tmp "$1" 
+    if [ "$BASEDIR" != "" ]; then
+        # have to escape slashes / in path to send string to sed
+        BASEDIRSTRING=$(echo "$BASEDIR" | sed 's/\//\\\//g')
+        cat "$1" | sed "/BASEDIR=/c\BASEDIR=$BASEDIRSTRING/" > "$TMP_DIR"/setBASEDIR.tmp 
+        cp "$TMP_DIR"/setBASEDIR.tmp "$1" 
+    fi
 }
 
 #----------  end of setBASEDIR --------------
