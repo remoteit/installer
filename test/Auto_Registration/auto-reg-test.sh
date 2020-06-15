@@ -5,7 +5,7 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.0
+VERSION=1.1.1
 MODIFIED="June 15, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
@@ -15,7 +15,6 @@ result=0
 # include the package library to access some utility functions
 
 . /usr/bin/connectd_library
-
 
 #---------------------------------------------
 # script execution starts here
@@ -44,7 +43,7 @@ uuid > /etc/connectd/registration_key.txt
 
 # Set the predefined Bulk ID code used in an Auto Registration.
 if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
-    echo "$CI_BULK_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
+    echo "$CI_AUTO_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
 else
     exit 1
 fi
