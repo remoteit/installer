@@ -50,7 +50,9 @@ uuid > /etc/connectd/hardware_id.txt
 
 uuid > /etc/connectd/registration_key.txt
 
-echo "$BULKIDCODE" > /etc/connectd/bulk_identification_code.txt
+if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
+    echo "$CI_BULK_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
+fi
 
 # display bulk registration configuration
 echo
