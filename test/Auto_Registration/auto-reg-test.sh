@@ -6,24 +6,16 @@
 # use the amd64 Debian package.
 
 VERSION=1.1.0
-MODIFIED="June 07, 2020"
+MODIFIED="June 15, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
 #---------------------------------------------
-# Set the predefined Bulk ID code used in an Auto Registration.
-# This one is from the faultline1989 account.
-
-#---------------------------------------------
-# this should be set by a Circle CI environment variable
-# but for now it's hardwired to a specific account
-BULKIDCODE="434ABC4D-BEAC-B77C-C58A-C91127CAB4E3"
 
 # include the package library to access some utility functions
 
 . /usr/bin/connectd_library
 
-/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 
 #---------------------------------------------
 # script execution starts here
@@ -50,11 +42,15 @@ uuid > /etc/connectd/hardware_id.txt
 
 uuid > /etc/connectd/registration_key.txt
 
+# Set the predefined Bulk ID code used in an Auto Registration.
 if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
     echo "$CI_BULK_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
+else
+    exit 1
 fi
 
 # display bulk registration configuration
+/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 echo
 echo "connectd_control show"
 connectd_control show
