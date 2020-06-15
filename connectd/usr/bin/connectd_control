@@ -880,8 +880,8 @@ deviceReset()
  
     # reset is a collection of standard tasks
     sudo /usr/bin/connectd_stop_all
-    sudo connectd_control stop all
-    sudo connectd_control reset y
+    stop all
+    reset y
 
     # archive the current pre-reset settings - just in case
 	if [ -f "/etc/connectd/hardware_id.txt" ]; then
