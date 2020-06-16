@@ -49,10 +49,10 @@ else
 fi
 
 # display bulk registration configuration
-/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
+sudo /usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 echo
 echo "connectd_control show"
-connectd_control show
+sudo connectd_control show
 
 # make sure any previously configured services are stopped 
 # (there shouldn't be any when running CI, but just to be sure.)
@@ -60,40 +60,40 @@ connectd_control show
 
 echo
 echo "connectd_control -v stop all"
-connectd_control -v stop all
+sudo connectd_control -v stop all
 echo
 echo "connectd_control reset"
-connectd_control reset < "$SCRIPT_DIR"/reset.key
+sudo connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 # run the provisioning step, capture both stdio and stderr outputs
 echo
 echo "connectd_control -v dprovision"
-sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
+sudo sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
 
 # run the registration (bprovision) step, capture both stdio and stderr outputs
 echo
 echo "connectd_control bprovision all"
-sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
+sudo sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-connectd_control -v status all | tee  /tmp/status.txt
+sudo connectd_control -v status all | tee  /tmp/status.txt
 
 # get status of all services
 echo
 echo "connectd_control stop all"
-connectd_control -v stop all | tee /tmp/stop.txt
+sudo connectd_control -v stop all | tee /tmp/stop.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-connectd_control -v status all | tee -a /tmp/status.txt
+sudo connectd_control -v status all | tee -a /tmp/status.txt
 
 # factory reset
 echo
 echo "connectd_control reset"
-connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
+sudo connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
 
 
 echo
