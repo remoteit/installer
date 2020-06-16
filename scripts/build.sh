@@ -272,7 +272,7 @@ fi
 # add the test account credentials.
 add_creds
 
-"$TEST_DIR"/Auto_Registration/auto-reg-test.sh < "$TEST_DIR"/Auto_Registration/reset.key
+sudo -E "$TEST_DIR"/Auto_Registration/auto-reg-test.sh 
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1

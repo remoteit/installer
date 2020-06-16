@@ -21,6 +21,7 @@ result=0
 echo "Test $0 starting..."
 echo
 
+checkForRoot
 # the next lines can be used as needed to override a specific API version
 # comment these lines out to return to default API
 # echo "API:"
@@ -29,12 +30,8 @@ echo
 # echo
 
 #---------------------------------------------
-# make sure user is running with root access (sudo is OK)
-
-checkForRoot
 
 # generate a new Hardware ID
-
 uuid > /etc/connectd/hardware_id.txt
 
 # generate a new Registration Key
@@ -49,10 +46,10 @@ else
 fi
 
 # display bulk registration configuration
-sudo /usr/bin/connectd_mp_configure -n | tee mp_configure.txt
+/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 echo
 echo "connectd_control show"
-sudo connectd_control show
+connectd_control show
 
 # make sure any previously configured services are stopped 
 # (there shouldn't be any when running CI, but just to be sure.)
@@ -60,40 +57,40 @@ sudo connectd_control show
 
 echo
 echo "connectd_control -v stop all"
-sudo connectd_control -v stop all
+connectd_control -v stop all
 echo
 echo "connectd_control reset"
-sudo connectd_control reset < "$SCRIPT_DIR"/reset.key
+connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 # run the provisioning step, capture both stdio and stderr outputs
 echo
 echo "connectd_control -v dprovision"
-sudo sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
+sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
 
 # run the registration (bprovision) step, capture both stdio and stderr outputs
 echo
 echo "connectd_control bprovision all"
-sudo sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
+sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-sudo connectd_control -v status all | tee  /tmp/status.txt
+connectd_control -v status all | tee  /tmp/status.txt
 
 # get status of all services
 echo
 echo "connectd_control stop all"
-sudo connectd_control -v stop all | tee /tmp/stop.txt
+connectd_control -v stop all | tee /tmp/stop.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-sudo connectd_control -v status all | tee -a /tmp/status.txt
+connectd_control -v status all | tee -a /tmp/status.txt
 
 # factory reset
 echo
 echo "connectd_control reset"
-sudo connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
+connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
 
 
 echo
