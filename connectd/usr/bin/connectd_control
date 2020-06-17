@@ -28,8 +28,8 @@ BASEDIR=$CONNECTD_BASEDIR
 #set -x
 
 #### Settings #####
-VERSION=1.1.15
-MODIFIED="June 09, 2020"
+VERSION=1.1.16
+MODIFIED="June 17, 2020"
 
 #
 # Config Dir CONNECTD_DIR is read from connectd_options
@@ -810,15 +810,15 @@ sendDeviceInfo()
     hw_mac=$(oemGetDefaultHardwareId)
     
     # hw id is either already saved by OEM or use default
-    if [ -f "/etc/connectd/hardware_id.txt" ]; then
-       hwid=$(cat /etc/connectd/hardware_id.txt)
+    if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
+       hwid=$(cat $CONNECTD_DIR/hardware_id.txt)
     else
        hwid=$(oemGetDefaultHardwareId)
     fi
 
     # reg key mac is either already saved by OEM or use default
-    if [ -f "/etc/connectd/registration_key.txt" ]; then
-       rk_mac=$(cat /etc/connectd/registration_key.txt)
+    if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
+       rk_mac=$(cat $CONNECTD_DIR/registration_key.txt)
     else
         rk_mac=$(oemGetDefaultRegistrationKey)
     fi
@@ -831,8 +831,8 @@ sendDeviceInfo()
     tcp=$(oemGetTCPServices)
         
     # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
-	  if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
-       secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
+	  if sudo test -f "$DEVICES_AVAILABLE/$bulk_id_code"; then
+       secret=$(sudo grep password "$DEVICES_AVAILABLE/$bulk_id_code" | tail -1 | awk '{print $2}')
        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
     else 
         data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
@@ -848,19 +848,19 @@ sendDeviceReady()
     if [ $VERBOSE -gt 0 ]; then printf "Starting Device Ready\n" ; fi
     
     # hw id is either already saved by OEM or use default
-    if [ -f "/etc/connectd/hardware_id.txt" ]; then
-       hwid=$(cat /etc/connectd/hardware_id.txt)
+    if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
+       hwid=$(cat $CONNECTD_DIR/hardware_id.txt)
     else
        hwid=$(oemGetDefaultHardwareId)
     fi
         
     # check for Bulk Service already being registered so we can update - authentication with secret	
-	if sudo test -f "/etc/connectd/available/$bulk_id_code"; then
+	if sudo test -f "$DEVICES_AVAILABLE/$bulk_id_code"; then
 	
 	   # set a claim code and pass it along
 	   cc=$(sudo connectd_claimcode set)
 	   
-       secret=$(sudo grep password "/etc/connectd/available/$bulk_id_code" | tail -1 | awk '{print $2}')
+       secret=$(sudo grep password "$DEVICES_AVAILABLE/$bulk_id_code" | tail -1 | awk '{print $2}')
        data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "DeviceSecret" : "'$secret'", "ClaimCode" : "'$cc'"}'
 
        resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceReadyURL )
@@ -876,7 +876,7 @@ sendDeviceReady()
 deviceReset()
 {
     # save the currect bic to restore after reset
-    sudo mv /etc/connectd/bulk_identification_code.txt /tmp/bic.txt
+    sudo mv "$CONNECTD_BULK_ID" /tmp/bic.txt
  
     # reset is a collection of standard tasks
     sudo /usr/bin/connectd_stop_all
@@ -884,33 +884,33 @@ deviceReset()
     reset y
 
     # archive the current pre-reset settings - just in case
-	if [ -f "/etc/connectd/hardware_id.txt" ]; then
-       sudo mv /etc/connectd/hardware_id.txt /etc/connectd/hardware_id.txt.prev
+	if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
+       sudo mv $CONNECTD_DIR/hardware_id.txt $CONNECTD_DIR/hardware_id.txt.prev
     fi
-    if [ -f "/etc/connectd/registration_key.txt" ]; then
-       sudo mv /etc/connectd/registration_key.txt /etc/connectd/registration_key.txt.prev
+    if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
+       sudo mv $CONNECTD_DIR/registration_key.txt $CONNECTD_DIR/registration_key.txt.prev
     fi
-    if [ -f "/etc/connectd/bulk_identification_code.txt" ]; then
-       sudo mv /etc/connectd/bulk_identification_code.txt /etc/connectd/bulk_identification_code.txt.prev
+    if [ -f "$CONNECTD_BULK_ID" ]; then
+       sudo mv "$CONNECTD_BULK_ID" "$CONNECTD_BULK_ID".prev
     fi
-    if [ -d "/etc/connectd/services" ]; then
-       sudo mv /etc/connectd/services /etc/connectd/services.prev
+    if [ -d "$CONNECTD_DIR/services" ]; then
+       sudo mv $CONNECTD_DIR/services $CONNECTD_DIR/services.prev
     fi
-    if [ -d "/etc/connectd/pfiles" ]; then
-       sudo mv /etc/connectd/pfiles /etc/connectd/pfiles.prev
+    if [ -d "$PROVISION_DEFAULT" ]; then
+       sudo mv "$PROVISION_DEFAULT" "$PROVISION_DEFAULT".prev
     fi
-    if [ -d "/etc/connectd/dfiles" ]; then
-       sudo mv /etc/connectd/dfiles /etc/connectd/dfiles.prev
+    if [ -d "$PROVISION_DOWNLOAD" ]; then
+       sudo mv "$PROVISION_DOWNLOAD" "$PROVISION_DOWNLOAD".prev
     fi
-    if [ -d "/etc/connectd/active" ]; then
-       sudo mv /etc/connectd/active /etc/connectd/active.prev
+    if [ -d "$DEVICES_ACTIVE" ]; then
+       sudo mv "$DEVICES_ACTIVE" "$DEVICES_ACTIVE".prev
     fi
-    if [ -d "/etc/connectd/available" ]; then
-       sudo mv /etc/connectd/available /etc/connectd/available.prev
+    if [ -d "$DEVICES_AVAILABLE" ]; then
+       sudo mv "$DEVICES_AVAILABLE" "$DEVICES_AVAILABLE".prev
     fi
     
     # restore the bic and other values
-    sudo mv /tmp/bic.txt /etc/connectd/bulk_identification_code.txt
+    sudo mv /tmp/bic.txt "$CONNECTD_BULK_ID"
     
     # enable connectd
     sudo systemctl enable connectd
@@ -935,6 +935,11 @@ dprovision()
     local resp
     local resp2
     local lines
+# check if bulk ID file is present.  If not, exit with code 1.  This is used during continuous integration.
+    if [ ! -e "$CONNECTD_BULK_ID" ]; then
+        echo "Fail: $CONNECTD_BULK_ID is missing."
+        exit 1
+    fi
 
     #if [ "$#" -ne 2 ]; then
     #if [ -z "${@}" ]; then
@@ -963,7 +968,7 @@ dprovision()
         
         # save the new hardware ID       
         echo $hardware_id > /tmp/hwid.txt
-        sudo mv /tmp/hwid.txt /etc/connectd/hardware_id.txt
+        sudo mv /tmp/hwid.txt $CONNECTD_DIR/hardware_id.txt
 	
 	    # start the process again by sending updated information
 		sendDeviceInfo
@@ -1038,6 +1043,11 @@ bprovisionit()
     if [ $VERBOSE -gt 0 ]; then
         printf "Bulk provisioning %s\n" $1
     fi
+# check if bulk ID file is present.  If not, exit with code 1.  This is used during continuous integration.
+    if [ ! -e "$CONNECTD_BULK_ID" ]; then
+        echo "Fail: $CONNECTD_BULK_ID is missing."
+        exit 1
+    fi
     #extract the project ID 
     project_id=$(grep -A1 \#begin "$PROVISION_DEFAULT/$1" | grep -v \#begin)
     #idlen=expr length "$project_id"
@@ -1075,7 +1085,7 @@ bprovisionit()
             	
                 # Save the hardware ID for future registration and clone detection
                 echo $hardware_id>/tmp/hwid
-                sudo mv /tmp/hwid /etc/connectd/hardware_id.txt
+                sudo mv /tmp/hwid $CONNECTD_DIR/hardware_id.txt
             	
             	#
             	# Activate it
