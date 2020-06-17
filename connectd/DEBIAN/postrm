@@ -16,19 +16,24 @@ clearCrontab()
 cleanFolder()
 {
 folder=$1
+if [ "$folder" = "" ]; then
+   X=
+else
+   X="/"
+fi
 # remove configuration files and folders
-    if [ -d /etc/connectd/"$folder" ]; then
-        for file in /etc/connectd/"$folder"/*.conf ; do
+    if [ -d /etc/connectd$X"$folder" ]; then
+        for file in /etc/connectd$X"$folder"/*.conf ; do
             rm -f $file
         done
-        rmdir /etc/connectd/"$folder"
+        rmdir /etc/connectd$X"$folder"
     fi
     # handle possible backup folders created if there is an auto reg clone.
-    if [ -d /etc/connectd/"$folder".prev ]; then
-        for file in /etc/connectd/"$folder".prev/*.conf ; do
+    if [ -d /etc/connectd$X"$folder".prev ]; then
+        for file in /etc/connectd$X"$folder".prev/*.conf ; do
             rm -f $file
         done
-        rmdir /etc/connectd/"$folder".prev
+        rmdir /etc/connectd$X"$folder".prev
     fi
 }
 
@@ -65,6 +70,7 @@ case "$1" in
     cleanFolder active
     cleanFolder available
     cleanFolder ""
+
 # remove PID files
     for file in /var/run/connectd*.pid ; do
       rm -f $file
