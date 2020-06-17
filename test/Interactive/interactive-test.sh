@@ -9,6 +9,10 @@ checkForRoot
 
 #-----------------------------------------------------------------------
 
+# it is necessasry to remove the bulk_identification_code.txt file for the following tests to work
+# bulk_identification_code.txt is only used by bulk and auto registration
+sudo rm /etc/connectd/bulk_identification_code.txt
+
 # If run with no following parameter, just run the script interactively
 # while capturing the debug output (e.g. for manual testing).
 if [ "$1" = "" ]; then
