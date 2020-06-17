@@ -1,6 +1,6 @@
 #!/bin/sh
 # postrm script for connectd
-# updated 01/09/2019
+# updated 06/17/2020
 
 TMP_DIR=/tmp
 
@@ -10,6 +10,35 @@ clearCrontab()
     crontab -l | grep -v connectd_start_all | cat > $TMP_DIR/.crontmp
     crontab $TMP_DIR/.crontmp
 }
+
+
+# clean up specific folders under /etc/connectd
+# and finally etc/connectd itself
+cleanFolder()
+{
+folder=$1
+# remove configuration files and folders
+    if [ -d /etc/connectd$X"$folder" ]; then
+        for file in /etc/connectd$X"$folder"/*.* ; do
+            rm -f $file
+        done
+        for file in /etc/connectd$X"$folder"/* ; do
+            rm -f $file
+        done
+        rmdir /etc/connectd$X"$folder"
+    fi
+    # handle possible backup folders created if there is an auto reg clone.
+    if [ -d /etc/connectd$X"$folder".prev ]; then
+        for file in /etc/connectd$X"$folder".prev/*.* ; do
+            rm -f $file
+        done
+        for file in /etc/connectd$X"$folder".prev/* ; do
+            rm -f $file
+        done
+        rmdir /etc/connectd$X"$folder".prev
+    fi
+}
+
 
 # clearServices stops and disables the connectd & connectd_schannel services
 clearServices()
@@ -37,42 +66,13 @@ case "$1" in
       rm -f $file
     done
 # remove configuration files and folders
-    for file in /etc/connectd/services/*.conf ; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd/services ]; then
-         rmdir /etc/connectd/services
-    fi
-    for file in /etc/connectd/dfiles/* ; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd/dfiles ]; then
-         rmdir /etc/connectd/dfiles
-    fi
-    for file in /etc/connectd/pfiles/* ; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd/pfiles ]; then
-         rmdir /etc/connectd/pfiles
-    fi
-    for file in /etc/connectd/active/* ; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd/active ]; then
-         rmdir /etc/connectd/active
-    fi
-    for file in /etc/connectd/available/* ; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd/available ]; then
-         rmdir /etc/connectd/available
-    fi
-    for file in /etc/connectd/*.*; do
-      rm -f $file
-    done
-    if [ -d /etc/connectd ]; then
-         rmdir /etc/connectd
-    fi
+    cleanFolder /services
+    cleanFolder /dfiles
+    cleanFolder /pfiles
+    cleanFolder /active
+    cleanFolder /available
+    cleanFolder ""
+
 # remove PID files
     for file in /var/run/connectd*.pid ; do
       rm -f $file
