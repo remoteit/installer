@@ -17,6 +17,7 @@ user=$(whoami)
 echo $user
 # debugging flag, set to 0 to skip tests
 runtests=1
+INTERACTIVE=1
 
 #---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
@@ -278,10 +279,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+if [ $INTERACTIVE -eq 1 ]; then
 "$TEST_DIR"/Interactive/full-interactive-test.sh
 if [ $? -ne 0 ]; then
     echo "Interactive Registration failure!"
     exit 1
+fi
 fi
 
 sudo "$TEST_DIR"/dpkg/dpkg-purge.sh

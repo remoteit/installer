@@ -85,20 +85,20 @@ check_service_counts 4 1 configure-01-test.key
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-check_service_counts 10 1 configure-02-test.key
+# check_service_counts 10 1 configure-02-test.key
 
 # Now use systemd to turn off and then on the connectd and connectd_schannel
 # daemons and confirm operation.
 
 sudo systemctl stop connectd
-sleep 10
+sleep 5
 check_service_counts 0 1
 sudo systemctl stop connectd_schannel
 sleep 5
 check_service_counts 0 0
 
 sudo systemctl start connectd
-sleep 10
+sleep 5
 check_service_counts 10 0
 sudo systemctl start connectd_schannel
 sleep 5
