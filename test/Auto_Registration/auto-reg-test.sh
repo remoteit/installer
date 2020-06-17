@@ -5,31 +5,23 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.0
-MODIFIED="June 07, 2020"
+VERSION=1.1.1
+MODIFIED="June 15, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
 #---------------------------------------------
-# Set the predefined Bulk ID code used in an Auto Registration.
-# This one is from the faultline1989 account.
-
-#---------------------------------------------
-# this should be set by a Circle CI environment variable
-# but for now it's hardwired to a specific account
-BULKIDCODE="434ABC4D-BEAC-B77C-C58A-C91127CAB4E3"
 
 # include the package library to access some utility functions
 
 . /usr/bin/connectd_library
-
-/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 
 #---------------------------------------------
 # script execution starts here
 echo "Test $0 starting..."
 echo
 
+checkForRoot
 # the next lines can be used as needed to override a specific API version
 # comment these lines out to return to default API
 # echo "API:"
@@ -38,21 +30,23 @@ echo
 # echo
 
 #---------------------------------------------
-# make sure user is running with root access (sudo is OK)
-
-checkForRoot
 
 # generate a new Hardware ID
-
 uuid > /etc/connectd/hardware_id.txt
 
 # generate a new Registration Key
 
 uuid > /etc/connectd/registration_key.txt
 
-echo "$BULKIDCODE" > /etc/connectd/bulk_identification_code.txt
+# Set the predefined Bulk ID code used in an Auto Registration.
+if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
+    echo "$CI_AUTO_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
+else
+    exit 1
+fi
 
 # display bulk registration configuration
+/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
 echo
 echo "connectd_control show"
 connectd_control show

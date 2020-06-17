@@ -9,6 +9,6 @@
 #   connectd_d2d stop
 # when the connectd_stop script is run, typically on product shutdown.
 #
-#BASEDIR=$CONNECTD_BASEDIR
+BASEDIR=$CONNECTD_BASEDIR
 #
 #
