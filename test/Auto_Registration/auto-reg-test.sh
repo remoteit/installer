@@ -104,6 +104,13 @@ echo
 echo "Clone check: connectd_control bprovision all"
 sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov-clone.txt
 
+# stop all daemons so that subsequent tests don't get confused
+echo
+echo "connectd_control -v stop all"
+connectd_control -v stop all
+echo
+echo "connectd_control reset"
+connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 echo
 echo "Basic Auto Registration test $0 passed."
