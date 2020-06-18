@@ -86,25 +86,28 @@ check_service_counts 2 1 configure-01-test.key
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
 if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
-    check_service_counts 10 1 configure-02-test.key
+    COUNT=10
+    check_service_counts $COUNT 1 configure-02-test.key
+else
+    COUNT=2
 fi
 
 # Now use systemd to turn off and then on the connectd and connectd_schannel
 # daemons and confirm operation.
 
 sudo systemctl stop connectd
-sleep 5
+sleep 10
 check_service_counts 0 1
 sudo systemctl stop connectd_schannel
 sleep 5
 check_service_counts 0 0
 
 sudo systemctl start connectd
-sleep 5
-check_service_counts 10 0
+sleep 10
+check_service_counts $COUNT 0
 sudo systemctl start connectd_schannel
 sleep 5
-check_service_counts 10 1
+check_service_counts $COUNT 1
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
