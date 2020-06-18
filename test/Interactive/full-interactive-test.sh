@@ -15,8 +15,8 @@ user=$(whoami)
 #-----------------------------------------------------------------------
 count_services()
 {
-    ps ax | grep "connectd\." | grep -v grep > ~/nservices
-    cat ~/nservices
+    ps ax | grep "connectd\." | grep -v grep > /tmp/nservices
+    cat /tmp/nservices
     services="$(wc -l ~/nservices  | awk '{ print $1 }')"
     return $services
 }
@@ -24,8 +24,8 @@ count_services()
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel\." | grep -v grep > ~/nschannel
-    cat ~/nschannel
+    ps ax | grep "connectd_schannel\." | grep -v grep > /tmp/nschannel
+    cat /tmp/nschannel
     schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
