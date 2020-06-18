@@ -875,6 +875,7 @@ sendDeviceReady()
 
 deviceReset()
 {
+    echo "Clone detected - device reset."
     # save the currect bic to restore after reset
     sudo mv "$CONNECTD_BULK_ID" /tmp/bic.txt
  
@@ -916,7 +917,7 @@ deviceReset()
     sudo systemctl enable connectd
     sudo systemctl enable connectd_schannel
     
-	create_config
+    create_config
 }
 
 #

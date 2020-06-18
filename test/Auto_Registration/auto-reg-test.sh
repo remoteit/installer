@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.1
-MODIFIED="June 15, 2020"
+VERSION=1.1.2
+MODIFIED="June 18, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 result=0
 
@@ -42,6 +42,7 @@ uuid > /etc/connectd/registration_key.txt
 if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
     echo "$CI_AUTO_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
 else
+    echo "Bulk Identification Code is missing!"
     exit 1
 fi
 
@@ -91,6 +92,17 @@ connectd_control -v status all | tee -a /tmp/status.txt
 echo
 echo "connectd_control reset"
 connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
+
+# the next section should trigger clone detection as we are using the same hardware ID
+# run the provisioning step, capture both stdio and stderr outputs
+echo
+echo "Clone check: connectd_control -v dprovision"
+sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov-clone.txt
+
+# run the registration (bprovision) step, capture both stdio and stderr outputs
+echo
+echo "Clone check: connectd_control bprovision all"
+sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov-clone.txt
 
 
 echo
