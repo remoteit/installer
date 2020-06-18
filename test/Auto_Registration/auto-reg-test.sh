@@ -16,6 +16,30 @@ result=0
 
 . /usr/bin/connectd_library
 
+count_services()
+{
+    ps ax | grep "connectd\." | grep -v grep > ~/nservices
+    cat ~/nservices
+    services="$(wc -l ~/nservices  | awk '{ print $1 }')"
+    return $services
+}
+
+#-----------------------------------------------------------------------
+# pass this the # of expected connectd daemons, and
+# a string to indicate the test step
+
+check_service_counts()
+{
+
+count_services
+nservices=$?
+if [ $nservices -ne $1 ]; then
+   echo "Auto-registration $2 test failed with services: $nservices.  Expected $1."
+   exit 1
+fi
+echo "Auto-registration service test $2 $1 passed."
+}
+
 #---------------------------------------------
 # script execution starts here
 echo "Test $0 starting..."
@@ -63,6 +87,8 @@ echo
 echo "connectd_control reset"
 connectd_control reset < "$SCRIPT_DIR"/reset.key
 
+check_service_counts 0 "Reset and stop all services"
+
 # run the provisioning step, capture both stdio and stderr outputs
 echo
 echo "connectd_control -v dprovision"
@@ -78,7 +104,9 @@ echo
 echo "connectd_control status all"
 connectd_control -v status all | tee  /tmp/status.txt
 
-# get status of all services
+check_service_counts 2 "Provisioned 2 services"
+
+# get stop all services
 echo
 echo "connectd_control stop all"
 connectd_control -v stop all | tee /tmp/stop.txt
@@ -87,6 +115,8 @@ connectd_control -v stop all | tee /tmp/stop.txt
 echo
 echo "connectd_control status all"
 connectd_control -v status all | tee -a /tmp/status.txt
+
+check_service_counts 0 "Stopped 2 services"
 
 # factory reset
 echo
@@ -113,6 +143,6 @@ echo "connectd_control reset"
 connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 echo
-echo "Basic Auto Registration test $0 passed."
+echo "Auto Registration test $0 passed."
 exit 0
 
