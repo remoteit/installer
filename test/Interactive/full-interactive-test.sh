@@ -85,7 +85,7 @@ check_service_counts 2 1 configure-01-test.key
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-if [ $CI_FULL_INTERACTIVE_TEST -eq 1 ]; then
+if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
     check_service_counts 10 1 configure-02-test.key
 fi
 
