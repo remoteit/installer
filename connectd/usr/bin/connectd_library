@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.21
+LIBVERSION=lib_v2.1.22
 AUTHOR="Gary Worsham"
-LIBMODIFIED="June 11, 2019"
+LIBMODIFIED="June 17, 2020"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -1111,7 +1111,7 @@ getNewPassword() {
            stty echo
         fi
 
-        if [ $(validateInput "$password" "\$ \@ \! \- \_ \. [a-zA-Z0-9]") != 0 ]; then
+        if [ $(validateInput "$password" "\$ \@ \! \_ \. [a-zA-Z0-9]-") != 0 ]; then
 	    printf "\nSorry, password contains one or more invalid characters.\n"
 	    password=""
 	    passwordOK=-1

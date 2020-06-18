@@ -78,14 +78,19 @@ sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-01.key > "$SCRIPT_DIR"/c
 sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/configure-02-test.key
 
 #-------------------------------------------------------------------
-# run installer for first time, add device name and 3 services
-# expected result is that 4 connectd services and 1 schannel service will be running
-check_service_counts 4 1 configure-01-test.key
+# run installer for first time, add device name and 1 service
+# expected result is that 2 connectd services and 1 schannel service will be running
+check_service_counts 2 1 configure-01-test.key
 
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-check_service_counts 10 1 configure-02-test.key
+if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
+    COUNT=10
+    check_service_counts $COUNT 1 configure-02-test.key
+else
+    COUNT=2
+fi
 
 # Now use systemd to turn off and then on the connectd and connectd_schannel
 # daemons and confirm operation.
@@ -99,10 +104,10 @@ check_service_counts 0 0
 
 sudo systemctl start connectd
 sleep 10
-check_service_counts 10 0
+check_service_counts $COUNT 0
 sudo systemctl start connectd_schannel
 sleep 5
-check_service_counts 10 1
+check_service_counts $COUNT 1
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running

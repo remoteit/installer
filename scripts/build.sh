@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.13
-MODIFIED="June 10, 2020"
+ver=2.1.14
+MODIFIED="June 17, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -17,6 +17,7 @@ user=$(whoami)
 echo $user
 # debugging flag, set to 0 to skip tests
 runtests=1
+interactive=1
 
 #---------------------------------------------------------------------------------
 # add_creds takes the environment variables and puts them into the file
@@ -278,10 +279,12 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
+if [ $interactive -eq 1 ]; then
 "$TEST_DIR"/Interactive/full-interactive-test.sh
 if [ $? -ne 0 ]; then
     echo "Interactive Registration failure!"
     exit 1
+fi
 fi
 
 sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
