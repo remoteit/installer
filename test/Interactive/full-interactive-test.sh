@@ -17,7 +17,7 @@ count_services()
 {
     ps ax | grep "connectd\." | grep -v grep > /tmp/nservices
     cat /tmp/nservices
-    services="$(wc -l ~/nservices  | awk '{ print $1 }')"
+    services="$(wc -l /tmp/nservices  | awk '{ print $1 }')"
     return $services
 }
 
@@ -26,7 +26,7 @@ count_schannel()
 {
     ps ax | grep "connectd_schannel\." | grep -v grep > /tmp/nschannel
     cat /tmp/nschannel
-    schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
+    schannel="$(wc -l /tmp/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
 
@@ -46,7 +46,7 @@ fi
 count_services
 nservices=$?
 if [ $nservices -ne $1 ]; then
-   echo "$3 test failed with services: $nservices"
+   echo "$3 test failed with services: $nservices (expected $1)"
    exit 1
 fi
 count_schannel
