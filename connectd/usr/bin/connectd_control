@@ -807,7 +807,11 @@ sendDeviceInfo()
 
     # Default MAC based - OEM platforms may use different identifiers
     # mac=$(oemGetDefaultHardwareId)
-    hw_mac=$(oemGetDefaultHardwareId)
+    if [ -f "$CONNECTD_DIR/ci_mac.txt" ]; then
+       hw_mac=$(cat $CONNECTD_DIR/ci_mac.txt)
+    else
+       hw_mac=$(oemGetDefaultHardwareId)
+    fi
     
     # hw id is either already saved by OEM or use default
     if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
@@ -935,7 +939,7 @@ dprovision()
     if [ "$status" = "reset" ]; then
     
         # get the reset hardware ID 
-	    hardware_id=$(jsonval "$resp" "HardwareId")
+	hardware_id=$(jsonval "$resp" "HardwareId")
         echo "Service directs to reset for new ID: $hardware_id"  
          
         # reset the device
@@ -945,12 +949,12 @@ dprovision()
         echo $hardware_id > /tmp/hwid.txt
         sudo mv /tmp/hwid.txt $CONNECTD_DIR/hardware_id.txt
 	
-	    # start the process again by sending updated information
-		sendDeviceInfo
+	# start the process again by sending updated information
+	sendDeviceInfo
 		
-	    # get the list again - should be fine now
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
-	    status=$(jsonval "$resp" "status")
+	# get the list again - should be fine now
+        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
+        status=$(jsonval "$resp" "status")
     fi
 		  
 	# status now should ready to be used	             
