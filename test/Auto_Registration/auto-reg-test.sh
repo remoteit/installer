@@ -191,7 +191,7 @@ check_service_counts 0 "Final stop all"
 # have to clear provisioning files to prevent interactive test from restarting
 # any services which were auto-registered
 
-connectd_control reset
+connectd_control reset < "$SCRIPT_DIR"/reset.key
 
 echo
 echo "Auto Registration test $0 passed."
