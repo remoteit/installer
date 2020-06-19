@@ -197,7 +197,19 @@ auto_reg_test 0 0 "clone-new-Hardware_id" 0
 
 connectd_control stop all
 
-check_service_counts 0 "Final stop all"
+check_service_counts 0 "Stop all"
+
+#==================================================================================
+# the next section should trigger a new registration detection as we are using the same CPUID
+# we changed the Hardware ID.
+# Now we deleted the provisioning files
+
+auto_reg_test 1 0 "reset-new-Hardware_id" 2
+
+connectd_control stop all
+
+check_service_counts 0 "Reset-new-hardware stop all"
+#==================================================================================
 # have to clear provisioning files to prevent interactive test from restarting
 # any services which were auto-registered
 
