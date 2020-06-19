@@ -151,9 +151,14 @@ echo
 
 # generate a new Hardware ID
 # uuid > /etc/connectd/hardware_id.txt
+# removing the hardware_id.txt file forces use of the MAC for the hardware ID
+rm /etc/connectd/hardware_id.txt
 
 # generate a new Registration Key
 uuid > /etc/connectd/registration_key.txt
+
+# generate a new  CPUID
+uuid > /etc/connectd/cpuid.txt
 
 # run first test - factory reset, no clone, fresh
 auto_reg_test 1 0 "fresh" $SERVICECOUNT
