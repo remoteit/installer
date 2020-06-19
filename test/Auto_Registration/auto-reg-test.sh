@@ -5,9 +5,12 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.2
-MODIFIED="June 18, 2020"
+VERSION=1.1.3
+MODIFIED="June 19, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
+# SERVICECOUNT is the expected number of active services, depends on the product definition
+# and per-serrvice "enabled" state.
+SERVICECOUNT=2
 result=0
 
 #---------------------------------------------
@@ -55,13 +58,6 @@ checkForRoot
 
 #---------------------------------------------
 
-# generate a new Hardware ID
-uuid > /etc/connectd/hardware_id.txt
-
-# generate a new Registration Key
-
-uuid > /etc/connectd/registration_key.txt
-
 # Set the predefined Bulk ID code used in an Auto Registration.
 if [ "$CI_AUTO_REG_ID_CODE" != "" ]; then
     echo "$CI_AUTO_REG_ID_CODE" > /etc/connectd/bulk_identification_code.txt
@@ -70,11 +66,16 @@ else
     exit 1
 fi
 
-# display bulk registration configuration
-/usr/bin/connectd_mp_configure -n | tee mp_configure.txt
-echo
-echo "connectd_control show"
-connectd_control show
+# auto_reg_test() takes 4 parameters
+# $1 is whether to factory reset prior to running the test
+# $2 is whether or not a clone is expected at this step
+# $3 is a label for this test run
+# $4 is the number of services expected to be running at the end of the cycle
+
+auto_reg_test()
+{
+echo "#=================================================================================="
+echo "Test step: $3"
 
 # make sure any previously configured services are stopped 
 # (there shouldn't be any when running CI, but just to be sure.)
@@ -84,64 +85,100 @@ echo
 echo "connectd_control -v stop all"
 connectd_control -v stop all
 echo
-echo "connectd_control reset"
-connectd_control reset < "$SCRIPT_DIR"/reset.key
 
-check_service_counts 0 "Reset and stop all services"
+if [ $1 -eq 1 ]; then
+    echo "connectd_control reset"
+    connectd_control reset < "$SCRIPT_DIR"/reset.key
+else
+    echo "No factory reset"
+fi
 
+# display bulk registration configuration
+/usr/bin/connectd_mp_configure -n | tee mp_configure$3.txt
+echo
+
+check_service_counts 0 "Check $3: stop all services"
+
+#================================================================
+# first time device detection
 # run the provisioning step, capture both stdio and stderr outputs
 echo
-echo "connectd_control -v dprovision"
-sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov.txt
+echo "dprovision $3"
+sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov$3.txt
+grep "Clone detected" /tmp/dprov$3.txt
+if [ $? -eq 0 ]; then
+    if [ $2 -eq 1 ]; then
+        echo "Clone detected, OK."
+    else
+        echo "Clone detected, error."
+        exit 1
+    fi
+else
+    if [ $2 -eq 1 ]; then
+        echo "Clone not detected, error."
+        exit 1
+    else
+        echo "Clone not detected, OK."
+    fi
+fi
 
 # run the registration (bprovision) step, capture both stdio and stderr outputs
 echo
-echo "connectd_control bprovision all"
-sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov.txt
+echo "bprovision $3"
+sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov$3.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-connectd_control -v status all | tee  /tmp/status.txt
+connectd_control -v status all | tee  /tmp/status$3.txt
 
-check_service_counts 2 "Provisioned 2 services"
+check_service_counts $4 "Provisioned $4 services $3"
 
 # get stop all services
 echo
 echo "connectd_control stop all"
-connectd_control -v stop all | tee /tmp/stop.txt
+connectd_control -v stop all | tee /tmp/stop$3.txt
 
 # get status of all services
 echo
 echo "connectd_control status all"
-connectd_control -v status all | tee -a /tmp/status.txt
+connectd_control -v status all | tee -a /tmp/status$3.txt
 
-check_service_counts 0 "Stopped 2 services"
-
-# factory reset
+check_service_counts 0 "Stopped 2 services $3"
+echo "#=================================================================================="
 echo
-echo "connectd_control reset"
-connectd_control -v reset < "$SCRIPT_DIR"/reset.key | tee  /tmp/reset.txt
+}
 
+# generate a new Hardware ID
+# uuid > /etc/connectd/hardware_id.txt
+
+# generate a new Registration Key
+uuid > /etc/connectd/registration_key.txt
+
+# run first test - factory reset, no clone, fresh
+auto_reg_test 1 0 "fresh" $SERVICECOUNT
+
+#==================================================================================
+# the next section should not trigger clone detection as we are using the same hardware ID
+# and CPUID
+# and have not deleted the provisioning files
+auto_reg_test 0 0 "restart" 0
+
+#==================================================================================
 # the next section should trigger clone detection as we are using the same hardware ID
-# run the provisioning step, capture both stdio and stderr outputs
-echo
-echo "Clone check: connectd_control -v dprovision"
-sh -x /usr/bin/connectd_control -v dprovision 2> /tmp/dprov-clone.txt
+# and CPUID
+# we deleted the provisioning files
+auto_reg_test 1 1 "clone-a" $SERVICECOUNT
 
-# run the registration (bprovision) step, capture both stdio and stderr outputs
-echo
-echo "Clone check: connectd_control bprovision all"
-sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov-clone.txt
+# generate a new CPUID
+uuid > /etc/connectd/cpuid.txt
 
-# stop all daemons so that subsequent tests don't get confused
-echo
-echo "connectd_control -v stop all"
-connectd_control -v stop all
-echo
-echo "connectd_control reset"
-connectd_control reset < "$SCRIPT_DIR"/reset.key
+#==================================================================================
+# the next section should trigger clone detection as we are using the same hardware ID
+# we changed the CPUID
+# we did not delete the provisioning files
 
+auto_reg_test 1 1 "clone-new-cpuid" $SERVICECOUNT
 echo
 echo "Auto Registration test $0 passed."
 exit 0

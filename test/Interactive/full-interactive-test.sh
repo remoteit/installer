@@ -73,7 +73,8 @@ echo
 #-------------------------------------------------------------------
 # create random string to serve as part of device/service names
 # this allows overlapping CI tests to run
-TESTNAME=$(cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 2>/dev/null)
+sudo -H sh -c "cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 >/tmp/testname.txt 2>/dev/null"
+TESTNAME=$(cat /tmp/testname.txt)
 sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-01.key > "$SCRIPT_DIR"/configure-01-test.key
 sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/configure-02-test.key
 
