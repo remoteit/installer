@@ -884,32 +884,6 @@ deviceReset()
     stop all
     reset y
 
-    # archive the current pre-reset settings - just in case
-    if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
-       sudo mv $CONNECTD_DIR/hardware_id.txt $CONNECTD_DIR/hardware_id.txt.prev
-    fi
-    if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
-       sudo mv $CONNECTD_DIR/registration_key.txt $CONNECTD_DIR/registration_key.txt.prev
-    fi
-    if [ -f "$CONNECTD_BULK_ID" ]; then
-       sudo mv "$CONNECTD_BULK_ID" "$CONNECTD_BULK_ID".prev
-    fi
-    if [ -d "$CONNECTD_DIR"/services ]; then
-       sudo mv "$CONNECTD_DIR"/services "$CONNECTD_DIR"/services.prev
-    fi
-    if [ -d "$PROVISION_DEFAULT" ]; then
-       sudo mv "$PROVISION_DEFAULT" "$PROVISION_DEFAULT".prev
-    fi
-    if [ -d "$PROVISION_DOWNLOAD" ]; then
-       sudo mv "$PROVISION_DOWNLOAD" "$PROVISION_DOWNLOAD".prev
-    fi
-    if [ -d "$DEVICES_ACTIVE" ]; then
-       sudo mv "$DEVICES_ACTIVE" "$DEVICES_ACTIVE".prev
-    fi
-    if [ -d "$DEVICES_AVAILABLE" ]; then
-       sudo mv "$DEVICES_AVAILABLE" "$DEVICES_AVAILABLE".prev
-    fi
-    
     # restore the bic and other values
     sudo mv /tmp/bic.txt "$CONNECTD_BULK_ID"
     
