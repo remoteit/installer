@@ -184,6 +184,11 @@ uuid > /etc/connectd/cpuid.txt
 # we did not delete the provisioning files
 
 auto_reg_test 1 1 "clone-new-cpuid" $SERVICECOUNT
+
+connectd_control stop all
+
+check_service_counts 0 "Final stop all"
+
 echo
 echo "Auto Registration test $0 passed."
 exit 0
