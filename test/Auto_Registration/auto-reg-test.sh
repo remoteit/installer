@@ -183,7 +183,17 @@ uuid > /etc/connectd/cpuid.txt
 # we changed the CPUID
 # we did not delete the provisioning files
 
-auto_reg_test 1 1 "clone-new-cpuid" $SERVICECOUNT
+auto_reg_test 0 1 "clone-new-cpuid" $SERVICECOUNT
+
+# generate a new HWID
+uuid > /etc/connectd/hardware_id.txt
+
+#==================================================================================
+# the next section should trigger clone detection as we are using the same CPUID
+# we changed the Hardware ID.
+# we did not delete the provisioning files
+
+auto_reg_test 0 1 "clone-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
