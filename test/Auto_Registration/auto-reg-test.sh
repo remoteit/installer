@@ -193,7 +193,7 @@ uuid > /etc/connectd/hardware_id.txt
 # we changed the Hardware ID.
 # we did not delete the provisioning files
 
-auto_reg_test 0 1 "clone-new-Hardware_id" $SERVICECOUNT
+auto_reg_test 0 0 "clone-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
