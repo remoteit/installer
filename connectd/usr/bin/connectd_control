@@ -806,7 +806,7 @@ sendDeviceInfo()
     cpu=$(oemGetSystemId)
 
     # Default MAC based - OEM platforms may use different identifiers
-    mac=$(oemGetDefaultHardwareId)
+    # mac=$(oemGetDefaultHardwareId)
     hw_mac=$(oemGetDefaultHardwareId)
     
     # hw id is either already saved by OEM or use default
