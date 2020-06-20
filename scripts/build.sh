@@ -285,7 +285,7 @@ grep -n "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 echo "============================================================================="
 echo "============================================================================="
-sort /tmp/auto-reg-overview.tmp | tee /tmp/auto-reg-summary.txt
+sort -g /tmp/auto-reg-overview.tmp | tee /tmp/auto-reg-summary.txt
 echo "============================================================================="
 echo "============================================================================="
 
