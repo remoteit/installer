@@ -279,8 +279,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 grep -n "^Test" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
-grep -n -A 2 "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
-grep -n "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n -A 2 "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 echo "============================================================================="
