@@ -278,12 +278,16 @@ if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
 fi
-grep "^Test" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
-grep -A 2 "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
-grep "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
-grep "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
-grep "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^Test" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
+grep -n -A 2 "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+echo "============================================================================="
+echo "============================================================================="
 sort /tmp/auto-reg-overview.tmp | tee /tmp/auto-reg-summary.txt
+echo "============================================================================="
+echo "============================================================================="
 
 if [ $interactive -eq 1 ]; then
 "$TEST_DIR"/Interactive/full-interactive-test.sh
