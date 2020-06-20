@@ -134,10 +134,16 @@ echo
 echo "connectd_control status all"
 connectd_control -v status all | tee  /tmp/status$3.txt
 
-check_service_counts $4 "Provisioned $4 services $3"
+# now start all enabled services.  This happens automatically at boot but in some cases
+# the services do not start after bprovision with this command line CI sequence.
+echo
+echo "connectd_control start all"
+connectd_control -v start all | tee /tmp/start-all$3.txt
+
+check_service_counts $4 "Provisioned $4 services $3
 
 echo "Available UIDs"
-grep -i "^uid" /etc/connectd/available/*
+grep -i "^uid" /etc/connectd/available/* | awk '{ print $2 }'
 echo "Active symlinks"
 ls -l /etc/connectd/active
 
