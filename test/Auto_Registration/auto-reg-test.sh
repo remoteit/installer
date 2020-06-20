@@ -134,7 +134,7 @@ connectd_control -v status all | tee  /tmp/status$3.txt
 
 check_service_counts $4 "Provisioned $4 services $3"
 
-grep "^uid" /etc/connectd/available/*.conf
+grep "^uid" /etc/connectd/available/*
 ls -l /etc/connectd/active
 
 # get stop all services
