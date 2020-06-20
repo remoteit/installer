@@ -140,7 +140,7 @@ echo
 echo "connectd_control start all"
 connectd_control -v start all | tee /tmp/start-all$3.txt
 
-check_service_counts $4 "Provisioned $4 services $3
+check_service_counts $4 "Provisioned $4 services $3"
 
 echo "Available UIDs"
 grep -i "^uid" /etc/connectd/available/* | awk '{ print $2 }'
