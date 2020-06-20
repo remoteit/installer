@@ -75,7 +75,7 @@ fi
 auto_reg_test()
 {
 echo
-echo "#=================================================================================="
+echo "#=TEST================================================================================="
 echo "#=================================================================================="
 echo "Test step: $3"
 
@@ -217,7 +217,7 @@ auto_reg_test 1 1 "new-cpuid-reset" $SERVICECOUNT
 # we did not delete the provisioning files
 uuid > /etc/connectd/ci_mac.txt
 
-auto_reg_test 0 0 "new-mac" $SERVICECOUNT
+auto_reg_test 0 1 "new-mac" $SERVICECOUNT
 
 connectd_control stop all
 
@@ -252,7 +252,6 @@ check_service_counts 0 "Stop all"
 # we changed the Hardware ID.
 # Now we deleted the provisioning files
 
-auto_reg_test 1 0 "reset-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
