@@ -5,7 +5,7 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.3
+VERSION=1.1.4
 MODIFIED="June 19, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 # SERVICECOUNT is the expected number of active services, depends on the product definition
@@ -68,7 +68,7 @@ fi
 
 # auto_reg_test() takes 4 parameters
 # $1 is whether to factory reset prior to running the test
-# $2 is whether or not a clone is expected at this step
+# $2 is w 0t1hether or not a clone is expected at this step
 # $3 is a label for this test run
 # $4 is the number of services expected to be running at the end of the cycle
 
@@ -134,6 +134,9 @@ connectd_control -v status all | tee  /tmp/status$3.txt
 
 check_service_counts $4 "Provisioned $4 services $3"
 
+grep "^uid" /etc/connectd/available/*.conf
+ls -l /etc/connectd/active
+
 # get stop all services
 echo
 echo "connectd_control stop all"
@@ -160,34 +163,68 @@ uuid > /etc/connectd/registration_key.txt
 # generate a new  CPUID
 uuid > /etc/connectd/cpuid.txt
 
-# run first test - factory reset, no clone, fresh
+# (1) run first test - factory reset, no clone, fresh
 auto_reg_test 1 0 "fresh" $SERVICECOUNT
 
 #==================================================================================
-# the next section should not trigger clone detection as we are using the same hardware ID
+# (2) the next section should not trigger clone detection as we are using the same hardware ID
 # and CPUID
 # and have not deleted the provisioning files
 auto_reg_test 0 0 "restart" 0
 
 #==================================================================================
-# the next section should trigger clone detection as we are using the same hardware ID
+# (3) the next section should trigger clone detection as we are using the same hardware ID
 # and CPUID
 # we deleted the provisioning files
 auto_reg_test 1 1 "clone-a" $SERVICECOUNT
 
-# generate a new CPUID
+#==================================================================================
+# (4) generate a new CPUID
+# the next section should trigger clone detection as:
+# we are using the same hardware ID
+# we change the CPUID
+# we do not delete the provisioning files
 uuid > /etc/connectd/cpuid.txt
 
+auto_reg_test 0 1 "clone-new-cpuid-no-reset" $SERVICECOUNT
+
 #==================================================================================
-# the next section should trigger clone detection as we are using the same hardware ID
-# we changed the CPUID
+# (5) generate a new CPUID
+# the next section should trigger clone detection as:
+# we are using the same hardware ID
+# we change the CPUID
+# we do delete the provisioning files
+uuid > /etc/connectd/cpuid.txt
+
+auto_reg_test 1 1 "clone-new-cpuid-reset" $SERVICECOUNT
+
+
+#==================================================================================
+# (6) generate a new HWID
+# the next section should NOT trigger clone detection as:
+# we changed the Hardware ID.
+# we are using the same CPUID
 # we did not delete the provisioning files
-
-auto_reg_test 0 1 "clone-new-cpuid" $SERVICECOUNT
-
-# generate a new HWID
 uuid > /etc/connectd/hardware_id.txt
 
+auto_reg_test 0 0 "clone-new-Hardware_id" 0
+
+connectd_control stop all
+
+check_service_counts 0 "Stop all"
+
+#==================================================================================
+# the next section should trigger a new registration detection as we are using the same CPUID
+# we changed the Hardware ID.
+# Now we deleted the provisioning files
+
+uuid > /etc/connectd/ci_mac.txt
+
+auto_reg_test 0 0 "reset-new-Hardware_id" 2
+
+connectd_control stop all
+
+check_service_counts 0 "Reset-new-hardware stop all"
 #==================================================================================
 # the next section should trigger clone detection as we are using the same CPUID
 # we changed the Hardware ID.
