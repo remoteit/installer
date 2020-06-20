@@ -217,7 +217,7 @@ auto_reg_test 1 1 "clone-new-cpuid-reset" $SERVICECOUNT
 # we did not delete the provisioning files
 uuid > /etc/connectd/hardware_id.txt
 
-auto_reg_test 0 0 "clone-new-Hardware_id" 0
+auto_reg_test 0 0 "clone-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
@@ -240,7 +240,7 @@ check_service_counts 0 "Reset-new-hardware stop all"
 # we changed the Hardware ID.
 # we did not delete the provisioning files
 
-auto_reg_test 0 0 "clone-new-Hardware_id" 0
+auto_reg_test 0 0 "clone-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
@@ -251,7 +251,7 @@ check_service_counts 0 "Stop all"
 # we changed the Hardware ID.
 # Now we deleted the provisioning files
 
-auto_reg_test 1 0 "reset-new-Hardware_id" 2
+auto_reg_test 1 0 "reset-new-Hardware_id" $SERVICECOUNT
 
 connectd_control stop all
 
