@@ -273,11 +273,17 @@ fi
 # add the test account credentials.
 add_creds
 
-sudo -E "$TEST_DIR"/Auto_Registration/auto-reg-test.sh 
+sudo -E "$TEST_DIR"/Auto_Registration/auto-reg-test.sh  | tee /tmp/auto-reg-result.txt
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
 fi
+grep "^Test" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
+grep -A 2 "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+sort /tmp/auto-reg-overview.tmp | tee /tmp/auto-reg-summary.txt
 
 if [ $interactive -eq 1 ]; then
 "$TEST_DIR"/Interactive/full-interactive-test.sh

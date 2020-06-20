@@ -180,13 +180,13 @@ auto_reg_test 1 0 "fresh" $SERVICECOUNT
 # (2) the next section should not trigger clone detection as we are using the same hardware ID
 # and CPUID
 # and have not deleted the provisioning files
-auto_reg_test 0 0 "restart" $SERVICECOUNT
+auto_reg_test 0 0 "fresh-restart" $SERVICECOUNT
 
 #==================================================================================
 # (3) the next section should trigger clone detection as we are using the same hardware ID
 # and CPUID
 # we deleted the provisioning files
-auto_reg_test 1 1 "clone-a" $SERVICECOUNT
+auto_reg_test 1 1 "fresh-reset" $SERVICECOUNT
 
 #==================================================================================
 # (4) generate a new CPUID
@@ -196,7 +196,7 @@ auto_reg_test 1 1 "clone-a" $SERVICECOUNT
 # we do not delete the provisioning files
 uuid > /etc/connectd/cpuid.txt
 
-auto_reg_test 0 1 "clone-new-cpuid-no-reset" $SERVICECOUNT
+auto_reg_test 0 1 "new-cpuid" $SERVICECOUNT
 
 #==================================================================================
 # (5) generate a new CPUID
@@ -206,18 +206,18 @@ auto_reg_test 0 1 "clone-new-cpuid-no-reset" $SERVICECOUNT
 # we do delete the provisioning files
 uuid > /etc/connectd/cpuid.txt
 
-auto_reg_test 1 1 "clone-new-cpuid-reset" $SERVICECOUNT
+auto_reg_test 1 1 "new-cpuid-reset" $SERVICECOUNT
 
 
 #==================================================================================
-# (6) generate a new HWID
+# (6) generate a new MAC, reuse CPUID same HWID
 # the next section should NOT trigger clone detection as:
-# we changed the Hardware ID.
-# we are using the same CPUID
+# we changed the MAC.
+# we are using the same CPUID and hardware ID.
 # we did not delete the provisioning files
-uuid > /etc/connectd/hardware_id.txt
+uuid > /etc/connectd/ci_mac.txt
 
-auto_reg_test 0 0 "clone-new-Hardware_id" $SERVICECOUNT
+auto_reg_test 0 0 "new-mac" $SERVICECOUNT
 
 connectd_control stop all
 
@@ -228,19 +228,20 @@ check_service_counts 0 "Stop all"
 # we changed the Hardware ID.
 # Now we deleted the provisioning files
 
-uuid > /etc/connectd/ci_mac.txt
-
-auto_reg_test 0 0 "reset-new-Hardware_id" 2
+auto_reg_test 1 1 "new-mac-reset" 2
 
 connectd_control stop all
 
 check_service_counts 0 "Reset-new-hardware stop all"
+
 #==================================================================================
-# the next section should trigger clone detection as we are using the same CPUID
+# the next section should not trigger clone detection as we are using 
+# the same CPUID and MAC
 # we changed the Hardware ID.
 # we did not delete the provisioning files
 
-auto_reg_test 0 0 "clone-new-Hardware_id" $SERVICECOUNT
+uuid > /etc/connectd/hardware_id
+auto_reg_test 0 0 "re-use" $SERVICECOUNT
 
 connectd_control stop all
 
