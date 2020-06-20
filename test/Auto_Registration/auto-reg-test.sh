@@ -180,7 +180,7 @@ auto_reg_test 1 0 "fresh" $SERVICECOUNT
 # (2) the next section should not trigger clone detection as we are using the same hardware ID
 # and CPUID
 # and have not deleted the provisioning files
-auto_reg_test 0 0 "restart" 0
+auto_reg_test 0 0 "restart" $SERVICECOUNT
 
 #==================================================================================
 # (3) the next section should trigger clone detection as we are using the same hardware ID
