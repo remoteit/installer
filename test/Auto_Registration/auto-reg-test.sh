@@ -74,6 +74,8 @@ fi
 
 auto_reg_test()
 {
+echo
+echo "#=================================================================================="
 echo "#=================================================================================="
 echo "Test step: $3"
 
@@ -134,7 +136,9 @@ connectd_control -v status all | tee  /tmp/status$3.txt
 
 check_service_counts $4 "Provisioned $4 services $3"
 
-grep "^uid" /etc/connectd/available/*
+echo "Available UIDs"
+grep -i "^uid" /etc/connectd/available/*
+echo "Active symlinks"
 ls -l /etc/connectd/active
 
 # get stop all services
