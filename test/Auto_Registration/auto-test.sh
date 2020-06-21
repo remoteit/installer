@@ -20,6 +20,7 @@ grep -n "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^Hardware ID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^hardware_id.txt" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^System ID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^Reset" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^oemGet" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^#=TEST==" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 echo "============================================================================="
