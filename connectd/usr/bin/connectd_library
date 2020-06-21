@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.22
+LIBVERSION=lib_v2.1.23
 AUTHOR="Gary Worsham"
-LIBMODIFIED="June 17, 2020"
+LIBMODIFIED="June 21, 2020"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -1673,7 +1673,7 @@ registerDevice()
         fi    
         printf "Only letters, numbers, underscore, space and dash are allowed.\n\n"
         read alias
-        if [ $(validateInput "$alias" "\- \_ \. [a-zA-Z0-9]") != 0 ]; then
+        if [ $(validateInput "$alias" "\_ \. [a-zA-Z0-9]-") != 0 ]; then
             printf "\nSorry, %s contains one or more invalid characters.\n\n" "$alias"
             alias=""
         fi
