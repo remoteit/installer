@@ -5,9 +5,9 @@
 ver=2.1.14
 MODIFIED="June 21, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
-TEST_DIR="$SCRIPT_DIR"/../test
+TEST_DIR="$SCRIPT_DIR"
 
-sudo -E "$TEST_DIR"/Auto_Registration/auto-reg-test.sh  | tee /tmp/auto-reg-result.txt
+sudo -E "$TEST_DIR"/auto-reg-test.sh  | tee /tmp/auto-reg-result.txt
 if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
