@@ -4,7 +4,7 @@
   "description": "System tools for setting up remote.it on your internet connected devices.",
   "scripts": {
     "build": "./scripts/build.sh",
-    "test-auto": "./test/auto-test.sh",
+    "test-auto": "./test/Auto_Registration/auto-test.sh",
     "download-assets": "ts-node scripts/download-assets.ts"
   },
   "dependencies": {
