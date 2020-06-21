@@ -16,8 +16,6 @@ controlFile="$controlFilePath"/control
 user=$(whoami)
 echo $user
 # debugging flag, set to 0 to skip tests
-runtests=1
-interactive=1
 
 #-------------------------------------------------
 # setOption() is used to change settings in the connectd_$1 file
@@ -241,12 +239,10 @@ build x86_64-ubuntu16.04 1 amd64
 # in this section we do some basic installer tests using the amd64 Debian
 # package running on the build container
 
-if [ $runtests -eq 1 ]; then
 sudo "$TEST_DIR"/dpkg/dpkg-install.sh
 if [ $? -ne 0 ]; then
     echo "dpkg installation failure!"
     exit 1
-fi
 fi
 }
 

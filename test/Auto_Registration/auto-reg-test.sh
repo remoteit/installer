@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.5
-MODIFIED="June 20, 2020"
+VERSION=1.1.6
+MODIFIED="June 21, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 # SERVICECOUNT is the expected number of active services, depends on the product definition
 # and per-serrvice "enabled" state.
