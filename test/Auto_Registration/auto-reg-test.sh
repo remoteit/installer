@@ -129,6 +129,10 @@ echo
 echo "bprovision $3"
 sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov$3.txt
 
+# show hardware_id.txt, in case it changed
+echo
+echo "hardware_id.txt" > hanrdware_id$3.txt
+
 # get status of all services
 echo
 echo "connectd_control status all"
