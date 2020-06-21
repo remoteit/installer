@@ -131,7 +131,7 @@ sh -x /usr/bin/connectd_control bprovision all 2> /tmp/bprov$3.txt
 
 # show hardware_id.txt, in case it changed
 echo
-echo "hardware_id.txt" > hanrdware_id$3.txt
+echo "hardware_id.txt: $(cat /etc/connectd/hardware_id.txt)" | tee  hardware_id$3.txt
 
 # get status of all services
 echo

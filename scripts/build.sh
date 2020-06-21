@@ -278,12 +278,13 @@ if [ $? -ne 0 ]; then
     echo "Auto Registration failure!"
     exit 1
 fi
-grep -n "^Test" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
+grep -n "^Test step" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
 grep -n "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n -A 2 "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^dprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^bprovision" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^Hardware ID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
+grep -n "^hardware_id.txt" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^System ID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^oemGet" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^#=TEST==" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
