@@ -1,9 +1,10 @@
 {
   "name": "remote.it-installer",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "System tools for setting up remote.it on your internet connected devices.",
   "scripts": {
     "build": "./scripts/build.sh",
+    "test-auto": "./test/auto-test.sh",
     "download-assets": "ts-node scripts/download-assets.ts"
   },
   "dependencies": {
