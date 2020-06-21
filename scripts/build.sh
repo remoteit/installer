@@ -274,8 +274,6 @@ fi
 fi
 }
 
-exit 0
-
 # add the test account credentials.
 add_creds
 
