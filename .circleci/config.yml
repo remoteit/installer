@@ -46,7 +46,7 @@ jobs:
           name: Build amd64 binary and test dpkg install
           command: npm run build
       - run:
-          eame: Run auto-registration test
+          name: Run auto-registration test
           command: npm run test-auto
       - store_artifacts:
           path: ~/project/build

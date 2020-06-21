@@ -1,9 +1,7 @@
 #!/bin/bash
-# build.sh
-# script to build Debian package for remote.it connectd Installer
-# sorts out Lintian errors/warnings into individual
-# text files
-pkg=connectd
+# auto-test.sh
+# script to test auto registration and present summary at end
+
 ver=2.1.14
 MODIFIED="June 21, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
@@ -25,7 +23,7 @@ grep -n "^System ID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^oemGet" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n "^#=TEST==" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 echo "============================================================================="
-echo "============================================================================="
+echo "=========  Auto Registration Test Summary ==================================="
 sort -g /tmp/auto-reg-overview.tmp | tee /tmp/auto-reg-summary.txt
 echo "============================================================================="
 echo "============================================================================="
