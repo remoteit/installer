@@ -19,30 +19,6 @@ echo $user
 runtests=1
 interactive=1
 
-#---------------------------------------------------------------------------------
-# add_creds takes the environment variables and puts them into the file
-# for use by the intereactive installer tests
-add_creds()
-{
-# get account login credentials from environment variables (set in Circle CI)
-if [ "${TESTUSERNAME}" = "" ]; then
-    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
-    exit 1
-elif [ "${TESTPASSWORD}" = "" ]; then
-    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
-    exit 1
-fi
-
-testusername=${TESTUSERNAME}
-testpassword=${TESTPASSWORD}
-
-file1=/usr/bin/connectd_installer
-sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
-sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
-grep USERNAME "$file1"
-}
-
-
 #-------------------------------------------------
 # setOption() is used to change settings in the connectd_$1 file
 
@@ -273,23 +249,6 @@ if [ $? -ne 0 ]; then
 fi
 fi
 }
-
-# add the test account credentials.
-add_creds
-
-if [ $interactive -eq 1 ]; then
-"$TEST_DIR"/Interactive/full-interactive-test.sh
-if [ $? -ne 0 ]; then
-    echo "Interactive Registration failure!"
-    exit 1
-fi
-fi
-
-sudo "$TEST_DIR"/dpkg/dpkg-purge.sh
-if [ $? -ne 0 ]; then
-    echo "dpkg purge failure!"
-    exit 1
-fi
 
 build_all()
 {

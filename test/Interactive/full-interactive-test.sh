@@ -63,6 +63,31 @@ echo "Interactive installer service test $3 $1 $2 test passed."
 echo "------------------------------------------------"
 echo "Interactive installer test suite - begin"
 echo "user=$user"
+#---------------------------------------------------------------------------------
+# add_creds takes the environment variables and puts them into the file
+# for use by the intereactive installer tests
+add_creds()
+{
+# get account login credentials from environment variables (set in Circle CI)
+if [ "${TESTUSERNAME}" = "" ]; then
+    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
+    exit 1
+elif [ "${TESTPASSWORD}" = "" ]; then
+    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
+    exit 1
+fi
+
+testusername=${TESTUSERNAME}
+testpassword=${TESTPASSWORD}
+
+file1=/usr/bin/connectd_installer
+sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
+sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+grep USERNAME "$file1"
+}
+
+add_creds
+
 # checkForRoot
 #-------------------------------------------------------------------
 # show test account credentials from environment variables
