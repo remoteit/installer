@@ -248,9 +248,11 @@ build() {
 }
 
 #
-echo $SCRIPT_DIR
-echo $TEST_DIR
+# echo $SCRIPT_DIR
+# echo $TEST_DIR
 
+build_one_and_test()
+{
 # now define and create each build 1 by 1
 # the amd64 Debian package should be first as we test installing that package and running
 # several registration scenarios prior to building everything else
@@ -269,6 +271,8 @@ if [ $? -ne 0 ]; then
     echo "dpkg installation failure!"
     exit 1
 fi
+fi
+}
 
 exit 0
 
@@ -289,7 +293,8 @@ if [ $? -ne 0 ]; then
     exit 1
 fi
 
-fi
+build_all()
+{
 #---------------------------------------------------
 # 32-bit i386 Debian package
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -425,6 +430,18 @@ build mipsel-gcc342_static 0
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build mipsel-bmc5354_static 0
+}
+
+#==== program starts here
+
+if [ "$1" == "one" ]; then
+    build_one_and_test
+elif [ "$1" == "all" ]; then
+    build_all
+else
+    echo "build.sh requires parameter one or all"
+	exit 1
+fi
 
 echo "======   build.sh $ver completed   =============="
 exit 0

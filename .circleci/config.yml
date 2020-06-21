@@ -44,9 +44,15 @@ jobs:
             - ~/.cache
       - run:
           name: Build amd64 binary and test dpkg install
-          command: npm run build
+          command: npm run build-one
       - run:
           name: Run auto-registration test
           command: npm run test-auto
+      - run:
+          name: Run interactive registration test and test dpkg --purge
+          command: npm run test-auto
+      - run:
+          name: Build the rest of the binaries
+          command: npm run build-all
       - store_artifacts:
           path: ~/project/build
