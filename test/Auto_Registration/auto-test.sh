@@ -9,10 +9,11 @@ TEST_DIR="$SCRIPT_DIR"
 
 sudo -E "$TEST_DIR"/auto-reg-test.sh  | tee /tmp/auto-reg-result.txt
 grep "failed" /tmp/auto-reg-result.txt
-if [ $? -ne 0 ]; then
+if [ $? -eq 0 ]; then
     echo "Auto Registration failure!"
     exit 1
 fi
+
 grep -n "^Test step" /tmp/auto-reg-result.txt > /tmp/auto-reg-overview.tmp
 grep -n "^Clone" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
 grep -n -A 2 "^Available UID" /tmp/auto-reg-result.txt >> /tmp/auto-reg-overview.tmp
