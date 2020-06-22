@@ -199,7 +199,7 @@ auto_reg_test 1 1 "fresh-reset" $SERVICECOUNT
 
 rm /etc/connectd/hardware_id.txt
 
-auto_reg_test 0 0 "same_HWID_MAC_as_original-no_reset" $SERVICECOUNT
+auto_reg_test 0 1 "same_HWID_MAC_as_original-no_reset" $SERVICECOUNT
 
 connectd_control stop all
 
