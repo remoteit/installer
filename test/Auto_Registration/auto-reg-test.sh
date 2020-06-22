@@ -193,6 +193,31 @@ auto_reg_test 0 0 "fresh-restart" $SERVICECOUNT
 auto_reg_test 1 1 "fresh-reset" $SERVICECOUNT
 
 #==================================================================================
+# the next section should trigger clone detection as we are using 
+# the same HWID and MAC as the original
+# we did not delete the provisioning files
+
+rm /etc/connectd/hardware_id.txt
+
+auto_reg_test 0 1 "same HWID/MAC as original - no reset" $SERVICECOUNT
+
+connectd_control stop all
+
+check_service_counts 0 "Stop all"
+
+#==================================================================================
+# the next section should not trigger clone detection as we are using 
+# the same HWID and MAC
+# we did not delete the provisioning files
+
+rm /etc/connectd/hardware_id.txt
+auto_reg_test 1 1 "same HWID/MAC as original - reset" $SERVICECOUNT
+
+connectd_control stop all
+
+check_service_counts 0 "Stop all"
+
+#==================================================================================
 # (4) generate a new CPUID
 # the next section should trigger clone detection as:
 # we are using the same hardware ID
@@ -251,41 +276,6 @@ connectd_control stop all
 
 check_service_counts 0 "Stop all"
 
-#==================================================================================
-# the next section should trigger clone detection as we are using 
-# the same HWID and MAC as the original
-# we did not delete the provisioning files
-
-rm /etc/connectd/hardware_id.txt
-rm /etc/connectd/ci_mac.txt
-
-auto_reg_test 0 1 "same HWID/MAC as original - no reset" $SERVICECOUNT
-
-connectd_control stop all
-
-check_service_counts 0 "Stop all"
-
-#==================================================================================
-# the next section should not trigger clone detection as we are using 
-# the same HWID and MAC
-# we did not delete the provisioning files
-
-rm /etc/connectd/hardware_id.txt
-auto_reg_test 1 1 "same HWID/MAC as original - reset" $SERVICECOUNT
-
-connectd_control stop all
-
-check_service_counts 0 "Stop all"
-
-#==================================================================================
-# the next section should trigger a new registration detection as we are using the same CPUID
-# we changed the Hardware ID.
-# Now we deleted the provisioning files
-
-
-connectd_control stop all
-
-check_service_counts 0 "Reset-new-hardware stop all"
 #==================================================================================
 # have to clear provisioning files to prevent interactive test from restarting
 # any services which were auto-registered
