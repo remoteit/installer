@@ -820,6 +820,8 @@ sendDeviceInfo()
        hwid=$(oemGetDefaultHardwareId)
     fi
 
+echo "DEBUG: hwid: $hwid"
+echo "DEBUG: hardware ID: $hardware_id"
     # reg key mac is either already saved by OEM or use default
     if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
        rk_mac=$(cat $CONNECTD_DIR/registration_key.txt)
