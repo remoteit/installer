@@ -820,8 +820,6 @@ sendDeviceInfo()
        hwid=$(oemGetDefaultHardwareId)
     fi
 
-echo "DEBUG: hwid: $hwid"
-echo "DEBUG: hardware ID: $hardware_id"
     # reg key mac is either already saved by OEM or use default
     if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
        rk_mac=$(cat $CONNECTD_DIR/registration_key.txt)
@@ -839,7 +837,7 @@ echo "DEBUG: hardware ID: $hardware_id"
     # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
 	  if sudo test -f "$DEVICES_AVAILABLE/$bulk_id_code"; then
        secret=$(sudo grep password "$DEVICES_AVAILABLE/$bulk_id_code" | tail -1 | awk '{print $2}')
-       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
     else 
         data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
     fi
