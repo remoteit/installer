@@ -199,7 +199,7 @@ auto_reg_test 1 1 "fresh-reset" $SERVICECOUNT
 
 rm /etc/connectd/hardware_id.txt
 
-auto_reg_test 0 0 "same HWID/MAC as original - no reset" $SERVICECOUNT
+auto_reg_test 0 0 "same_HWID_MAC_as_original-no_reset" $SERVICECOUNT
 
 connectd_control stop all
 
@@ -211,7 +211,7 @@ check_service_counts 0 "Stop all"
 # we did not delete the provisioning files
 
 rm /etc/connectd/hardware_id.txt
-auto_reg_test 1 1 "same HWID/MAC as original - reset" $SERVICECOUNT
+auto_reg_test 1 1 "same_HWID_MAC_as_original-reset" $SERVICECOUNT
 
 connectd_control stop all
 
