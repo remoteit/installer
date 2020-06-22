@@ -112,12 +112,12 @@ if [ $? -eq 0 ]; then
     if [ $2 -eq 1 ]; then
         echo "Clone detected, OK."
     else
-        echo "Clone detected, error."
+        echo "Clone detected, failed."
         exit 1
     fi
 else
     if [ $2 -eq 1 ]; then
-        echo "Clone not detected, error."
+        echo "Clone not detected, failed."
         exit 1
     else
         echo "Clone not detected, OK."
