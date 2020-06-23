@@ -33,7 +33,7 @@ count_services()
 
 check_service_counts()
 {
-
+sleep 2
 count_services
 nservices=$?
 if [ $nservices -ne $1 ]; then
