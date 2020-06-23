@@ -139,6 +139,7 @@ echo "================ remote.it software and API version =================="
 echo "remote.it connectd package version:$r3"
 echo "remote.it API:$api$apv" | sed 's/"//g'
 echo "================ Bulk/Auto registration settings ====================="
+echo "oemGetDefaultHardwareId returns $(oemGetDefaultHardwareId)"
 if [ -e /etc/connectd/hardware_id.txt ]; then
     hwid="$(cat /etc/connectd/hardware_id.txt)"
 else

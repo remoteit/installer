@@ -806,8 +806,12 @@ sendDeviceInfo()
     cpu=$(oemGetSystemId)
 
     # Default MAC based - OEM platforms may use different identifiers
-    mac=$(oemGetDefaultHardwareId)
-    hw_mac=$(oemGetDefaultHardwareId)
+    # mac=$(oemGetDefaultHardwareId)
+    if [ -f "$CONNECTD_DIR/ci_mac.txt" ]; then
+       hw_mac=$(cat $CONNECTD_DIR/ci_mac.txt)
+    else
+       hw_mac=$(oemGetDefaultHardwareId)
+    fi
     
     # hw id is either already saved by OEM or use default
     if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
@@ -833,10 +837,12 @@ sendDeviceInfo()
     # check for Bulk Service already being registered so we can update - authenticatin wiuth secret	
 	  if sudo test -f "$DEVICES_AVAILABLE/$bulk_id_code"; then
        secret=$(sudo grep password "$DEVICES_AVAILABLE/$bulk_id_code" | tail -1 | awk '{print $2}')
-       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
+       data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hwid'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'", "DeviceSecret" : "'$secret'"}'
     else 
         data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
     fi
+
+echo "DEBUG: $data"
  
     resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )
 	status=$(jsonval "$resp" "status")
@@ -875,6 +881,7 @@ sendDeviceReady()
 
 deviceReset()
 {
+    echo "Clone detected - device reset."
     # save the currect bic to restore after reset
     sudo mv "$CONNECTD_BULK_ID" /tmp/bic.txt
  
@@ -883,32 +890,6 @@ deviceReset()
     stop all
     reset y
 
-    # archive the current pre-reset settings - just in case
-	if [ -f "$CONNECTD_DIR/hardware_id.txt" ]; then
-       sudo mv $CONNECTD_DIR/hardware_id.txt $CONNECTD_DIR/hardware_id.txt.prev
-    fi
-    if [ -f "$CONNECTD_DIR/registration_key.txt" ]; then
-       sudo mv $CONNECTD_DIR/registration_key.txt $CONNECTD_DIR/registration_key.txt.prev
-    fi
-    if [ -f "$CONNECTD_BULK_ID" ]; then
-       sudo mv "$CONNECTD_BULK_ID" "$CONNECTD_BULK_ID".prev
-    fi
-    if [ -d "$CONNECTD_DIR/services" ]; then
-       sudo mv $CONNECTD_DIR/services $CONNECTD_DIR/services.prev
-    fi
-    if [ -d "$PROVISION_DEFAULT" ]; then
-       sudo mv "$PROVISION_DEFAULT" "$PROVISION_DEFAULT".prev
-    fi
-    if [ -d "$PROVISION_DOWNLOAD" ]; then
-       sudo mv "$PROVISION_DOWNLOAD" "$PROVISION_DOWNLOAD".prev
-    fi
-    if [ -d "$DEVICES_ACTIVE" ]; then
-       sudo mv "$DEVICES_ACTIVE" "$DEVICES_ACTIVE".prev
-    fi
-    if [ -d "$DEVICES_AVAILABLE" ]; then
-       sudo mv "$DEVICES_AVAILABLE" "$DEVICES_AVAILABLE".prev
-    fi
-    
     # restore the bic and other values
     sudo mv /tmp/bic.txt "$CONNECTD_BULK_ID"
     
@@ -916,7 +897,7 @@ deviceReset()
     sudo systemctl enable connectd
     sudo systemctl enable connectd_schannel
     
-	create_config
+    create_config
 }
 
 #
@@ -960,7 +941,7 @@ dprovision()
     if [ "$status" = "reset" ]; then
     
         # get the reset hardware ID 
-	    hardware_id=$(jsonval "$resp" "HardwareId")
+	hardware_id=$(jsonval "$resp" "HardwareId")
         echo "Service directs to reset for new ID: $hardware_id"  
          
         # reset the device
@@ -970,12 +951,12 @@ dprovision()
         echo $hardware_id > /tmp/hwid.txt
         sudo mv /tmp/hwid.txt $CONNECTD_DIR/hardware_id.txt
 	
-	    # start the process again by sending updated information
-		sendDeviceInfo
+	# start the process again by sending updated information
+	sendDeviceInfo
 		
-	    # get the list again - should be fine now
-	    resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
-	    status=$(jsonval "$resp" "status")
+	# get the list again - should be fine now
+        resp=$(curl ${CURL_OPTS} GET -H "content-type:application/json" "$ProjectListURL/$bulk_id_code/$hardware_id/")
+        status=$(jsonval "$resp" "status")
     fi
 		  
 	# status now should ready to be used	             

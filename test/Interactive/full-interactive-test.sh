@@ -15,18 +15,18 @@ user=$(whoami)
 #-----------------------------------------------------------------------
 count_services()
 {
-    ps ax | grep "connectd\." | grep -v grep > ~/nservices
-    cat ~/nservices
-    services="$(wc -l ~/nservices  | awk '{ print $1 }')"
+    ps ax | grep "connectd\." | grep -v grep > /tmp/nservices
+    cat /tmp/nservices
+    services="$(wc -l /tmp/nservices  | awk '{ print $1 }')"
     return $services
 }
 
 #-----------------------------------------------------------------------
 count_schannel()
 {
-    ps ax | grep "connectd_schannel\." | grep -v grep > ~/nschannel
-    cat ~/nschannel
-    schannel="$(wc -l ~/nschannel  | awk '{ print $1 }')"
+    ps ax | grep "connectd_schannel\." | grep -v grep > /tmp/nschannel
+    cat /tmp/nschannel
+    schannel="$(wc -l /tmp/nschannel  | awk '{ print $1 }')"
     return $schannel
 }
 
@@ -46,7 +46,7 @@ fi
 count_services
 nservices=$?
 if [ $nservices -ne $1 ]; then
-   echo "$3 test failed with services: $nservices"
+   echo "$3 test failed with services: $nservices (expected $1)"
    exit 1
 fi
 count_schannel
@@ -63,6 +63,31 @@ echo "Interactive installer service test $3 $1 $2 test passed."
 echo "------------------------------------------------"
 echo "Interactive installer test suite - begin"
 echo "user=$user"
+#---------------------------------------------------------------------------------
+# add_creds takes the environment variables and puts them into the file
+# for use by the intereactive installer tests
+add_creds()
+{
+# get account login credentials from environment variables (set in Circle CI)
+if [ "${TESTUSERNAME}" = "" ]; then
+    echo "TESTUSERNAME environment variable not set! ${TESTUSERNAME}"
+    exit 1
+elif [ "${TESTPASSWORD}" = "" ]; then
+    echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
+    exit 1
+fi
+
+testusername=${TESTUSERNAME}
+testpassword=${TESTPASSWORD}
+
+file1=/usr/bin/connectd_installer
+sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
+sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+grep USERNAME "$file1"
+}
+
+add_creds
+
 # checkForRoot
 #-------------------------------------------------------------------
 # show test account credentials from environment variables
@@ -73,7 +98,8 @@ echo
 #-------------------------------------------------------------------
 # create random string to serve as part of device/service names
 # this allows overlapping CI tests to run
-TESTNAME=$(cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 2>/dev/null)
+sudo -H sh -c "cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 >/tmp/testname.txt 2>/dev/null"
+TESTNAME=$(cat /tmp/testname.txt)
 sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-01.key > "$SCRIPT_DIR"/configure-01-test.key
 sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/configure-02-test.key
 

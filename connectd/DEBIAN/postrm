@@ -18,24 +18,14 @@ cleanFolder()
 {
 folder=$1
 # remove configuration files and folders
-    if [ -d /etc/connectd$X"$folder" ]; then
-        for file in /etc/connectd$X"$folder"/*.* ; do
+    if [ -d /etc/connectd"$folder" ]; then
+        for file in /etc/connectd"$folder"/*.* ; do
             rm -f $file
         done
-        for file in /etc/connectd$X"$folder"/* ; do
+        for file in /etc/connectd"$folder"/* ; do
             rm -f $file
         done
-        rmdir /etc/connectd$X"$folder"
-    fi
-    # handle possible backup folders created if there is an auto reg clone.
-    if [ -d /etc/connectd$X"$folder".prev ]; then
-        for file in /etc/connectd$X"$folder".prev/*.* ; do
-            rm -f $file
-        done
-        for file in /etc/connectd$X"$folder".prev/* ; do
-            rm -f $file
-        done
-        rmdir /etc/connectd$X"$folder".prev
+        rmdir /etc/connectd"$folder"
     fi
 }
 

@@ -11,19 +11,21 @@
 
 oemGetSystemId()
 {
-
-cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
+if [ -e $CONNECTD_DIR/cpuid.txt ]; then
+    cpuid=$(cat $CONNECTD_DIR/cpuid.txt)
+else
+    cpuid=$(awk '/Serial/ {print $3}' /proc/cpuinfo | sed 's/://g')
 
 ##
 ## Override default system ID for this platform
 
 # check for legal value
-if [ ${#cpuid} -ge 1 ]; then
-   continue
-else
-   cpuid="Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
+    if [ ${#cpuid} -ge 1 ]; then
+       continue
+    else
+       cpuid="Issue: system ID is not set properly. Fix oemGetSystemId() in /etc/connectd/oem_settings."   
+    fi
 fi
-
 # return the System ID
 echo $cpuid
 
