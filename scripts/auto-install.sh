@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.4.26
+VERSION=2.5.36
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -293,6 +293,7 @@ if [ $useTar -eq 1 ]; then
         if [ "$?" != 0 ]; then
             echo "Could not locate a compatible package."
             echo "Please contact support@remote.it."
+            echo "Attach the file $LOGFILE which was created in this folder."
             echo "Press ENTER to display system information."
             echo "$(uname -a)"
             echo "$(cat /proc/cpuinfo)"
