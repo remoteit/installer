@@ -1383,6 +1383,8 @@ installProvisioning()
         platformType="430"
     elif [ "$(echo "$PLATFORM" | grep "arm")" != "" ]; then
         platformType="4B0"
+    elif [ "$(echo "$PLATFORM" | grep "aarch64")" != "" ]; then
+        platformType="4B0"
     elif [ "$(echo "$PLATFORM" | grep "mips")" != "" ]; then
         platformType="4B1"
     else
