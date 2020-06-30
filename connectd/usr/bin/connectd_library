@@ -9,9 +9,9 @@
 #  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.24
+LIBVERSION=lib_v2.1.25
 AUTHOR="Gary Worsham"
-LIBMODIFIED="June 29, 2020"
+LIBMODIFIED="June 30, 2020"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -953,8 +953,7 @@ deleteAllConnections()
         # stop the connectd and schannel daemons using systemd
         # we already stopped the connectd daemons but doing this
         # keeps systemd in sync
-        systemctl stop connectd
-        systemctl stop connectd_schannel
+        stopAllServices
       fi
       exit 0
     fi
@@ -1498,23 +1497,51 @@ cronRemoveLine()
     crontab "$TMP_DIR"/.crontmp
 }
 
+# stopAllServices uses the appropriate call, whether systemctl is available or not
+stopAllServices()
+{
+    which systemctl
+    isSystemctlSupported=$?
+    if [ $isSytemctlSupported -eq 0 ]; then
+        systemctl stop connectd
+        systemctl stop connectd_schannel
+    elif [ $isSystemctlSupported -eq 127 ]; then
+        echo "which command not supported"
+    elif [ $isSytemctlSupported -eq 1 ]; then
+        echo "systemctl was not located in the path".
+    fi
+}
+
+
 ######### Enable remote.it services to start at reboot time ######
 # also have to "restart" connectd, otherwise shutdown will not trigger
 # systemctl stop until after next reboot
 enableStartup()
 {
-    systemctl enable connectd
-    systemctl enable connectd_schannel
-    systemctl restart connectd
-    systemctl restart connectd_schannel
+    which systemctl
+    isSystemctlSupported=$?
+    if [ $isSytemctlSupported -eq 0 ]; then
+        systemctl enable connectd
+        systemctl enable connectd_schannel
+        systemctl restart connectd
+        systemctl restart connectd_schannel
+    else
+	echo "systemctl not supported - enable Startup"
+    fi
 }
 ######### End Enable remote.it services to start at reboot time ######
 
 ######### Disable remote.it services to start at reboot time ######
 disableStartup()
 {
-    systemctl disable connectd
-    systemctl disable connectd_schannel
+    which systemctl
+    isSystemctlSupported=$?
+    if [ $isSytemctlSupported -eq 0 ]; then
+        systemctl disable connectd
+        systemctl disable connectd_schannel
+    else
+	echo "systemctl not supported - disable Startup"
+    fi
     cronRemoveLine "@reboot $BIN_DIR/$STARTEMUP"
 }
 
