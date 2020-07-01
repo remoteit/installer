@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.6
-MODIFIED="June 21, 2020"
+VERSION=1.1.7
+MODIFIED="June 30, 2020"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 # SERVICECOUNT is the expected number of active services, depends on the product definition
 # and per-serrvice "enabled" state.
@@ -47,6 +47,9 @@ echo "Auto-registration service test $2 $1 passed."
 # script execution starts here
 echo "Test $0 starting..."
 echo
+if [ $CI_SUPPRESS_AUTO_TEST -eq 1 ]; then
+    return 0
+fi
 
 checkForRoot
 # the next lines can be used as needed to override a specific API version
