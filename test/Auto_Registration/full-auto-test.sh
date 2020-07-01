@@ -19,6 +19,10 @@ countServices()
     echo
 }
 
+if [ $CI_SUPPRESS_AUTO_TEST -eq 1 ]; then
+    return 0
+fi
+
 checkForRoot
 
 echo "About to start initial auto-registration"
