@@ -842,7 +842,7 @@ sendDeviceInfo()
         data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
     fi
 
-if [ $"DEBUG" = "1" ]; then
+if [ "$DEBUG" = "1" ]; then
     echo "DEBUG: $data"
 fi
  
