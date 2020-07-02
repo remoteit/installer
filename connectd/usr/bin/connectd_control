@@ -28,8 +28,8 @@ BASEDIR=$CONNECTD_BASEDIR
 #set -x
 
 #### Settings #####
-VERSION=1.1.16
-MODIFIED="June 17, 2020"
+VERSION=1.1.17
+MODIFIED="July 01, 2020"
 
 #
 # Config Dir CONNECTD_DIR is read from connectd_options
@@ -842,7 +842,9 @@ sendDeviceInfo()
         data='{"BulkIdentificationCode" : "'$bulk_id_code'", "HardwareId" : "'$hardware_id'", "MACAddress" : "'$hw_mac'", "CPUId" : "'$cpu'", "OSLabel" : "'$os'", "R3Package" : "'$r3'", "TCPServiceList" : "'$tcp'"}'
     fi
 
-echo "DEBUG: $data"
+if [ "$DEBUG" = "1" ]; then
+    echo "DEBUG: $data"
+fi
  
     resp=$(curl ${CURL_OPTS} POST -H "content-type:application/json" --data "$data" $DeviceInformationURL )
 	status=$(jsonval "$resp" "status")
