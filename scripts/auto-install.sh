@@ -255,6 +255,10 @@ if [ $useTar -eq 1 ]; then
         daemon=mips-24kec
         downloadAndTestDaemon $daemon
         if [ "$?" != 0 ]; then
+            daemon=mips-24kec-musl
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
             daemon=mips-34kc
             downloadAndTestDaemon $daemon
         fi
