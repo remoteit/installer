@@ -6,12 +6,12 @@
 #  attachment services for tcp listeners.
 #  Interactive and preconfigured modes supported.
 #
-#  Copyright (C) 2019 remot3.it, Inc. All rights reserved.
+#  Copyright (C) 2019-2020 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.24
+LIBVERSION=lib_v2.1.25
 AUTHOR="Gary Worsham"
-LIBMODIFIED="June 29, 2020"
+LIBMODIFIED="August 07, 2020"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -41,8 +41,6 @@ deleteURL="${apiMethod}${apiServer}${apiVersion}"/device/delete
 connectURL="${apiMethod}${apiServer}${apiVersion}"/device/connect
 deviceURL="${apiMethod}${apiServer}${apiVersion}"/device
 deviceHWIDURL="${apiMethod}${apiServer}${apiVersion}"/developer/device/hardwareid
-regAccountURL="${apiMethod}${apiServer}${apiVersion}"/user/create/verify
-regAccountURLVerified="${apiMethod}${apiServer}${apiVersion}"/user/create/verified
 regdeviceURL="${apiMethod}${apiServer}${apiVersion}"/device/register
 getHWIDURL="${apiMethod}${apiServer}${apiVersion}"/developer/device/hardwareid/get
 projectListURL="${apiMethod}${apiServer}${apiVersion}"/project/list/all
@@ -987,10 +985,8 @@ askRegisterLogin()
 #        printf "\n\n"
         printf "********************* Sign In Menu *********************\n"
         printf "                                                      \n"
-        printf "     1) Sign in to your existing remote.it account    \n"
-        printf "     2) Request a code for a new remote.it account    \n"
-        printf "     3) Enter a verification code received in e-mail  \n"
-        printf "     4) Exit                                          \n"
+        printf "     1) Sign in to your remote.it account    \n"
+        printf "     2) Exit                                          \n"
         printf "                                                      \n"
         printf "********************************************************\n\n"
 
@@ -998,21 +994,11 @@ askRegisterLogin()
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
-        if [ "$get_num" = 2 ]; then
-		registerUser
-#		askVerificationCode
-		value="false"
-        elif [ "$get_num" = 1 ]; then
+        if [ "$get_num" = 1 ]; then
 		userLogin
 		testLogin
 		value="true"
-        elif [ "$get_num" = 3 ]; then
-		if [ "$username" = "" ]; then
-		    getEmail
-		fi
-                enterVerificationCode
-#		value="true"
-        elif [ "$get_num" = 4 ]; then
+        elif [ "$get_num" = 2 ]; then
 	    if ask "Are you sure?"; then
 		exit 0
 	    fi
@@ -1021,140 +1007,6 @@ askRegisterLogin()
 }
 
 ######### End askRegisterLogin #########
-
-######### Begin getEmail #########
-getEmail() 
-{
-    printf "Enter your e-mail address to create a new remote.it account.\n"
-    if [ "$USERNAME" != "" ]; then 
-	username="$USERNAME"
-    else        
-	read username
-    fi
-}
-######### End getEmail #########
-
-######### Begin registerUser #########
-registerUser()
-{
-    getEmail
-    resp=$(curl ${CURL_OPTS} 'POST' $regAccountURL -d "{\"email\":\"$username\"}" -H "content-type:application/json" -H "apikey:$apikey" 2> "$TMP_DIR"/.curlerr)
-
-    debug "$resp"
-    value=$(jsonval "$resp" "status") 
-    reason=$(jsonval "$resp" "reason") 
-    if [ "$value" != "true" ]; then
-    	echo "E-mail registration error: " "$reason"
-    else
-    	printf "\nA verification code has been sent to %s.\n" "$username"
-    	printf "If you do not receive this e-mail with your code\n"
-    	printf "within a few minutes, select option 2 to try again.\n"
-    	printf "Once you receive the code, select option 3 to enter it.\n\n"
-   fi
-   printf "Press Enter to continue."
-   read anyKey
- }
-
-######### End registerUser #########
-
-######### Begin enterVerificationCode #########
-enterVerificationCode()
-{
-    passwordOK=0
-    printf "\nEnter the verification code which you received by e-mail.\n"
-    read registrationCode
-    while [ "$passwordOK" != 1 ]; do
-        echo
-    	getNewPassword
-    done
-
-     resp=$(curl ${CURL_OPTS} 'POST' $regAccountURLVerified -d "{\"email\":\"$username\", \"password\":\"$password\", \"shortcode\":\"$registrationCode\"}" -H "content-type:application/json" -H "apikey:$apikey" 2> "$TMP_DIR"/.curlerr)
-
-    debug "$resp"
-    value=$(jsonval "$resp" "status") 
-    if [ "$value" != "true" ]; then
-	reason=$(jsonval "$resp" "reason")
-    	echo "Account registration error:" "$reason"
-        echo "Hit Enter to continue."
-	value="false"
-	read anyKey
-    else
-        echo
-        echo "Your remote.it account has been created."
-	echo "Now log in."
-        echo
-# now log in
-        userLogin
-	signInAPI
-	testLogin
-    fi
-}
-
-######### End enterVerificationCode #########
-
-######### Begin getNewPassword #########
-getNewPassword() {
-    if [ "$PASSWORD" != "" ]; then
-	password="$PASSWORD"
-    else
-	printf "\nChoose a password to use with your remote.it account.\n"
-	printf "It should be between 7 and 64 characters in length.\n"
-	printf "Valid special characters are limited to ! . - @ _ $ \n"
-	printf "Please enter it now:\n"
-	password=""
-	#  CTD-249 use stty to suppress password, if stty exists.
-        if [ "$(which stty)" != "" ]; then
-            stty -echo
-        fi
-        read password
-        if [ "$(which stty)" != "" ]; then
-           stty echo
-        fi
-
-        if [ $(validateInput "$password" "\$ \@ \! \_ \. [a-zA-Z0-9]-") != 0 ]; then
-	    printf "\nSorry, password contains one or more invalid characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	fi 
-
-	length=${#password}
-#	echo "Length of $password is $length".
-
-	if [ "$length" -lt 7 ] ; then
-	    printf "\nPassword length should be between 7 and 64 characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	elif [ "$length" -gt 64 ] ; then
-	    printf "\nPassword length should be between 7 and 64 characters.\n"
-	    password=""
-	    passwordOK=-1
-	    return
-	fi
-
-        printf "\nPlease confirm your remote.it password: \n"
-	#  CTD-249 use stty to suppress password, if stty exists.
-        if [ "$(which stty)" != "" ]; then
-            stty -echo
-        fi
-        read passwordConfirm
-        if [ "$(which stty)" != "" ]; then
-           stty echo
-        fi
-
-        if [ "$password" != "$passwordConfirm" ]; then
-	    echo
-	    printf "Passwords don't match!"
-	    echo
-	    passwordOK=-1
-        else
-	    passwordOK=1
-	fi
-    fi
-}
-
-######### End getNewPassword #########
 
 ######### Begin Portal Login #########
 userLogin() #Portal login function
