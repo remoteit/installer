@@ -979,8 +979,6 @@ bashCheck()
 ######### Begin askRegisterLogin #########
 askRegisterLogin()
 {
-	value="false"
-	while [ "$value" = "false" ]; do
    #     clear
 #        printf "\n\n"
         printf "********************* Sign In Menu *********************\n"
@@ -990,20 +988,18 @@ askRegisterLogin()
         printf "                                                      \n"
         printf "********************************************************\n\n"
 
-        getNumRange 1 4 "Choose a menu selection"   
+        getNumRange 1 2 "Choose a menu selection"   
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
         if [ "$get_num" = 1 ]; then
 		userLogin
 		testLogin
-		value="true"
         elif [ "$get_num" = 2 ]; then
 	    if ask "Are you sure?"; then
 		exit 0
 	    fi
 	fi
-	done
 }
 
 ######### End askRegisterLogin #########
