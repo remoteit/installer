@@ -259,6 +259,16 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build aarch64-ubuntu16.04_static 0
 
+# arm-v5t_le package - tar package with dynamic linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build arm-v5t_le 0
+
+# arm-v5t_le package - tar package with static linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build arm-v5t_le_static 0
+
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
