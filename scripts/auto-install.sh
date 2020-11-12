@@ -46,7 +46,7 @@ downloadAndTestDaemon()
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
+        curl -sfLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -56,8 +56,7 @@ downloadAndTestDaemon()
     fi
     sleep 2
     chmod +x "$testDaemon"
-    ./"$testDaemon" -n > /dev/null 2>&1
-    if [ "$?" = "0" ]; then
+    if ./"$testDaemon" -n 2>&1 | grep 'Looks compatible.'; then
         printf "%s\n" "$testDaemon is compatible!" | tee -a $LOGFILE
         retval=0
     else
@@ -78,7 +77,7 @@ downloadSchannel()
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
     if [ ! -e "$testDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
 	    exit 1
@@ -87,7 +86,7 @@ downloadSchannel()
     sleep 2
     chmod +x "$testDaemon"
     mv $testDaemon /usr/bin/connectd_"$testDaemon"
-    ln -s /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
+    ln -sf /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
     echo $retval
 }
 
@@ -105,7 +104,7 @@ downMultiport()
     printf "\n"
     printf "%s\n" "Downloading and testing $muxerDaemon..." | tee -a $LOGFILE
     if [ ! -e "$muxerDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
         if [ "$?" != "0" ]; then
             printf "%s\n" "$muxerDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -115,12 +114,12 @@ downMultiport()
     # link it and chmod it
     chmod +x "$muxerDaemon"
     mv $muxerDaemon "/usr/bin/connectd_${muxerDaemon}"
-    ln -s "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
+    ln -sf "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
 
     printf "\n"
     printf "%s\n" "Downloading and testing $demuxerDaemon..." | tee -a $LOGFILE
     if [ ! -e "$demuxerDaemon" ]; then
-        curl -sLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
+        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
         if [ "$?" != "0" ]; then
             printf "%s\n" "$demuxerDaemon download failed!" | tee -a $LOGFILE
             exit 1
@@ -129,7 +128,7 @@ downMultiport()
     sleep 2
     chmod +x "$demuxerDaemon"
     mv $demuxerDaemon /usr/bin/connectd_"$demuxerDaemon"
-    ln -s "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
+    ln -sf "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
     echo $retval
 }
 
@@ -330,7 +329,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=arm-v5tle
+            daemon=arm-v5t_le
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -346,7 +345,7 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=arm-v5tle_static
+            daemon=arm-v5t_le_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -397,7 +396,11 @@ if [ $useTar -eq 1 ]; then
     # echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
     # echo "filepath $filepath"
-    curl -sLkO "$filepath" > /dev/null
+    curl -sfLkO "$filepath" > /dev/null
+    if [ "$?" != "0" ]; then
+        echo "Download of $filepath failed!" | tee -a $LOGFILE
+        exit 1
+    fi
     echo
     ls -l "$filename"
     echo
@@ -426,7 +429,11 @@ else
     echo "filename $filename"
     filepath="$BUILDPATH"/"$filename"
     echo "filepath $filepath"
-    curl -sLkO "$filepath" > /dev/null
+    curl -sfLkO "$filepath" > /dev/null
+    if [ "$?" != "0" ]; then
+        echo "Download of $filepath failed!" | tee -a $LOGFILE
+        exit 1
+    fi
     sudo dpkg -i "$filename"
     if [ $? -ne 0 ]; then
         echo "dpkg error!"
