@@ -55,7 +55,7 @@ async function downloadAsset(asset: ReleaseAsset) {
 
   response.data.pipe(writer);
 
-  return new Promise((success, failure) => {
+  return new Promise<void>((success, failure) => {
     writer.on("finish", () => {
       console.log(`✅  Downloaded file "${asset.name}"!`);
       success();
