@@ -36,8 +36,8 @@ LOG_DIR=/var/log
 # API's
 #
 apiMethod="https://"
-apiVersion="/api"
-apiServer="device.remot3.it"
+apiVersion="/apv/v27"
+apiServer="api.remote.it"
 #
 
 #===================================
