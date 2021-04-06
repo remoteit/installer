@@ -136,7 +136,7 @@ connectdCompatibility()
         grep "UDP connections to the internet are not working." "$TMP_DIR"/.testdaemon
         if [ $? -eq 0 ]; then
             printf "It appears your network may be blocking UDP.\n"
-            printf "remote.it requires outbound UDP from port 5959 to 5979 to be open.\n"
+            printf "remote.it requires outbound UDP from port 5959 to 5970 to be open.\n"
             printf "Please check your firewall configuration to make sure it is configured properly.\n"
             printf "If you need help, please contact support@remote.it.\n\n"
         else
