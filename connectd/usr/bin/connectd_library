@@ -986,6 +986,9 @@ askRegisterLogin()
         printf "     1) Sign in to your remote.it account    \n"
         printf "     2) Exit                                          \n"
         printf "                                                      \n"
+        printf "********************************************************\n"
+        printf "*  To create a remote.it account, please visit         *\n"
+        printf "*  https://remote.it                                   *\n"
         printf "********************************************************\n\n"
 
         getNumRange 1 2 "Choose a menu selection"   
