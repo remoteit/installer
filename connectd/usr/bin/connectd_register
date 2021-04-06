@@ -35,8 +35,14 @@ DEBUG="1"
 USERNAME=""
 PASSWORD=""
 AUTHHASH="REPLACE_AUTHHASH"
+ACCESSKEY=""
+ACCESSKEYSECRET=""
 APIKEY="remote.it.developertoolsHW9iHnd"
-
+# set USEACCESSKEY=1 to use Access Key and Secret
+# Access Keys and secrets can be set in the Account area of the web portal at
+# https://remote.it
+# by default, USEACCESSKEY=0 and this script will use your account username and password.
+USEACCESSKEY=0
 #==================================================================================
 # include all of the registration functions
 
@@ -55,15 +61,25 @@ main()
 	      exit 1
     fi
 #-----------------------------------------------------------------------
-
-    if [ "$1" != "" ]; then
-        USERNAME=$1
+    if [ "$USEACCESSKEY" = "0" ]; then
+        if [ "$1" != "" ]; then
+            USERNAME=$1
+        fi
+        if [ "$2" != "" ]; then
+            PASSWORD=$2
+        fi
+        userLogin
+        testLogin
+    else
+        if [ "$1" != "" ]; then
+            ACCESSKEY=$1
+        fi
+        if [ "$2" != "" ]; then
+            ACCESSKEYSECRET=$2
+        fi
+        userLogin key
+        testLogin
     fi
-    if [ "$2" != "" ]; then
-        PASSWORD=$2
-    fi
-    userLogin
-    testLogin
 
 # =============================================    
 # $SERVICEBASENAME is the base name of all installed services installed

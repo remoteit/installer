@@ -51,8 +51,8 @@ projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 # the variables in this section are used by the login by access key function only.
 key_alias=""
 secret_base64=""
-URL="https://rest-evan.internal.remote.it/user/info"
-HOST="rest-evan.internal.remote.it"
+URL="https://device.remote.it/user/info"
+HOST="device.remote.it"
 URL_PATH="user/info"
 DATA=""
 VERB="GET"
@@ -1028,39 +1028,49 @@ askRegisterLogin()
 #
 userLogin() 
 {
+# use access key and secrete
 
     if [ "$1" = "key" ]; then
-	printf "Please enter your remote.it access key: \n"
-	read key_alias
-	printf "Please enter your remote.it access key secret: \n"
-	read secret_base64
-    else
-    if [ "$USERNAME" != "" ]; then 
-	username="$USERNAME"
-    else        
-	printf "Please enter your remote.it Username (e-mail address): \n"
-	read username
-    fi
-    if [ "$AUTHHASH" != "REPLACE_AUTHHASH" ]; then
-	authhash="$AUTHHASH"
-    else
-        if [ "$PASSWORD" != "" ]; then
-	    password="$PASSWORD"
-        else
-	# use stty to suppress password, if stty exists.
-            if [ "$(which stty)" != "" ]; then
-                stty -echo
-	    fi
-	    printf "\nPlease enter your remote.it password: \n"
-	    password=""
-	    read password
-           if [ "$(which stty)" != "" ]; then
-                stty echo
-	    fi
+        if [ "$ACCESSKEY" != "" ]; then 
+	    key_alias="$ACCESSKEY"
+        else        
+	    printf "Please enter your remote.it access key: \n"
+	    read key_alias
         fi
+        if [ "$ACCESSKEYSECRET" != "" ]; then 
+	    secret_base64="$ACCESSKEYSECRET"
+        else        
+	    printf "Please enter your remote.it access key secret: \n"
+	    read secret_base64
+        fi
+# use account username and password
+    else
+        if [ "$USERNAME" != "" ]; then 
+            username="$USERNAME"
+        else        
+	    printf "Please enter your remote.it Username (e-mail address): \n"
+	    read username
+        fi
+        if [ "$AUTHHASH" != "REPLACE_AUTHHASH" ]; then
+	    authhash="$AUTHHASH"
+        else
+            if [ "$PASSWORD" != "" ]; then
+	        password="$PASSWORD"
+            else
+	# use stty to suppress password, if stty exists.
+                if [ "$(which stty)" != "" ]; then
+                    stty -echo
+	        fi
+	        printf "\nPlease enter your remote.it password: \n"
+	        password=""
+	        read password
+                if [ "$(which stty)" != "" ]; then
+                    stty echo
+	        fi
+            fi
+       fi
+       debug $username $password $authhash
    fi
-   fi
-   debug $username $password $authhash
    signInAPI
 }
 ######### End Portal Login #########
