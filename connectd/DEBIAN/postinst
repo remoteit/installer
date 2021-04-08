@@ -23,6 +23,7 @@ echo
 echo "================================================================================"
 echo "Run \"sudo connectd_installer\" to interactively install remote.it Services on this device."
 echo
-echo "See https://docs.remote.it for more information."
+echo "See https://support.remote.it/hc/en-us/sections/360010786372-Using-the-connectd-package"
+echo "for more information."
 echo
 echo "================================================================================"
