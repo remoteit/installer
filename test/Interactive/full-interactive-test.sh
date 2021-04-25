@@ -93,8 +93,8 @@ testkeysecret=${TESTKEYSECRET}
 file1=/usr/bin/connectd_installer
 sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
 sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
-sudo sed -i "/ACCESSKEY/c\USERNAME=$testaccesskey" "$file1"
-sudo sed -i "/KEYSECRET/c\PASSWORD=$testkeysecret" "$file1"
+sudo sed -i "/ACCESSKEY/c\ACCESSKEY=$testaccesskey" "$file1"
+sudo sed -i "/KEYSECRET/c\KEYSECRET=$testkeysecret" "$file1"
 grep USERNAME "$file1"
 }
 
