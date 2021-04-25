@@ -36,7 +36,7 @@ USERNAME=""
 PASSWORD=""
 AUTHHASH="REPLACE_AUTHHASH"
 ACCESSKEY=""
-ACCESSKEYSECRET=""
+KEYSECRET=""
 APIKEY="remote.it.developertoolsHW9iHnd"
 # set USEACCESSKEY=1 to use Access Key and Secret
 # Access Keys and secrets can be set in the Account area of the web portal at
