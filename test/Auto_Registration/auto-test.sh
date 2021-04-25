@@ -2,8 +2,8 @@
 # auto-test.sh
 # script to test auto registration and present summary at end
 
-ver=2.1.15
-MODIFIED="APril 24, 2021"
+ver=2.6.16
+MODIFIED="April 24, 2021"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"
 

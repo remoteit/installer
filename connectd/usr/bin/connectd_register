@@ -75,7 +75,7 @@ main()
             ACCESSKEY=$1
         fi
         if [ "$2" != "" ]; then
-            ACCESSKEYSECRET=$2
+            KEYSECRET=$2
         fi
         userLogin key
         testLogin

@@ -9,9 +9,9 @@
 #  Copyright (C) 2019-2021 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.28
+LIBVERSION=lib_v2.6.29
 AUTHOR="Gary Worsham"
-LIBMODIFIED="March 31, 2021"
+LIBMODIFIED="April 24, 2021"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -473,8 +473,6 @@ checkForServices()
 
 getNumRange()
 {
-    # sleep below is to debug in CI, otherwise buffer fills up too quickly
-    sleep 1
      validInput="n"
         while [ "$validInput" = "n" ]; do
             echo "$3 ($1 - $2):"
@@ -1013,7 +1011,6 @@ askRegisterLogin()
         elif [ "$get_num" = 2 ]; then
 		userLogin key
                 debug "token: $token"
-		 # testLogin
         elif [ "$get_num" = 3 ]; then
 	    if ask "Are you sure?"; then
 		exit 0
