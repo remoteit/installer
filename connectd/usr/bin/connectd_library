@@ -1026,7 +1026,7 @@ askRegisterLogin()
 #
 userLogin() 
 {
-# use access key and secrete
+# use access key and secret
 
     if [ "$1" = "key" ]; then
         if [ "$ACCESSKEY" != "" ]; then 
