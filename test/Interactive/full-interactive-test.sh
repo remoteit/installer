@@ -135,7 +135,7 @@ fi
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all
+check_service_counts 0 0 remove-all $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 1 service
@@ -158,22 +158,22 @@ fi
 
 sudo systemctl stop connectd
 sleep 10
-check_service_counts 0 1
+check_service_counts 0 1 $TESTNAME
 sudo systemctl stop connectd_schannel
 sleep 5
-check_service_counts 0 0
+check_service_counts 0 0 $TESTNAME
 
 sudo systemctl start connectd
 sleep 10
-check_service_counts $COUNT 0
+check_service_counts $COUNT 0 $TESTNAME
 sudo systemctl start connectd_schannel
 sleep 5
-check_service_counts $COUNT 1
+check_service_counts $COUNT 1 $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all
+check_service_counts 0 0 remove-all $TESTNAME
 echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
 
