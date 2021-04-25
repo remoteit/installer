@@ -1037,8 +1037,8 @@ userLogin()
 	    printf "Please enter your remote.it access key: \n"
 	    read key_alias
         fi
-        if [ "$ACCESSKEYSECRET" != "" ]; then 
-	    secret_base64="$ACCESSKEYSECRET"
+        if [ "$KEYSECRET" != "" ]; then 
+	    secret_base64="$KEYSECRET"
         else        
 	    printf "Please enter your remote.it access key secret: \n"
 	    read secret_base64
