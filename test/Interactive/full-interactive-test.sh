@@ -189,8 +189,9 @@ check_service_counts $COUNT 1
 
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
+# use access key to log in
 # expected result is that 0 connectd services and 0 schannel service will be running
-run_test_and_check 0 0 remove-all $TESTNAME
+run_test_and_check 0 0 remove-all-ak $TESTNAME
 echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
 
