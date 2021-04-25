@@ -1001,7 +1001,8 @@ askRegisterLogin()
         printf "     3) Exit                                          \n"
         printf "                                                      \n"
         printf "********************************************************\n\n"
-
+        # sleep below is to debug in CI, otherwise buffer fills up too quickly
+        sleep 1
         getNumRange 1 3 "Choose a menu selection"   
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
