@@ -135,7 +135,7 @@ fi
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all.key
+check_service_counts 0 0 remove-all
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 1 service
@@ -173,7 +173,7 @@ check_service_counts $COUNT 1
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all.key
+check_service_counts 0 0 remove-all
 echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
 
