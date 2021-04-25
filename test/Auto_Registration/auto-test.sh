@@ -9,7 +9,7 @@ TEST_DIR="$SCRIPT_DIR"
 
 # use the CI_SUPPRESS_AUTO_TEST environment variable to skip the auto test
 # because it takes a long time.  During test development anyway.
-if [ "$CI_SUPPRESS_AUTO_TEST" != "" ]; then
+if [ "${CI_SUPPRESS_AUTO_TEST}" != "" ]; then
     exit 0
 fi
 
