@@ -125,7 +125,7 @@ check_service_counts 2 1 configure-01 $TESTNAME
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
+if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
     COUNT=10
     check_service_counts $COUNT 1 configure-02 $TESTNAME
 else
@@ -146,7 +146,7 @@ check_service_counts 2 1 configure-01-ak $TESTNAME
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
+if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
     COUNT=10
     check_service_counts $COUNT 1 configure-02-ak $TESTNAME
 else
