@@ -30,12 +30,18 @@ count_schannel()
     return $schannel
 }
 
+# run_test_and_check() sets up a keystroke file with the random device/service name string
+# then runs the test, then checks to make sure the right number of services are running at the end
 #-----------------------------------------------------------------------
-# pass this the # of expected connectd daemons, 0 or 1 for schannel, and
-# the name of the keystroke file (without the .key extension)
+# pass this:
+# $1 - the # of expected connectd daemons
+# $2 -0 or 1 for schannel
+# $3 - name of the keystroke file
+# $4 - random string to use for Service names
 
-check_service_counts()
+run_test_and_check()
 {
+
 sed "s/SERVICENAME/$4/g" "$SCRIPT_DIR"/$3.key > "$SCRIPT_DIR"/$3-test.key
 if [ "$3" != "" ]; then
     echo "Starting interactive install test with keystroke file $3..."
@@ -44,6 +50,17 @@ if [ "$3" != "" ]; then
     sleep 1
 fi
 
+check_service_counts $1 $2
+
+}
+
+#-----------------------------------------------------------------------
+# pass this:
+# $1 - the # of expected connectd daemons
+# $2 -0 or 1 for schannel
+
+check_service_counts()
+{
 count_services
 nservices=$?
 if [ $nservices -ne $1 ]; then
@@ -120,14 +137,14 @@ TESTNAME=$(cat /tmp/testname.txt)
 # run installer for first time, add device name and 1 service
 # first pass uses username and password
 # expected result is that 2 connectd services and 1 schannel service will be running
-check_service_counts 2 1 configure-01 $TESTNAME
+run_test_and_check 2 1 configure-01 $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
 if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
     COUNT=10
-    check_service_counts $COUNT 1 configure-02 $TESTNAME
+    run_test_and_check $COUNT 1 configure-02 $TESTNAME
 else
     COUNT=2
 fi
@@ -135,20 +152,20 @@ fi
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all $TESTNAME
+run_test_and_check 0 0 remove-all $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 1 service
 # first pass uses username and password
 # expected result is that 2 connectd services and 1 schannel service will be running
-check_service_counts 2 1 configure-01-ak $TESTNAME
+run_test_and_check 2 1 configure-01-ak $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
 if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
     COUNT=3
-    check_service_counts $COUNT 1 configure-02-ak $TESTNAME
+    run_test_and_check $COUNT 1 configure-02-ak $TESTNAME
 else
     COUNT=2
 fi
@@ -158,22 +175,22 @@ fi
 
 sudo systemctl stop connectd
 sleep 10
-check_service_counts 0 1 $TESTNAME
+check_service_counts 0 1 
 sudo systemctl stop connectd_schannel
 sleep 5
-check_service_counts 0 0 $TESTNAME
+check_service_counts 0 0 
 
 sudo systemctl start connectd
 sleep 10
-check_service_counts $COUNT 0 $TESTNAME
+check_service_counts $COUNT 0 
 sudo systemctl start connectd_schannel
 sleep 5
-check_service_counts $COUNT 1 $TESTNAME
+check_service_counts $COUNT 1 
 
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all $TESTNAME
+run_test_and_check 0 0 remove-all $TESTNAME
 echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
 
