@@ -523,7 +523,6 @@ menuLoop()
         printf "===================================================================\n"
 
         getNumRange 1 5 "Choose a menu selection"
-        sleep 1
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
@@ -677,7 +676,6 @@ protocolSelection()
     unset get_port
 
     getNumRange 1 "$MAXSEL" "Choose a menu selection"
-    sleep 1
     get_num="$getNumRangeValue"
     debug "get_num: $get_num"
 
@@ -1006,7 +1004,6 @@ askRegisterLogin()
         printf "                                                      \n"
         printf "********************************************************\n\n"
         getNumRange 1 3 "Choose a menu selection"   
-        sleep 1
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
