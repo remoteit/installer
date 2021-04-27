@@ -400,10 +400,11 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build mips-24kec_static 0
 
+# commented out mips-24kec-musl_static until we can release schannel 0.6.0 or higher
 # mips-24kec-musl_static
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-build mips-24kec-musl_static 0
+# setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+# setOption options "BASEDIR" ""
+# build mips-24kec-musl_static 0
 
 # mips-34kc_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
