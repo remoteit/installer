@@ -254,15 +254,16 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build x86-ubuntu16.04 1 i386
 
+# openwrt options are commented out until we can release schannel 0.6.0 or later.
 # aarch64 OpenWrt package - tar package
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-build aarch64-openwrt 0
+# setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+# setOption options "BASEDIR" ""
+# build aarch64-openwrt 0
 
 # aarch64 OpenWrt package - tar package with static linking
-setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
-setOption options "BASEDIR" ""
-build aarch64-openwrt_static 0
+# setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+# setOption options "BASEDIR" ""
+# build aarch64-openwrt_static 0
 
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
