@@ -51,13 +51,9 @@ projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 # the variables in this section are used by the login by access key function only.
 key_alias=""
 secret_base64=""
-URL="https://device.remote.it/api/user/info"
 HOST="device.remote.it"
 URL_PATH="api/user/info"
-DATA=""
-VERB="GET"
-CONTENT_TYPE="application/json"
-LC_VERB=`echo "${VERB}" | tr '[:upper:]' '[:lower:]'`
+URL="https://${HOST}/{URL_PATH}"
 CONTENT_LENGTH=0
 #
 #
