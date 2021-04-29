@@ -6,12 +6,12 @@
 #  attachment services for tcp listeners.
 #  Interactive and preconfigured modes supported.
 #
-#  Copyright (C) 2019-2020 remot3.it, Inc. All rights reserved.
+#  Copyright (C) 2019-2021 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.1.26
+LIBVERSION=lib_v2.6.29
 AUTHOR="Gary Worsham"
-LIBMODIFIED="November 10, 2020"
+LIBMODIFIED="April 24, 2021"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -48,6 +48,19 @@ projectCreateURL="${apiMethod}${apiServer}${apiVersion}"/project/create
 projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 
 # ----------------------------------------
+# the variables in this section are used by the login by access key function only.
+key_alias=""
+secret_base64=""
+HOST="device.remote.it"
+URL_PATH="api/user/info"
+URL="https://${HOST}/${URL_PATH}"
+DATA=""
+VERB="GET"
+CONTENT_TYPE="application/json"
+LC_VERB=`echo "${VERB}" | tr '[:upper:]' '[:lower:]'`
+CONTENT_LENGTH=0
+#
+#
 ##### End Settings #####
 
 ##### Version #####
@@ -983,15 +996,15 @@ askRegisterLogin()
 #        printf "\n\n"
         printf "********************* Sign In Menu *********************\n"
         printf "                                                      \n"
-        printf "     1) Sign in to your remote.it account    \n"
-        printf "     2) Exit                                          \n"
+        printf "     1) Sign in to your remote.it account with username and password   \n"
+        printf "     2) Sign in to your remote.it account with access key and secret   \n"
+        printf "     3) Exit                                          \n"
         printf "                                                      \n"
         printf "********************************************************\n"
         printf "*  To create a remote.it account, please visit         *\n"
         printf "*  https://remote.it                                   *\n"
         printf "********************************************************\n\n"
-
-        getNumRange 1 2 "Choose a menu selection"   
+        getNumRange 1 3 "Choose a menu selection"   
         get_num="$getNumRangeValue"
         debug "get_num: $get_num"
 
@@ -999,6 +1012,9 @@ askRegisterLogin()
 		userLogin
 		testLogin
         elif [ "$get_num" = 2 ]; then
+		userLogin key
+                debug "token: $token"
+        elif [ "$get_num" = 3 ]; then
 	    if ask "Are you sure?"; then
 		exit 0
 	    fi
@@ -1008,35 +1024,54 @@ askRegisterLogin()
 ######### End askRegisterLogin #########
 
 ######### Begin Portal Login #########
-userLogin() #Portal login function
+# if parameter "key" is passed in, then it uses access key and secret
+# otherwise it uses account username and password.
+#
+userLogin() 
 {
-#    echo "connectd_library Username = $USERNAME Password = $PASSWORD"
+# use access key and secret
 
-    if [ "$USERNAME" != "" ]; then 
-	username="$USERNAME"
-    else        
-	printf "Please enter your remote.it Username (e-mail address): \n"
-	read username
-    fi
-    if [ "$AUTHHASH" != "REPLACE_AUTHHASH" ]; then
-	authhash="$AUTHHASH"
-    else
-        if [ "$PASSWORD" != "" ]; then
-	    password="$PASSWORD"
-        else
-	# use stty to suppress password, if stty exists.
-            if [ "$(which stty)" != "" ]; then
-                stty -echo
-	    fi
-	    printf "\nPlease enter your remote.it password: \n"
-	    password=""
-	    read password
-           if [ "$(which stty)" != "" ]; then
-                stty echo
-	    fi
+    if [ "$1" = "key" ]; then
+        if [ "$ACCESSKEY" != "" ]; then 
+	    key_alias="$ACCESSKEY"
+        else        
+	    printf "Please enter your remote.it access key: \n"
+	    read key_alias
         fi
+        if [ "$KEYSECRET" != "" ]; then 
+	    secret_base64="$KEYSECRET"
+        else        
+	    printf "Please enter your remote.it access key secret: \n"
+	    read secret_base64
+        fi
+# use account username and password
+    else
+        if [ "$USERNAME" != "" ]; then 
+            username="$USERNAME"
+        else        
+	    printf "Please enter your remote.it Username (e-mail address): \n"
+	    read username
+        fi
+        if [ "$AUTHHASH" != "REPLACE_AUTHHASH" ]; then
+	    authhash="$AUTHHASH"
+        else
+            if [ "$PASSWORD" != "" ]; then
+	        password="$PASSWORD"
+            else
+	# use stty to suppress password, if stty exists.
+                if [ "$(which stty)" != "" ]; then
+                    stty -echo
+	        fi
+	        printf "\nPlease enter your remote.it password: \n"
+	        password=""
+	        read password
+                if [ "$(which stty)" != "" ]; then
+                    stty echo
+	        fi
+            fi
+       fi
+       debug $username $password $authhash
    fi
-   debug $username $password $authhash
    signInAPI
 }
 ######### End Portal Login #########
@@ -1044,33 +1079,55 @@ userLogin() #Portal login function
 ####### SignInAPI ###################
 signInAPI()
 {
-    debug "U:$username P:$password A:$authhash D:$apikey"
-    # if AUTHHASH is REPLACE_AUTHHASH it means user just wants to use password
-    if [ "$AUTHHASH" = "REPLACE_AUTHHASH" ]; then
-          resp=$(curl ${CURL_OPTS} 'POST' -H "apikey:$apikey" -H "Content-Type:application/json" -H "Cache-Control:no-cache" -d "{ \"username\" : \"$username\", \"password\" : \"$password\" }" "$loginURL" 2> "$TMP_DIR"/.curlerr)
+    if [ "$key_alias" != "" ]; then
+        DATE=$(LANG=en_US date "+%a, %d %b %Y %H:%M:%S %Z")
+# note that the formatting of the SIGNING_STRING is critical and should not be changed.
+        SIGNING_STRING="(request-target): ${LC_VERB} /${URL_PATH}
+host: ${HOST}
+date: ${DATE}
+content-type: ${CONTENT_TYPE}
+content-length: ${CONTENT_LENGTH}"
+        SECRET=`echo ${secret_base64} | base64 --decode`
+        SIGNATURE=`echo -n "${SIGNING_STRING}" | openssl dgst -binary -sha256 -hmac "${SECRET}" | base64`
+        SIGNATURE_HEADER="Signature keyId=\"$key_alias\",algorithm=\"hmac-sha256\",headers=\"(request-target) host date content-type content-length\",signature=\"${SIGNATURE}\""
+        resp=$(curl -s -X ${VERB} -H "Authorization:${SIGNATURE_HEADER}" -H "apikey:${apikey}" -H "Date:${DATE}" -H "Content-Type:${CONTENT_TYPE}" ${URL} -d "${DATA}" --insecure 2> "$TMP_DIR"/.curlerr)
+        debug "Resp = $resp"
+        checkAPIResult "${URL}" "$resp"
+        status=$(jsonval "$resp" 'status')
+        if [ "$status" = 'true' ]; then
+            token=$(jsonval "$resp" "token")
+            debug "Login token: $token"
+        else
+            exit 1
+        fi
     else
+        # if AUTHHASH is REPLACE_AUTHHASH it means user just wants to use password
+        if [ "$AUTHHASH" = "REPLACE_AUTHHASH" ]; then
+            resp=$(curl ${CURL_OPTS} 'POST' -H "apikey:$apikey" -H "Content-Type:application/json" -H "Cache-Control:no-cache" -d "{ \"username\" : \"$username\", \"password\" : \"$password\" }" "$loginURL" 2> "$TMP_DIR"/.curlerr)
+        else
              resp=$(curl ${CURL_OPTS} 'POST' -H "apikey:$apikey" -H "Content-Type:application/json" -H "Cache-Control:no-cache" -d "{ \"username\" : \"$username\", \"authhash\" : \"$AUTHHASH\" }" "$loginAuthURL" 2> "$TMP_DIR"/.curlerr)
-    fi
+        fi
 #    checkAPIResult 'login' "$resp"
 
-    debug "Resp = $resp"
-    status=$(jsonval "$resp" 'status')
-    debug "Status = $status"
-    if [ "$status" = 'true' ]; then
-	token=$(jsonval "$resp" "token")
-        debug "Login token: $token"
-    else
-    	noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
+        debug "Resp = $resp"
+        status=$(jsonval "$resp" 'status')
+        debug "Status = $status"
+        if [ "$status" = 'true' ]; then
+	    token=$(jsonval "$resp" "token")
+            debug "Login token: $token"
+        else
+    	    noSuchUser=$(echo "$resp" | grep "missing user" | sed 's/"//g')
         # look for [0102] api return for invalid login
-    	loginFailed=$(echo "$resp" | grep "\[0102\]" | sed 's/"//g')
-    	slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
+    	    loginFailed=$(echo "$resp" | grep "\[0102\]" | sed 's/"//g')
+    	    slimError=$(echo "$resp" | grep "Slim Application Error" | sed 's/"//g')
 # 404 is triggered when you enter some special character in e-mail.  this specific search may fail if API
 # "$apiServer" is moved
-    	login404=$(echo "$resp" | grep "404 Page Not Found" | sed 's/"//g')
-    	login400=$(echo "$resp" | grep "400 Bad Request" | sed 's/"//g')
-    	apikeyerror=$(echo "$resp" | grep "The API application key is invalid" | sed 's/"//g')
-        devkeyerror=$(echo "$resp" | grep "api key failed validation" | sed 's/"//g')
-	debug "Login Error: $noSuchUser $loginFailed $slimError $login404 $login400 $apikeyerror $devkeyerror" 
+    	    login404=$(echo "$resp" | grep "404 Page Not Found" | sed 's/"//g')
+    	    login400=$(echo "$resp" | grep "400 Bad Request" | sed 's/"//g')
+    	    apikeyerror=$(echo "$resp" | grep "The API application key is invalid" | sed 's/"//g')
+            devkeyerror=$(echo "$resp" | grep "api key failed validation" | sed 's/"//g')
+	    debug "Login Error: $noSuchUser $loginFailed $slimError $login404 $login400 $apikeyerror $devkeyerror" 
+        fi
     fi
     # invalid cert can happen if system date is set to before current date
     invalidCert=$(grep "SSL certificate problem" "$TMP_DIR"/.curlerr)

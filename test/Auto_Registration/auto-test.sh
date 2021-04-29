@@ -2,10 +2,17 @@
 # auto-test.sh
 # script to test auto registration and present summary at end
 
-ver=2.1.14
-MODIFIED="June 21, 2020"
+ver=2.6.16
+MODIFIED="April 24, 2021"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"
+
+# use the CI_SUPPRESS_AUTO_TEST environment variable to skip the auto test
+# because it takes a long time.  During test development anyway.
+if [ "${CI_SUPPRESS_AUTO_TEST}" != "" ]; then
+    exit 0
+fi
+
 
 sudo -E "$TEST_DIR"/auto-reg-test.sh  | tee /tmp/auto-reg-result.txt
 grep "failed" /tmp/auto-reg-result.txt
