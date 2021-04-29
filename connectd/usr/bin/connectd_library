@@ -54,6 +54,10 @@ secret_base64=""
 HOST="device.remote.it"
 URL_PATH="api/user/info"
 URL="https://${HOST}/{URL_PATH}"
+DATA=""
+VERB="GET"
+CONTENT_TYPE="application/json"
+LC_VERB=`echo "${VERB}" | tr '[:upper:]' '[:lower:]'`
 CONTENT_LENGTH=0
 #
 #
