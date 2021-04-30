@@ -341,6 +341,13 @@ build arm-linaro-ulibc 0
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-pi 0
 
+# arm-linaro-pi-ulibc option commented out until schannel gets released at 0.6.0 or higher
+# setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+# build arm-linaro-pi-ulibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build arm-linaro-pi_static 0
+
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-pi_static 0
 
