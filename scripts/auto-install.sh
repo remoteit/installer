@@ -6,7 +6,7 @@
 #       Then it will try executing them and tell you which one is compatible.
 #       GSW.
 
-VERSION=2.5.38
+VERSION=2.6.39
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -278,6 +278,10 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
+            daemon=mips-24kec-musl_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
             daemon=mips-34kc_static
             downloadAndTestDaemon $daemon
         fi
@@ -286,11 +290,11 @@ if [ $useTar -eq 1 ]; then
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=mipsel-bmc5354-static
+            daemon=mipsel-bmc5354_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
-            daemon=mipsel-gcc342-static
+            daemon=mipsel-gcc342_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -303,10 +307,18 @@ if [ $useTar -eq 1 ]; then
             exit 1
         fi
     elif [ "$BASEPLATFORM" = "arm64" ]; then
-        daemon=aarm64-ubuntu16.04
+        daemon=aarch64-ubuntu16.04
         downloadAndTestDaemon $daemon
         if [ "$?" != 0 ]; then
-            daemon=aarm64-ubuntu16.04_static
+            daemon=aarch64-openwrt
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=aarch64-ubuntu16.04_static
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=aarch64-openwrt_static
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
@@ -322,6 +334,10 @@ if [ $useTar -eq 1 ]; then
         downloadAndTestDaemon $daemon
         if [ "$?" != 0 ]; then
             daemon=arm-linaro-pi
+            downloadAndTestDaemon $daemon
+        fi
+        if [ "$?" != 0 ]; then
+            daemon=arm-linaro-ulibc
             downloadAndTestDaemon $daemon
         fi
         if [ "$?" != 0 ]; then
