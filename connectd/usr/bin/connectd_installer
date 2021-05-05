@@ -9,12 +9,16 @@
 #
 
 ##### Settings #####
-VERSION=v2.0.5
+VERSION=v2.6.6
 AUTHOR="Gary Worsham"
-MODIFIED="April 13, 2019"
+MODIFIED="April 24, 2021"
 
 USERNAME=""
 PASSWORD=""
+# access key and secret are available in account page and can be used
+# when user has Google login only
+ACCESSKEY=""
+KEYSECRET=""
 AUTHHASH="REPLACE_AUTHHASH"
 DEVELOPERKEY=""
 MAXSEL=6

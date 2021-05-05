@@ -254,6 +254,16 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 setOption options "BASEDIR" ""
 build x86-ubuntu16.04 1 i386
 
+# aarch64 OpenWrt package - tar package
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build aarch64-openwrt 0
+
+# aarch64 OpenWrt package - tar package with static linking
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build aarch64-openwrt_static 0
+
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
@@ -326,10 +336,26 @@ setOption options "BASEDIR" ""
 build x86_64-ubuntu16.04_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build arm-linaro-ulibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-pi 0
+
+# arm-linaro-pi-ulibc option commented out until schannel gets released at 0.6.0 or higher
+# setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+# build arm-linaro-pi-ulibc 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build arm-linaro-pi_static 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build arm-linaro-pi_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-gnueabi 0
+
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+build arm-gnueabi_static 0
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
 # Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
@@ -378,6 +404,11 @@ build mipsel-bmc5354 0
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build mips-24kec_static 0
+
+# mips-24kec-musl_static
+setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
+setOption options "BASEDIR" ""
+build mips-24kec-musl_static 0
 
 # mips-34kc_static
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"

@@ -30,19 +30,37 @@ count_schannel()
     return $schannel
 }
 
+# run_test_and_check() sets up a keystroke file with the random device/service name string
+# then runs the test, then checks to make sure the right number of services are running at the end
 #-----------------------------------------------------------------------
-# pass this the # of expected connectd daemons, 0 or 1 for schannel, and
-# the name of the keystroke file
+# pass this:
+# $1 - the # of expected connectd daemons
+# $2 -0 or 1 for schannel
+# $3 - name of the keystroke file
+# $4 - random string to use for Service names
 
-check_service_counts()
+run_test_and_check()
 {
+
+sed "s/SERVICENAME/$4/g" "$SCRIPT_DIR"/$3.key > "$SCRIPT_DIR"/$3-test.key
 if [ "$3" != "" ]; then
     echo "Starting interactive install test with keystroke file $3..."
-    sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"
+    sudo "$SCRIPT_DIR"/interactive-test.sh "$SCRIPT_DIR"/"$3"-test.key
     # not entirely sure if sleep is needed here
     sleep 1
 fi
 
+check_service_counts $1 $2
+
+}
+
+#-----------------------------------------------------------------------
+# pass this:
+# $1 - the # of expected connectd daemons
+# $2 -0 or 1 for schannel
+
+check_service_counts()
+{
 count_services
 nservices=$?
 if [ $nservices -ne $1 ]; then
@@ -75,24 +93,38 @@ if [ "${TESTUSERNAME}" = "" ]; then
 elif [ "${TESTPASSWORD}" = "" ]; then
     echo "TESTPASSWORD environment variable not set! ${TESTPASSWORD}"
     exit 1
+# get account access key/secret from environment variables (set in Circle CI)
+elif [ "${TESTACCESSKEY}" = "" ]; then
+    echo "TESTACCESSKEY environment variable not set! ${TESTACCESSKEY}"
+    exit 1
+elif [ "${TESTKEYSECRET}" = "" ]; then
+    echo "TESTKEYSECRET environment variable not set! ${TESTKEYSECRET}"
+    exit 1
 fi
 
 testusername=${TESTUSERNAME}
 testpassword=${TESTPASSWORD}
+testaccesskey=${TESTACCESSKEY}
+testkeysecret=${TESTKEYSECRET}
 
 file1=/usr/bin/connectd_installer
 sudo sed -i "/USERNAME/c\USERNAME=$testusername" "$file1"
 sudo sed -i "/PASSWORD/c\PASSWORD=$testpassword" "$file1"
+sudo sed -i "/ACCESSKEY/c\ACCESSKEY=$testaccesskey" "$file1"
+sudo sed -i "/KEYSECRET/c\KEYSECRET=$testkeysecret" "$file1"
 grep USERNAME "$file1"
 }
 
 add_creds
 
-# checkForRoot
 #-------------------------------------------------------------------
 # show test account credentials from environment variables
+# Generally speaking, Circle CI will obscure these with *****
 echo "USERNAME from environment variable"
 grep USERNAME /usr/bin/connectd_installer
+echo
+echo "ACCESSKEY from environment variable"
+grep ACCESSKEY /usr/bin/connectd_installer
 echo
 
 #-------------------------------------------------------------------
@@ -100,20 +132,40 @@ echo
 # this allows overlapping CI tests to run
 sudo -H sh -c "cat /dev/urandom | tr -cd '0-9' | dd bs=10 count=1 >/tmp/testname.txt 2>/dev/null"
 TESTNAME=$(cat /tmp/testname.txt)
-sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-01.key > "$SCRIPT_DIR"/configure-01-test.key
-sed "s/SERVICENAME/$TESTNAME/g" "$SCRIPT_DIR"/configure-02.key > "$SCRIPT_DIR"/configure-02-test.key
 
 #-------------------------------------------------------------------
 # run installer for first time, add device name and 1 service
+# first pass uses username and password
 # expected result is that 2 connectd services and 1 schannel service will be running
-check_service_counts 2 1 configure-01-test.key
+run_test_and_check 2 1 configure-01 $TESTNAME
 
 #-------------------------------------------------------------------
 # run installer for second time, add 6 more services
 # expected result is that 9 connectd services and 1 schannel service will be running
-if [ "$CI_FULL_INTERACTIVE_TEST" = "1" ]; then
+if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
     COUNT=10
-    check_service_counts $COUNT 1 configure-02-test.key
+    run_test_and_check $COUNT 1 configure-02 $TESTNAME
+else
+    COUNT=2
+fi
+
+#-------------------------------------------------------------------
+# run installer for third time, remove all services
+# expected result is that 0 connectd services and 0 schannel service will be running
+run_test_and_check 0 0 remove-all $TESTNAME
+
+#-------------------------------------------------------------------
+# run installer for first time, add device name and 1 service
+# first pass uses username and password
+# expected result is that 2 connectd services and 1 schannel service will be running
+run_test_and_check 2 1 configure-01-ak $TESTNAME
+
+#-------------------------------------------------------------------
+# run installer for second time, add 6 more services
+# expected result is that 9 connectd services and 1 schannel service will be running
+if [ "${CI_FULL_INTERACTIVE_TEST}" = "1" ]; then
+    COUNT=3
+    run_test_and_check $COUNT 1 configure-02-ak $TESTNAME
 else
     COUNT=2
 fi
@@ -123,22 +175,23 @@ fi
 
 sudo systemctl stop connectd
 sleep 10
-check_service_counts 0 1
+check_service_counts 0 1 
 sudo systemctl stop connectd_schannel
 sleep 5
-check_service_counts 0 0
+check_service_counts 0 0 
 
 sudo systemctl start connectd
 sleep 10
-check_service_counts $COUNT 0
+check_service_counts $COUNT 0 
 sudo systemctl start connectd_schannel
 sleep 5
-check_service_counts $COUNT 1
+check_service_counts $COUNT 1 
+
 #-------------------------------------------------------------------
 # run installer for third time, remove all services
+# use access key to log in
 # expected result is that 0 connectd services and 0 schannel service will be running
-check_service_counts 0 0 remove-all.key
-
+run_test_and_check 0 0 remove-all-ak $TESTNAME
 echo "Interactive installer test suite - all passed"
 echo "------------------------------------------------"
 
