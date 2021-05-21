@@ -7,7 +7,7 @@
 #       GSW.
 
 VERSION=2.6.39
-# call out the exact version of connectd used for this version of installer
+# call out the exact versions of binaries used for this version of installer
 # prevents failure when "latest" changes the name of any daemon
 CONNECTDVERSION=v4.12.0
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
@@ -70,71 +70,6 @@ downloadAndTestDaemon()
     fi
     return $retval
 }
-
-downloadSchannel()
-{
-    local testArch=$1
-    local testDaemon=schannel."$testArch"
-    local retval=0
-
-    printf "\n"
-    printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE   
-    if [ ! -e "$testDaemon" ]; then
-        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${testDaemon}" > /dev/null
-        if [ "$?" != "0" ]; then
-            printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE           
-	    exit 1
-        fi
-    fi
-    sleep 2
-    chmod +x "$testDaemon"
-    mv $testDaemon /usr/bin/connectd_"$testDaemon"
-    ln -sf /usr/bin/connectd_"$testDaemon" "/usr/bin/connectd_schannel"
-    echo $retval
-}
-
-
-
-downMultiport()
-{
-    local testArch=$1
-    local muxer="muxer"
-    local demuxer="demuxer"
-    local muxerDaemon="${muxer}.${testArch}"
-    local demuxerDaemon="${demuxer}.${testArch}"
-    local retval=0
-
-    printf "\n"
-    printf "%s\n" "Downloading and testing $muxerDaemon..." | tee -a $LOGFILE
-    if [ ! -e "$muxerDaemon" ]; then
-        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${muxerDaemon}" >> $LOGFILE
-        if [ "$?" != "0" ]; then
-            printf "%s\n" "$muxerDaemon download failed!" | tee -a $LOGFILE
-            exit 1
-        fi
-    fi
-    #
-    # link it and chmod it
-    chmod +x "$muxerDaemon"
-    mv $muxerDaemon "/usr/bin/connectd_${muxerDaemon}"
-    ln -sf "/usr/bin/connectd_${muxerDaemon}" "/usr/bin/connectd_${muxer}"
-
-    printf "\n"
-    printf "%s\n" "Downloading and testing $demuxerDaemon..." | tee -a $LOGFILE
-    if [ ! -e "$demuxerDaemon" ]; then
-        curl -sfLkO "https://github.com/remoteit/multiport/releases/latest/download/${demuxerDaemon}" >> $LOGFILE
-        if [ "$?" != "0" ]; then
-            printf "%s\n" "$demuxerDaemon download failed!" | tee -a $LOGFILE
-            exit 1
-        fi
-    fi    
-    sleep 2
-    chmod +x "$demuxerDaemon"
-    mv $demuxerDaemon /usr/bin/connectd_"$demuxerDaemon"
-    ln -sf "/usr/bin/connectd_${demuxerDaemon}" "/usr/bin/connectd_${demuxer}"
-    echo $retval
-}
-
 
 # when using Debian package we have to check for compatibility with older versions
 # and use the older daemon if the newer one doesn't work.  If the older daemon gets used,
@@ -407,8 +342,6 @@ if [ $useTar -eq 1 ]; then
         fi
     fi
 
-    downMultiport "$daemon"
-    
     currentFolder=$(pwd)
     filename=connectd_"$VERSION"_"$daemon"".tar"
 
