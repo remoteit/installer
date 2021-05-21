@@ -7,8 +7,8 @@
 #       GSW.
 
 VERSION=2.6.39
-# call out the exact versions of binaries used for this version of installer
-# prevents failure when "latest" changes the name of any daemon
+# call out the exact version of connectd binary used in this version of installer
+# prevents failure when "latest" release changes the name of any daemon
 CONNECTDVERSION=v4.12.0
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
