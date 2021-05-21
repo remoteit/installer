@@ -7,6 +7,9 @@
 #       GSW.
 
 VERSION=2.6.39
+# call out the exact version of connectd used for this version of installer
+# prevents failure when "latest" changes the name of any daemon
+CONNECTDVERSION=v4.12.0
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
@@ -46,7 +49,7 @@ downloadAndTestDaemon()
     printf "\n"
     printf "%s\n" "Downloading and testing $testDaemon..." | tee -a $LOGFILE
     if [ ! -e "$testDaemon" ]; then
-        curl -sfLkO "https://github.com/remoteit/connectd/releases/latest/download/${testDaemon}" > /dev/null
+        curl -sfLkO "https://github.com/remoteit/connectd/releases/download/$CONNECTDVERSION/${testDaemon}" > /dev/null
         if [ "$?" != "0" ]; then
             printf "%s\n" "$testDaemon download failed!" | tee -a $LOGFILE
             exit 1
