@@ -7,7 +7,7 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="June 10, 2020"
+MODIFIED="July 12, 2021"
 #===================================
 BUILDDATE="Thu Jun 11 11:44:47 PDT 2020"    
 #===================================
@@ -37,7 +37,7 @@ LOG_DIR=/var/log
 #
 apiMethod="https://"
 apiVersion="/apv/v27"
-if [ $APISERVER = "" ]; then
+if [ "$APISERVER" = "" ]; then
     apiServer="api.remote.it"
 else
     set -x
