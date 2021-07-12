@@ -51,7 +51,7 @@ projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 # the variables in this section are used by the login by access key function only.
 key_alias=""
 secret_base64=""
-HOST="device.remote.it"
+HOST="$apiServer"
 URL_PATH="api/user/info"
 URL="https://${HOST}/${URL_PATH}"
 DATA=""
