@@ -37,6 +37,8 @@ LOG_DIR=/var/log
 #
 apiMethod="https://"
 apiVersion="/apv/v27"
+# allow setting a new API URL via environment variable at Circle CI
+# in order to regress package against a new API release candidate.
 if [ "$APISERVER" = "" ]; then
     apiServer="api.remote.it"
 else
