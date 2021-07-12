@@ -37,7 +37,13 @@ LOG_DIR=/var/log
 #
 apiMethod="https://"
 apiVersion="/apv/v27"
-apiServer="api.remote.it"
+if [ $APISERVER = "" ]; then
+    apiServer="api.remote.it"
+else
+    set -x
+    apiServer="$APISERVER"
+fi
+
 #
 
 #===================================
