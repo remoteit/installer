@@ -9,9 +9,9 @@
 #  Copyright (C) 2019-2021 remot3.it, Inc. All rights reserved.
 
 ##### Settings #####
-LIBVERSION=lib_v2.6.29
+LIBVERSION=lib_v2.6.30
 AUTHOR="Gary Worsham"
-LIBMODIFIED="April 24, 2021"
+LIBMODIFIED="July 12, 2021"
 GREPFLAGS=
 apikey="remote.it.developertoolsHW9iHnd"
 
@@ -51,7 +51,7 @@ projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 # the variables in this section are used by the login by access key function only.
 key_alias=""
 secret_base64=""
-HOST="$apiServer"
+HOST="device.remote.it"
 URL_PATH="api/user/info"
 URL="https://${HOST}/${URL_PATH}"
 DATA=""
@@ -1293,9 +1293,9 @@ installProvisioning()
         platformType="4B2"
     elif [ "$(echo "$PLATFORM" | grep "x86_64-etch")" != "" ]; then
         platformType="4B2"
-    elif [ "$(echo "$PLATFORM" | grep "x86-ubuntu16.04")" != "" ]; then
+    elif [ "$(echo "$PLATFORM" | grep "x86-ubuntu20.04")" != "" ]; then
         platformType="460"
-    elif [ "$(echo "$PLATFORM" | grep "x86_64-ubuntu16.04")" != "" ]; then
+    elif [ "$(echo "$PLATFORM" | grep "x86_64-ubuntu20.04")" != "" ]; then
         platformType="460"
     elif [ "$PLATFORM" = "arm-linaro-pi" ]; then
         platformType="430"
