@@ -4,8 +4,8 @@
 # sorts out Lintian errors/warnings into individual
 # text files
 pkg=connectd
-ver=2.1.15
-MODIFIED="July 21, 2020"
+ver=2.1.16
+MODIFIED="July 12, 2021"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 TEST_DIR="$SCRIPT_DIR"/../test
 pkgFolder="$pkg"
@@ -233,7 +233,7 @@ build_one_and_test()
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86_64-ubuntu16.04 1 amd64
+build x86_64-ubuntu20.04 1 amd64
 
 #---------------------------------------------------
 # in this section we do some basic installer tests using the amd64 Debian
@@ -252,7 +252,7 @@ build_all()
 # 32-bit i386 Debian package
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86-ubuntu16.04 1 i386
+build x86-ubuntu20.04 1 i386
 
 # aarch64 OpenWrt package - tar package
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -267,7 +267,7 @@ build aarch64-openwrt_static 0
 # aarch64 package - tar package with static linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarch64-ubuntu16.04_static 0
+build aarch64-ubuntu20.04_static 0
 
 # arm-v5t_le package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
@@ -282,12 +282,12 @@ build arm-v5t_le_static 0
 # aarch64 package - tar package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarch64-ubuntu16.04 0
+build aarch64-ubuntu20.04 0
 
 # arm64 package - Debian package with dynamic linking
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build aarch64-ubuntu16.04 1 arm64
+build aarch64-ubuntu20.04 1 arm64
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-android 0
@@ -313,11 +313,11 @@ build x86_64-etch 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86-ubuntu16.04 0
+build x86-ubuntu20.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86-ubuntu16.04_static 0
+build x86-ubuntu20.04_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
@@ -329,11 +329,11 @@ build x86-linaro_uClibc_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86_64-ubuntu16.04 0
+build x86_64-ubuntu20.04 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
-build x86_64-ubuntu16.04_static 0
+build x86_64-ubuntu20.04_static 0
 
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 build arm-linaro-ulibc 0
@@ -358,13 +358,13 @@ setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" 
 build arm-gnueabi_static 0
 
 # here we are using the tag "-etch" to create an i386 Debian architecture package for the older
-# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 20.04
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86-etch 1 i386 -etch
 
 # here we are using the tag "-etch" to create an amd64 Debian architecture package for the older
-# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 16.04
+# Debian "Etch" architecture that needs to be distinct from the one for Ubuntu 20.04
 setOption options "mac" '$'"(ip addr | grep ether | tail -n 1 | awk" "'{ print" '$2' "}')"
 setOption options "BASEDIR" ""
 build x86_64-etch 1 amd64 -etch
