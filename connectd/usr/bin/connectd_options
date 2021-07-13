@@ -36,6 +36,7 @@ LOG_DIR=/var/log
 # API's
 #
 apiMethod="https://"
+
 # allow setting a new API URL and version via environment variable at Circle CI
 # in order to regress package against a new API release candidate.
 
@@ -57,6 +58,7 @@ else
      echo "CI_APISERVER = $CI_APISERVER" | sed 's/\./-dot-/g'
      set -x
      apiServer="$CI_APISERVER"
+
 fi
 
 #
