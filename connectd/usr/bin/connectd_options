@@ -7,9 +7,9 @@
 #  Any script which includes this file must have #!/bin/sh as its first line.
 #  connectd_options is never executed directly.
 #===================================
-MODIFIED="July 12, 2021"
+MODIFIED="July 13, 2021"
 #===================================
-BUILDDATE="Thu Jun 11 11:44:47 PDT 2020"    
+BUILDDATE=
 #===================================
 VERSION=
 #===================================
@@ -21,7 +21,7 @@ DEBUG="0"
 # set EXITONAPIERROR to 0 for debugging as needed.
 EXITONAPIERROR="1"
 #===================================
-# BASEDIR is root on many systems. If so, leave it blank, else set the enviorment variable $CONNECTD_BASEDIR
+# BASEDIR is root on many systems. If so, leave it blank, else export the environment variable $CONNECTD_BASEDIR:
 BASEDIR=$CONNECTD_BASEDIR
 #===================================
 # BIN_DIR is default path for executables.  We install connectd scripts and binaries here.
@@ -36,14 +36,27 @@ LOG_DIR=/var/log
 # API's
 #
 apiMethod="https://"
-apiVersion="/apv/v27"
-# allow setting a new API URL via environment variable at Circle CI
+# allow setting a new API URL and version via environment variable at Circle CI
 # in order to regress package against a new API release candidate.
-if [ "$APISERVER" = "" ]; then
-    apiServer="api.remote.it"
+
+if [ "$CI_APIVERSION" = "" ]; then
+     apiVersion="/apv/v27"
 else
-    set -x
-    apiServer="$APISERVER"
+# have to change characters to get environment variables to print out on the
+# console in Circle CI
+     echo "CI_APIVERSION = $CI_APIVERSION" | sed 's/\//-slash-/g'
+     set -x
+     apiVersion="$CI_APIVERSION"
+fi
+
+if [ "$CI_APISERVER" = "" ]; then
+     apiServer="api.remote.it"
+else
+# have to change characters to get environment variables to print out on the
+# console in Circle CI
+     echo "CI_APISERVER = $CI_APISERVER" | sed 's/\./-dot-/g'
+     set -x
+     apiServer="$CI_APISERVER"
 fi
 
 #
