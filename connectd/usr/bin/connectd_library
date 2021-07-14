@@ -1082,7 +1082,7 @@ signInAPI()
     if [ "$key_alias" != "" ]; then
         DATE=$(LANG=en_US date "+%a, %d %b %Y %H:%M:%S %Z")
 # note that the formatting of the SIGNING_STRING is critical and should not be changed.
-        SIGNING_STRING="(request-target): ${LC_VERB} /${URL_PATH}
+        SIGNING_STRING="(request-target): ${LC_VERB} ${URL_PATH}
 host: ${HOST}
 date: ${DATE}
 content-type: ${CONTENT_TYPE}
