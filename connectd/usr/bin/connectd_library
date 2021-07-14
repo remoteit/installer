@@ -51,9 +51,9 @@ projectFileLinkURL="${apiMethod}${apiServer}${apiVersion}"/project/provisioning
 # the variables in this section are used by the login by access key function only.
 key_alias=""
 secret_base64=""
-HOST="device.remote.it"
-URL_PATH="api/user/info"
-URL="https://${HOST}/${URL_PATH}"
+HOST="$apiServer"
+URL_PATH="$apiVersion/user/info"
+URL="https://${HOST}${URL_PATH}"
 DATA=""
 VERB="GET"
 CONTENT_TYPE="application/json"
@@ -1082,7 +1082,7 @@ signInAPI()
     if [ "$key_alias" != "" ]; then
         DATE=$(LANG=en_US date "+%a, %d %b %Y %H:%M:%S %Z")
 # note that the formatting of the SIGNING_STRING is critical and should not be changed.
-        SIGNING_STRING="(request-target): ${LC_VERB} /${URL_PATH}
+        SIGNING_STRING="(request-target): ${LC_VERB} ${URL_PATH}
 host: ${HOST}
 date: ${DATE}
 content-type: ${CONTENT_TYPE}
