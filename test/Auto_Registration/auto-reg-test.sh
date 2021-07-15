@@ -5,8 +5,8 @@
 # As the assumption is that this test script is running on an Ubuntu VM,
 # use the amd64 Debian package.
 
-VERSION=1.1.6
-MODIFIED="June 21, 2020"
+VERSION=1.1.7
+MODIFIED="July 15, 2021"
 SCRIPT_DIR="$(cd $(dirname $0) && pwd)"
 # SERVICECOUNT is the expected number of active services, depends on the product definition
 # and per-serrvice "enabled" state.
@@ -151,7 +151,7 @@ grep -i "^uid" /etc/connectd/available/* | awk '{ print $2 }'
 echo "Active symlinks"
 ls -l /etc/connectd/active
 
-# get stop all services
+# stop all services
 echo
 echo "connectd_control stop all"
 connectd_control -v stop all | tee /tmp/stop$3.txt
@@ -162,6 +162,15 @@ echo "connectd_control status all"
 connectd_control -v status all | tee -a /tmp/status$3.txt
 
 check_service_counts 0 "Stopped 2 services $3"
+# check ownership of these services
+echo "Checking ownership of services"
+./login.sh
+if [ $? -eq 1 ]; then
+    echo "Ownership test failed."
+    exit 1
+else
+    echo "Ownership test passed."
+fi
 echo "#=================================================================================="
 echo
 }
