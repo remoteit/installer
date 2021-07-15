@@ -164,8 +164,8 @@ connectd_control -v status all | tee -a /tmp/status$3.txt
 check_service_counts 0 "Stopped 2 services $3"
 # check ownership of these services
 echo "Checking ownership of services"
-./login.sh
-if [ $? -eq 1 ]; then
+"$SCRIPT_DIR"/login.sh
+if [ $? -ne 0 ]; then
     echo "Ownership test failed."
     exit 1
 else
