@@ -1,5 +1,7 @@
 # remote.it Installer
 
+## Please note, the connectd package is deprecated and not recommended for new installs.
+
 [![CircleCI](https://circleci.com/gh/remoteit/installer.svg?style=svg&circle-token=51d69d01d1536ee58ad7ddf3ae927811416fee63)](https://circleci.com/gh/remoteit/installer)
 
 > System tools for setting up remote.it on your internet connected devices.
