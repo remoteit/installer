@@ -13,6 +13,19 @@ CONNECTDVERSION=v4.12.0
 BUILDPATH=https://github.com/remoteit/installer/releases/download/v$VERSION
 LOGFILE=remote.itBinaryTestLog.txt
 
+show_deprecation_warning() {
+
+    echo "The connectd package has been deprecated.  We do not recommend this package for production."
+    echo "Please find the new instructions for single-device installation at:"
+    echo "https://link.remote.it/support/rpi-linux-quick-install"
+    echo
+    echo "To prepare an OS image for mass production that will register a pre-defined set of Remote.It"
+    echo "Services, please see: https://link.remote.it/docs/oem-overview ."
+    echo
+    echo "Press any key to continue.  Press ^C to terminate this script."
+    read anyKey
+}
+
 # to install curl tool
 installCurl() {
     printf "\nInstalling curl..........\n"
@@ -115,6 +128,7 @@ checkForUtilities()
 
 # main program starts here
 #
+show_deprecation_warning
 # clear log file each time
 if [ -e $LOGFILE ]; then
     rm $LOGFILE
