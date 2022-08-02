@@ -3,6 +3,7 @@
 ## Please note, the connectd package is deprecated and not recommended for new installs.
 
 Please find the new instructions for single-device installation at: https://link.remote.it/support/rpi-linux-quick-install
+
 To prepare an OS image for mass production that will register a pre-defined set of Remote.It Services, please see: https://link.remote.it/docs/oem-overview
 
 [![CircleCI](https://circleci.com/gh/remoteit/installer.svg?style=svg&circle-token=51d69d01d1536ee58ad7ddf3ae927811416fee63)](https://circleci.com/gh/remoteit/installer)
